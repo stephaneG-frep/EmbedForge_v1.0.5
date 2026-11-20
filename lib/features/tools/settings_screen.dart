@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/constants.dart';
@@ -92,6 +93,33 @@ class SettingsScreen extends StatelessWidget {
                   style: TextStyle(fontSize: 12.8, height: 1.4),
                 ),
                 const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () => _export(context),
+                        icon: const Icon(Icons.upload, size: 18),
+                        label: const Text('Exporter'),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () => _import(context),
+                        icon: const Icon(Icons.download, size: 18),
+                        label: const Text('Importer'),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  'Le code d’export permet de retrouver ta progression après '
+                  'une réinstallation ou sur un autre téléphone. Garde-le dans '
+                  'une note ou envoie-le-toi.',
+                  style: TextStyle(fontSize: 11.5, color: AppColors.inkSoft),
+                ),
+                const SizedBox(height: 4),
                 SizedBox(
                   width: double.infinity,
                   child: TextButton.icon(
@@ -192,6 +220,85 @@ class SettingsScreen extends StatelessWidget {
               selected ? Icons.radio_button_checked : Icons.radio_button_off,
               color: selected ? AppColors.blue : AppColors.inkSoft,
               size: 19,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Copie le code de sauvegarde dans le presse-papiers — uniquement à la
+  /// demande explicite de l'utilisateur.
+  Future<void> _export(BuildContext context) async {
+    final code = context.read<AppState>().exportProgress();
+    final messenger = ScaffoldMessenger.of(context);
+    await Clipboard.setData(ClipboardData(text: code));
+    messenger.showSnackBar(
+      const SnackBar(
+        content: Text(
+          'Code de sauvegarde copié. Colle-le dans une note pour le garder.',
+        ),
+      ),
+    );
+  }
+
+  void _import(BuildContext context) {
+    final ctrl = TextEditingController();
+    String? error;
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setLocal) => AlertDialog(
+          title: const Text('Importer une progression'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Colle le code exporté. Ta progression actuelle sera '
+                'remplacée.',
+                style: TextStyle(fontSize: 13),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: ctrl,
+                minLines: 2,
+                maxLines: 4,
+                style: const TextStyle(fontFamily: 'MonoTech', fontSize: 12),
+                decoration: InputDecoration(
+                  hintText: 'EMBEDFORGE1:…',
+                  errorText: error,
+                  suffixIcon: IconButton(
+                    tooltip: 'Coller',
+                    icon: const Icon(Icons.content_paste),
+                    onPressed: () async {
+                      final data = await Clipboard.getData('text/plain');
+                      if (data?.text != null) ctrl.text = data!.text!;
+                    },
+                  ),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Annuler'),
+            ),
+            FilledButton(
+              onPressed: () {
+                try {
+                  context.read<AppState>().importProgress(ctrl.text);
+                } on FormatException catch (e) {
+                  setLocal(() => error = e.message);
+                  return;
+                }
+                Navigator.pop(ctx);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Progression importée.')),
+                );
+              },
+              child: const Text('Importer'),
             ),
           ],
         ),

@@ -133,7 +133,7 @@ class LabsScreen extends StatelessWidget {
                   ),
                   SizedBox(height: 6),
                   Text(
-                    'Expérimentez GPIO, UART, I²C, SPI, le boot Linux, la mémoire\net le binaire, sans aucun matériel. 100 % hors-ligne.',
+                    'Expérimentez GPIO, UART, I²C, SPI, le boot Linux, la mémoire et le binaire, sans aucun matériel. 100\u00A0% hors-ligne.',
                     style: TextStyle(
                       color: Colors.white70,
                       fontSize: 12.5,
@@ -216,14 +216,28 @@ class _LabTile extends StatelessWidget {
   }
 }
 
-class _LabScaffold extends StatelessWidget {
+class _LabScaffold extends StatefulWidget {
   final LabEntry entry;
   const _LabScaffold({required this.entry});
 
   @override
+  State<_LabScaffold> createState() => _LabScaffoldState();
+}
+
+class _LabScaffoldState extends State<_LabScaffold> {
+  LabEntry get entry => widget.entry;
+
+  @override
+  void initState() {
+    super.initState();
+    // Après la première image : notifier pendant un build est interdit.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) context.read<AppState>().markLabUsed(entry.id);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final state = context.read<AppState>();
-    state.markLabUsed(entry.id);
     return Scaffold(
       appBar: AppBar(
         title: Row(

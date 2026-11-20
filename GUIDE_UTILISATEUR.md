@@ -21,7 +21,10 @@ Buildroot ou Yocto, entièrement **hors-ligne** sur votre téléphone.
 > étaient signées avec une clé de développement. Si une version future
 > signée avec la clé officielle refuse de s'installer par-dessus
 > (« conflit avec un paquet existant »), il faudra désinstaller l'ancienne
-> d'abord, **ce qui efface la progression enregistrée**.
+> d'abord, ce qui efface la progression enregistrée. **Avant de
+> désinstaller, exportez votre progression** (Outils → Paramètres →
+> Exporter), puis réimportez-la dans la nouvelle version (voir
+> *Sauvegarder et transférer sa progression*).
 
 ---
 
@@ -137,6 +140,23 @@ quiz, compétences acquises et badges. Accès aux paramètres.
 
 ---
 
+## Sauvegarder et transférer sa progression
+
+Dans **Outils → Paramètres → Données** :
+
+1. **Exporter** copie un code de sauvegarde (il commence par
+   `EMBEDFORGE1:`). Collez-le dans une note ou envoyez-le-vous : c'est
+   votre seule copie, l'application ne l'envoie nulle part.
+2. Sur le nouveau téléphone ou après réinstallation : **Importer**, touchez
+   l'icône *Coller*, puis **Importer**.
+
+Le code contient les modules et chapitres terminés, les projets, les scores
+de quiz, la roadmap, les labs utilisés, les favoris, le thème et la taille
+du texte. **L'import remplace la progression actuelle.** Un code incomplet
+ou modifié est refusé sans rien changer.
+
+---
+
 ## Réglages
 
 - **Thème** : clair, sombre ou celui du système.
@@ -153,10 +173,11 @@ quiz, compétences acquises et badges. Accès aux paramètres.
 | Problème | Solution |
 |---|---|
 | L'installation est bloquée | Autorisez « Installer des applications inconnues » pour le gestionnaire de fichiers |
-| « Conflit avec un paquet existant » | Voir l'encadré *Mise à jour* en haut de ce guide |
+| « Conflit avec un paquet existant » | Exportez votre progression, désinstallez, installez, puis importez (voir l'encadré *Mise à jour*) |
+| « Ce n'est pas un code EmbedForge » à l'import | Le code doit commencer par `EMBEDFORGE1:` et être copié en entier |
 | Le texte est trop petit ou trop grand | Outils → Paramètres → Taille du texte |
 | Je veux tout recommencer | Outils → Paramètres → Réinitialiser toute ma progression |
-| Ma réponse à un défi est refusée | Elle doit correspondre exactement à la commande attendue (options et arguments compris). Dans l'écran Défis, la bonne réponse s'affiche après coup |
+| Ma réponse à un défi est refusée | Elle doit correspondre exactement à la commande attendue (options et arguments compris). Dans l'écran Défis, la bonne réponse s'affiche après coup ; sur la fiche d'une commande, touchez « Voir la réponse » |
 | Le terminal ne connaît pas une commande | C'est un simulateur volontairement réduit : tapez `help` pour la liste |
 
 ---

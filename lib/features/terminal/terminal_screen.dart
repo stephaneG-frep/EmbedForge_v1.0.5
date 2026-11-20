@@ -39,7 +39,7 @@ class _TerminalScreenState extends State<TerminalScreen> {
   ];
 
   final List<_Line> _lines = [
-    _Line('EmbedForge Terminal — environnement 100 % simulé.'),
+    _Line('EmbedForge Terminal — environnement 100\u00A0% simulé.'),
     _Line('Tapez « help » pour lister les commandes disponibles.'),
     _Line('Aucune commande n’est réellement exécutée sur votre téléphone.'),
   ];

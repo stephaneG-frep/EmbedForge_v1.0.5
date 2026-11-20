@@ -206,6 +206,84 @@ class StorageService {
 
   void setFontScale(double value) => _set(_kFontScale, value);
 
+  // ---- export / import ----
+  static const exportPrefix = 'EMBEDFORGE1:';
+
+  static const _exportLists = [
+    _kCompletedCourses,
+    _kCompletedChapters,
+    _kCompletedProjects,
+    _kRoadmapSkills,
+    _kFavorites,
+    _kSeen,
+    _kLabsUsed,
+  ];
+
+  /// Code texte de sauvegarde (préfixe + JSON en base64) : se copie/colle,
+  /// survit à une désinstallation ou à un changement d'appareil.
+  String exportCode() {
+    final data = <String, Object?>{
+      'v': 1,
+      for (final k in _exportLists) k: getList(k),
+      _kQuizResults: _getString(_kQuizResults),
+      _kLastCourse: _getString(_kLastCourse),
+      _kTheme: _getString(_kTheme),
+      _kFontScale: _getDouble(_kFontScale),
+    };
+    return exportPrefix + base64Encode(utf8.encode(jsonEncode(data)));
+  }
+
+  /// Remplace la progression par celle du code. Lève [FormatException] si le
+  /// code est invalide — rien n'est alors modifié.
+  void importCode(String code) {
+    final trimmed = code.trim();
+    if (!trimmed.startsWith(exportPrefix)) {
+      throw const FormatException('Ce n’est pas un code EmbedForge.');
+    }
+    final Map<String, dynamic> data;
+    try {
+      data =
+          jsonDecode(
+                utf8.decode(
+                  base64Decode(trimmed.substring(exportPrefix.length)),
+                ),
+              )
+              as Map<String, dynamic>;
+    } catch (_) {
+      throw const FormatException('Code incomplet ou abîmé.');
+    }
+    if (data['v'] != 1) {
+      throw const FormatException('Version de code non prise en charge.');
+    }
+    // Validation complète AVANT toute écriture.
+    final lists = <String, List<String>>{};
+    for (final k in _exportLists) {
+      final v = data[k];
+      if (v != null && v is! List) {
+        throw const FormatException('Code invalide.');
+      }
+      lists[k] = [for (final e in (v as List? ?? const [])) e.toString()];
+    }
+    final quiz = data[_kQuizResults];
+    if (quiz != null) {
+      try {
+        jsonDecode(quiz as String) as Map<String, dynamic>;
+      } catch (_) {
+        throw const FormatException('Scores de quiz invalides.');
+      }
+    }
+    final last = data[_kLastCourse];
+    final theme = data[_kTheme];
+    final font = data[_kFontScale];
+
+    resetAll();
+    lists.forEach(_saveList);
+    if (quiz is String) _set(_kQuizResults, quiz);
+    if (last is String) _set(_kLastCourse, last);
+    if (theme is String) _set(_kTheme, theme);
+    if (font is num) _set(_kFontScale, font.toDouble().clamp(0.85, 1.3));
+  }
+
   void resetAll() {
     for (final k in [
       _kCompletedCourses,

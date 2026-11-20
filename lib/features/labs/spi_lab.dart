@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
@@ -243,127 +244,126 @@ class _SpiPainter extends CustomPainter {
       ..strokeWidth = 3
       ..color = transferring ? AppColors.teal : wire.color;
 
-    // Master (à gauche) et Slave (à droite)
+    // Quatre fils espacés de 26 px ; chaque libellé est posé AU-DESSUS de son
+    // fil (texte ≈ 12 px de haut) pour ne jamais être barré par un autre fil.
+    const yMosi = 44.0, yMiso = 70.0, ySclk = 98.0, yCs = 124.0;
+    const wires = [yMosi, yMiso, ySclk, yCs];
+    const chipW = 76.0;
+    const left = 14.0 + chipW;
+    final right = size.width - 14 - chipW;
+    final mid = (left + right) / 2;
+
+    // Master (à gauche) et Slave (à droite), broches alignées sur les fils.
     _chip(
       canvas,
-      const Rect.fromLTWH(14, 26, 96, 62),
+      const Rect.fromLTWH(14, 26, chipW, 110),
       'MASTER',
       AppColors.teal,
+      wires,
     );
     _chip(
       canvas,
-      Rect.fromLTWH(size.width - 132, 26, 110, 62),
+      Rect.fromLTWH(right, 26, chipW, 110),
       'SLAVE',
       AppColors.blue,
+      wires,
     );
 
-    const yStart = 38.0;
-    // MOSI
-    canvas.drawLine(
-      Offset(110, yStart),
-      Offset(size.width - 132, yStart),
-      active,
-    );
-    _text(canvas, 'MOSI', Offset(size.width / 2 - 22, yStart - 12));
-    // MISO
-    canvas.drawLine(
-      Offset(110, yStart + 22),
-      Offset(size.width - 132, yStart + 22),
-      active,
-    );
-    _text(canvas, 'MISO', Offset(size.width / 2 - 22, yStart + 10));
-    // SCLK : sinusoïde
-    final path = Path();
-    for (var x = 110.0; x <= size.width - 132; x += 4) {
-      final v = (x / 18).floor();
-      final y = yStart + 44 + (v.isEven ? -6 : 6);
-      if (x == 110) {
-        path.moveTo(x, y);
-      } else {
-        path.lineTo(x, y);
-      }
+    canvas.drawLine(Offset(left, yMosi), Offset(right, yMosi), active);
+    _label(canvas, 'MOSI →', mid, yMosi - 14);
+    canvas.drawLine(Offset(left, yMiso), Offset(right, yMiso), active);
+    _label(canvas, '← MISO', mid, yMiso - 14);
+
+    // SCLK : signal carré (±5 px autour du fil).
+    final path = Path()..moveTo(left, ySclk + 5);
+    var high = false;
+    for (var x = left; x < right; x += 9) {
+      final y = ySclk + (high ? -5 : 5);
+      path
+        ..lineTo(x, y)
+        ..lineTo(math.min(x + 9, right), y);
+      high = !high;
     }
     canvas.drawPath(path, active);
-    _text(canvas, 'SCLK  $clock MHz', Offset(size.width / 2 - 42, yStart + 40));
-    // CS
-    canvas.drawLine(
-      Offset(110, yStart + 68),
-      Offset(size.width - 132, yStart + 68),
-      wire,
-    );
-    _text(canvas, 'CS', Offset(size.width / 2 - 9, yStart + 58));
+    _label(canvas, 'SCLK $clock MHz', mid, ySclk - 19);
 
-    // Bits sous les lignes pendant transfert
+    canvas.drawLine(Offset(left, yCs), Offset(right, yCs), wire);
+    _label(canvas, 'CS', mid, yCs - 14);
+
+    // Registres sous le schéma.
     if (transferring) {
+      _label(canvas, 'registre master', mid, 140);
       final bits = mosi.toRadixString(2).padLeft(8, '0');
       for (var i = 0; i < 8; i++) {
-        final x = 120.0 + i * (18.0);
-        _text(canvas, bits[i], Offset(x, 130));
+        _label(canvas, bits[i], mid - 63 + i * 18, 152);
       }
-      _text(canvas, 'registre master', Offset(120, 118));
+      _label(canvas, 'registre slave', mid, 164);
       final bits2 = miso.toRadixString(2).padLeft(8, '0');
       for (var i = 0; i < 8; i++) {
-        final x = 120.0 + i * 18.0;
-        _text(canvas, bits2[i], Offset(x, 156));
+        _label(canvas, bits2[i], mid - 63 + i * 18, 176);
       }
-      _text(canvas, 'registre slave', Offset(120, 144));
     } else {
-      _text(
+      _label(
         canvas,
         'Master = 0x${mosi.toRadixString(16).toUpperCase().padLeft(2, '0')}',
-        Offset(120, 132),
+        mid,
+        148,
       );
-      _text(
+      _label(
         canvas,
         'Slave  = 0x${miso.toRadixString(16).toUpperCase().padLeft(2, '0')}',
-        Offset(120, 156),
+        mid,
+        168,
       );
     }
   }
 
-  void _chip(Canvas canvas, Rect rect, String label, Color color) {
+  void _chip(
+    Canvas canvas,
+    Rect rect,
+    String label,
+    Color color,
+    List<double> pins,
+  ) {
+    final r = RRect.fromRectAndRadius(rect, const Radius.circular(9));
+    canvas.drawRRect(r, Paint()..color = const Color(0xFF232C3B));
     canvas.drawRRect(
-      RRect.fromRectAndRadius(rect, const Radius.circular(9)),
-      Paint()..color = const Color(0xFF232C3B),
-    );
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(rect, const Radius.circular(9)),
+      r,
       Paint()
         ..style = PaintingStyle.stroke
         ..color = color
         ..strokeWidth = 1.6,
     );
-    for (final y in [30.0, 46.0, 62.0, 78.0]) {
-      final pinPaint = Paint()
-        ..color = color.withValues(alpha: 0.8)
-        ..strokeWidth = 2;
-      canvas.drawLine(
-        Offset(rect.left, y),
-        Offset(rect.left - 14, y - 4),
-        pinPaint,
-      );
+    final pinPaint = Paint()
+      ..color = color.withValues(alpha: 0.8)
+      ..strokeWidth = 2;
+    for (final y in pins) {
+      canvas.drawLine(Offset(rect.left - 8, y), Offset(rect.left, y), pinPaint);
       canvas.drawLine(
         Offset(rect.right, y),
-        Offset(rect.right + 14, y - 4),
+        Offset(rect.right + 8, y),
         pinPaint,
       );
     }
-    _text(canvas, label, Offset(rect.left + 12, rect.top + 24));
+    _label(canvas, label, rect.center.dx, rect.center.dy - 6);
   }
 
-  void _text(Canvas canvas, String t, Offset p) {
-    final tp = TextPainter(
-      text: TextSpan(
-        text: t,
-        style: const TextStyle(
-          color: Color(0xFFAEB8C6),
-          fontSize: 10,
-          fontFamily: 'MonoTech',
-        ),
+  TextPainter _painter(String t) => TextPainter(
+    text: TextSpan(
+      text: t,
+      style: const TextStyle(
+        color: Color(0xFFAEB8C6),
+        fontSize: 10,
+        fontFamily: 'MonoTech',
       ),
-      textDirection: TextDirection.ltr,
-    )..layout();
-    tp.paint(canvas, p);
+    ),
+    textDirection: TextDirection.ltr,
+  )..layout();
+
+  /// Texte centré horizontalement sur [cx].
+  void _label(Canvas canvas, String t, double cx, double top) {
+    final tp = _painter(t);
+    tp.paint(canvas, Offset(cx - tp.width / 2, top));
   }
 
   @override

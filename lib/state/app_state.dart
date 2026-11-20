@@ -109,6 +109,7 @@ class AppState extends ChangeNotifier {
   bool isLabUsed(String id) => storage.labsUsed.contains(id);
 
   void markLabUsed(String id) {
+    if (storage.labsUsed.contains(id)) return;
     storage.markLabUsed(id);
     notifyListeners();
   }
@@ -225,6 +226,16 @@ class AppState extends ChangeNotifier {
       minutes += c.totalMinutes;
     }
     return minutes;
+  }
+
+  // ---------------- export / import ----------------
+  String exportProgress() => storage.exportCode();
+
+  /// Lève [FormatException] si le code est invalide (rien n'est modifié).
+  void importProgress(String code) {
+    storage.importCode(code);
+    _restore();
+    notifyListeners();
   }
 
   // ---------------- reset ----------------

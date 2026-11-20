@@ -155,6 +155,44 @@ void main() {
     });
   });
 
+  group('Export / import de la progression', () {
+    test('aller-retour complet vers un autre appareil', () async {
+      SharedPreferences.setMockInitialValues({});
+      final a = StorageService();
+      await a.init();
+      a.setCourseCompleted('gpio', true);
+      a.setChapterCompleted('gpio/ch1', true);
+      a.toggleFavorite('command', 'ls');
+      a.saveQuizScore('quiz_debutant', 8, 8);
+      a.setThemeMode('dark');
+      a.setFontScale(1.15);
+      final code = a.exportCode();
+      expect(code, startsWith(StorageService.exportPrefix));
+
+      final b = StorageService(); // autre appareil (repli mémoire)
+      b.setCourseCompleted('autre', true);
+      b.importCode(code);
+      expect(b.completedCourses, {'gpio'});
+      expect(b.isChapterCompleted('gpio/ch1'), isTrue);
+      expect(b.isFavorite('command', 'ls'), isTrue);
+      expect(b.quizResults['quiz_debutant']!.correct, 8);
+      expect(b.themeMode, 'dark');
+      expect(b.fontScale, 1.15);
+    });
+
+    test('code invalide : erreur claire et rien n’est modifié', () {
+      final s = StorageService()..setCourseCompleted('gpio', true);
+      for (final bad in [
+        'n’importe quoi',
+        '${StorageService.exportPrefix}%%%',
+        StorageService.exportPrefix + base64Encode(utf8.encode('{"v":99}')),
+      ]) {
+        expect(() => s.importCode(bad), throwsFormatException);
+      }
+      expect(s.completedCourses, {'gpio'});
+    });
+  });
+
   group('Quiz', () {
     testWidgets('la dernière question n’est comptée qu’une fois', (
       tester,

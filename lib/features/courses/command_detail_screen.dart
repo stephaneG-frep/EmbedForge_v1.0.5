@@ -201,7 +201,17 @@ class _CommandDetailScreenState extends State<CommandDetailScreen> {
                       title: 'Incorrect',
                     ),
             ),
-          if (cmd.challengeAnswer != null && _challengeResult == true) ...[
+          if (_challengeResult == false && !_revealed)
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: () => setState(() => _revealed = true),
+                icon: const Icon(Icons.visibility, size: 18),
+                label: const Text('Voir la réponse'),
+              ),
+            ),
+          if (cmd.challengeAnswer != null &&
+              (_challengeResult == true || _revealed)) ...[
             const SizedBox(height: 6),
             CodeBlock(code: cmd.challengeAnswer!, label: 'réponse'),
           ],

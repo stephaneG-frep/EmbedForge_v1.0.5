@@ -337,7 +337,7 @@ class _ReviewView extends StatelessWidget {
                       child: OutlinedButton.icon(
                         onPressed: onRetry,
                         icon: const Icon(Icons.replay, size: 17),
-                        label: const Text('Recommencer'),
+                        label: const Text('Rejouer'),
                       ),
                     ),
                     const SizedBox(width: 10),
