@@ -6,7 +6,7 @@
     "category": "plateforme",
     "accent": "purple",
     "icon": "kernel",
-    "duration": 47,
+    "duration": 50,
     "summary": "Explorez le rôle, la structure et la configuration du noyau Linux, cœur de tout système embarqué.",
     "objectives": ["Comprendre le rôle du noyau", "Explorer sa structure", "Configurer et compiler le noyau", "Installer les modules"],
     "chapters": [
@@ -22,6 +22,7 @@
           {"type": "text", "body": "Le processeur exécute le code selon deux niveaux de privilège. Le noyau tourne en mode privilégié (espace noyau) : il peut tout faire sur le matériel. Les applications tournent en mode restreint (espace utilisateur) : pour lire un fichier ou envoyer un paquet, elles doivent demander au noyau par un appel système. Une application qui plante ne fait donc pas tomber le système ; un pilote qui plante, si."},
           {"type": "code", "title": "Observer les appels système d'une commande avec strace", "lang": "bash", "code": "strace -e trace=openat,read,write cat /etc/hostname\n# openat(AT_FDCWD, \"/etc/hostname\", O_RDONLY) = 3\n# read(3, \"embedforge\\n\", 131072)        = 11\n# write(1, \"embedforge\\n\", 11)            = 11\n# read(3, \"\", 131072)                    = 0"},
           {"type": "text", "body": "Chaque ligne montre un appel système, ses arguments et sa valeur de retour. Le 3 renvoyé par openat est le descripteur de fichier, réutilisé ensuite par read. strace est l'un des meilleurs outils pour comprendre pourquoi un programme échoue (fichier introuvable, permission refusée) sans en lire le code."},
+          {"type": "text", "body": "En situation réelle : quand une application embarquée se comporte mal (lenteur, blocage, erreur d'accès), on commence par observer ses échanges avec le noyau plutôt que de deviner. strace révèle immédiatement un fichier de configuration introuvable, un port série refusé faute de droits ou une attente interminable sur une connexion réseau. Comprendre la frontière entre espace utilisateur et noyau permet de savoir si un problème relève de l'application ou du système."},
           {"type": "exercise", "question": "Comment les applications communiquent-elles avec le noyau ?", "answer": "Par des appels système, comme open, read ou write."},
           {"type": "exercise", "question": "Pourquoi un bug dans une application ne plante-t-il pas tout le système, alors qu'un bug dans un pilote le peut ?", "answer": "L'application tourne en espace utilisateur, isolée et sans accès direct au matériel ; le pilote tourne en espace noyau, avec tous les privilèges."},
           {"type": "exercise", "question": "Pratique : affiche un résumé du nombre d'appels système effectués par « ls /etc ».", "answer": "strace -c ls /etc > /dev/null\n# tableau final : % time, calls, errors, syscall\n# (on redirige la sortie de ls pour ne garder que le résumé)"}
@@ -39,6 +40,7 @@
           {"type": "table", "title": "Les principaux répertoires des sources du noyau", "table": [["Répertoire", "Contenu"], ["arch/", "code propre à chaque architecture (arm64, arm, riscv…)"], ["drivers/", "les pilotes de périphériques : la plus grosse partie"], ["fs/", "les systèmes de fichiers (ext4, vfat, squashfs…)"], ["kernel/, mm/", "ordonnanceur, gestion des processus et de la mémoire"], ["net/", "la pile réseau"], ["Documentation/", "la documentation officielle, dont les bindings"]]},
           {"type": "text", "body": "Chaque fonctionnalité correspond à une option CONFIG_… : =y l'intègre au noyau, =m la compile en module chargeable, et une option absente ou commentée n'est pas compilée. Un pilote nécessaire au démarrage (contrôleur de la carte SD contenant la racine, par exemple) doit être en =y, sinon le noyau ne peut pas monter la racine pour charger les modules."},
           {"type": "code", "title": "Retrouver la configuration du noyau en cours d'exécution", "lang": "bash", "code": "zcat /proc/config.gz | grep CONFIG_I2C_CHARDEV      # si CONFIG_IKCONFIG_PROC est activé\ngrep CONFIG_I2C_CHARDEV /boot/config-$(uname -r)     # sur Debian, Ubuntu...\n# CONFIG_I2C_CHARDEV=m  -> disponible en module\n\nsysctl kernel.hostname            # lire un paramètre de /proc/sys\nsudo sysctl -w vm.swappiness=10   # le modifier jusqu'au prochain redémarrage"},
+          {"type": "text", "body": "En situation réelle : la configuration du noyau d'un produit est un fichier versionné au même titre que le code applicatif : chaque option ajoutée ou retirée doit être justifiée. Retirer les pilotes et systèmes de fichiers inutiles réduit la taille de l'image, accélère le démarrage et diminue la surface d'attaque. À l'inverse, oublier une option nécessaire au démarrage (contrôleur de stockage, système de fichiers racine) produit un noyau qui ne démarre pas."},
           {"type": "exercise", "question": "Quelle est l'extension des modules noyau ?", "answer": ".ko."},
           {"type": "exercise", "question": "Quelle différence entre CONFIG_FOO=y et CONFIG_FOO=m ?", "answer": "=y intègre la fonctionnalité dans l'image du noyau ; =m la compile en module .ko, chargeable à la demande."},
           {"type": "exercise", "question": "Pratique : vérifie si le pilote des LED GPIO (CONFIG_LEDS_GPIO) est intégré, en module ou absent sur ton système.", "answer": "zcat /proc/config.gz 2>/dev/null | grep CONFIG_LEDS_GPIO \\\n  || grep CONFIG_LEDS_GPIO /boot/config-$(uname -r)\n# =y intégré, =m module, « is not set » absent"},
@@ -48,7 +50,7 @@
       {
         "id": "ch3",
         "title": "Configurer et compiler",
-        "duration": 12,
+        "duration": 14,
         "sections": [
           {"type": "code", "code": "make menuconfig\nmake -j4\nmake modules_install\nmake install", "lang": "bash", "body": "Configurer, compiler et installer le noyau."},
           {"type": "text", "body": "La configuration se fait avec menuconfig ou defconfig. Ensuite on compile avec make, puis on installe les modules et le noyau lui-même."},
@@ -58,6 +60,9 @@
           {"type": "code", "title": "Cross-compiler un noyau arm64", "lang": "bash", "code": "export ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu-\nmake defconfig                    # ou : make bcm2711_defconfig, etc.\nmake menuconfig                   # ajustements éventuels\nmake -j$(nproc) Image modules dtbs\n\n# installer les modules dans un dossier, pas sur le PC :\nmake modules_install INSTALL_MOD_PATH=$PWD/rootfs\nls arch/arm64/boot/Image arch/arm64/boot/dts/broadcom/*.dtb"},
           {"type": "warning", "body": "En cross-compilation, n'exécutez jamais make install ni make modules_install sans INSTALL_MOD_PATH : vous installeriez un noyau ARM dans le /boot et le /lib/modules de votre PC."},
           {"type": "tip", "body": "scripts/config permet de modifier une option sans interface : ./scripts/config --enable CONFIG_LEDS_GPIO puis make olddefconfig pour résoudre les dépendances. Idéal dans un script de build."},
+          {"type": "text", "body": "En situation réelle : on ne recompile pas le noyau d'un Raspberry Pi pour le plaisir : on le fait pour activer un pilote absent, appliquer un correctif, intégrer PREEMPT_RT ou réduire le temps de démarrage. Dans un projet sérieux, cette compilation est confiée à Buildroot ou Yocto, qui conservent la configuration et les correctifs appliqués ; la compilation manuelle reste précieuse pour comprendre et pour tester rapidement une option."},
+          {"type": "tip", "body": "Gardez toujours l'ancien noyau sur la partition de démarrage sous un autre nom : en cas d'échec, il suffit de le réactiver pour retrouver un système qui démarre."},
+          {"type": "text", "body": "Bon réflexe : conserver la configuration exacte de chaque noyau livré, avec ses correctifs, dans le dépôt du projet. Avec l'option CONFIG_IKCONFIG_PROC, la configuration est aussi intégrée dans le noyau et lisible dans /proc/config.gz sur l'appareil : on peut ainsi vérifier à tout moment comment le noyau d'un appareil donné a été construit."},
           {"type": "exercise", "question": "Quel outil permet de configurer le noyau ?", "answer": "make menuconfig, ou d'autres comme make xconfig."},
           {"type": "exercise", "question": "Où se trouve l'image du noyau arm64 après compilation ?", "answer": "arch/arm64/boot/Image (les devicetrees sont dans arch/arm64/boot/dts/)."},
           {"type": "exercise", "question": "Pratique : active le module du capteur LM75 (CONFIG_SENSORS_LM75) en ligne de commande et recompile uniquement les modules.", "answer": "./scripts/config --module CONFIG_SENSORS_LM75\nmake olddefconfig\nmake -j$(nproc) modules\nmake modules_install INSTALL_MOD_PATH=$PWD/rootfs"}
@@ -66,13 +71,16 @@
       {
         "id": "ch4",
         "title": "Charger les modules",
-        "duration": 12,
+        "duration": 13,
         "sections": [
           {"type": "code", "code": "modprobe mon_module\nlsmod\nmodinfo mon_module", "lang": "bash", "body": "Charger un module, lister les modules chargés, afficher ses informations."},
           {"type": "text", "body": "modprobe charge un module et gère ses dépendances. lsmod liste les modules actifs. modinfo affiche la description, la licence et les options d'un module."},
           {"type": "text", "body": "Un module peut recevoir des paramètres au chargement. On les passe à modprobe, on les rend permanents dans /etc/modprobe.d/, et on les consulte dans /sys/module/<nom>/parameters/. Pour charger un module à chaque démarrage, on liste son nom dans un fichier de /etc/modules-load.d/."},
           {"type": "code", "title": "Paramètres, chargement automatique et liste noire", "lang": "bash", "code": "modinfo -p i2c_dev                      # paramètres acceptés\nsudo modprobe lm75                       # charge aussi les dépendances\necho lm75 | sudo tee /etc/modules-load.d/capteurs.conf   # au démarrage\n\n# empêcher un module de se charger automatiquement :\necho \"blacklist pcspkr\" | sudo tee /etc/modprobe.d/no-beep.conf\n\nsudo depmod -a      # recalculer les dépendances après ajout d'un .ko"},
           {"type": "text", "body": "La plupart des modules se chargent seuls : quand le noyau détecte un périphérique (USB, devicetree), il publie un identifiant (modalias) et udev demande à modprobe le module qui le prend en charge. C'est depmod qui construit la table de correspondance dans /lib/modules/$(uname -r)/."},
+          {"type": "text", "body": "En situation réelle : sur un appareil, la liste des modules chargés doit être connue et maîtrisée : un module chargé inutilement consomme de la mémoire et peut exposer du code vulnérable. On vérifie lsmod sur l'image finale, on met en liste noire ce qui n'a rien à faire là, et on s'assure que les modules nécessaires se chargent automatiquement, sans dépendre d'une manipulation manuelle après le démarrage."},
+          {"type": "tip", "body": "modprobe --show-depends nom_du_module affiche la liste des modules qui seront chargés, dans l'ordre, sans rien charger réellement."},
+          {"type": "text", "body": "Erreur fréquente : copier à la main un module compilé dans /lib/modules sans lancer depmod, puis s'étonner que modprobe ne le trouve pas. insmod fonctionne car il prend un chemin de fichier, mais modprobe s'appuie sur la table des dépendances. Après tout ajout ou suppression de module, depmod -a reconstruit cette table."},
           {"type": "exercise", "question": "Quelle commande charge un module noyau ?", "answer": "modprobe nom_du_module."},
           {"type": "exercise", "question": "Quelle commande faut-il lancer après avoir copié un nouveau .ko dans /lib/modules pour que modprobe le trouve ?", "answer": "depmod -a, qui recalcule les dépendances et les alias des modules."},
           {"type": "exercise", "question": "Pratique : fais charger le module i2c-dev à chaque démarrage, puis vérifie après redémarrage.", "answer": "echo i2c-dev | sudo tee /etc/modules-load.d/i2c.conf\nsudo reboot\n# après redémarrage :\nlsmod | grep i2c_dev\nls /dev/i2c-*"},
@@ -88,14 +96,14 @@
     "category": "plateforme",
     "accent": "orange",
     "icon": "microchip",
-    "duration": 79,
+    "duration": 81,
     "summary": "Codez votre premier pilote de périphérique noyau Linux et exposez-le aux applications via les fichiers de device.",
     "objectives": ["Comprendre la structure d'un driver", "Écrire les fonctions init/exit", "Implémenter un device char", "Compiler le module"],
     "chapters": [
       {
         "id": "ch1",
         "title": "Qu'est-ce qu'un driver",
-        "duration": 8,
+        "duration": 9,
         "sections": [
           {"type": "text", "body": "Un driver (pilote) est un module noyau qui contrôle un périphérique spécifique et fournit une interface aux applications. Les applications l'utilisent via des fichiers dans /dev."},
           {"type": "definition", "term": "Device char", "body": "Périphérique accédé en flux d'octets un à un, comme un port série, par opposition à un block device accédé par blocs."},
@@ -103,6 +111,8 @@
           {"type": "text", "body": "Linux classe ses pilotes en trois grandes familles : caractère (flux d'octets : port série, GPIO, capteurs), bloc (stockage accédé par blocs : carte SD, disque) et réseau (interfaces eth0, wlan0, qui n'ont pas de fichier dans /dev). La première lettre de ls -l dans /dev indique le type : c pour caractère, b pour bloc."},
           {"type": "code", "title": "Lire le type et les numéros d'un périphérique", "lang": "bash", "code": "ls -l /dev/ttyS0 /dev/mmcblk0\n# crw-rw---- 1 root dialout   4, 64 ... /dev/ttyS0     <- c = caractère, majeur 4, mineur 64\n# brw-rw---- 1 root disk    179,  0 ... /dev/mmcblk0   <- b = bloc\n\ncat /proc/devices     # majeurs attribués aux pilotes"},
           {"type": "text", "body": "Le noyau organise le tout selon un modèle bus / périphérique / pilote. Un pilote s'enregistre auprès d'un bus (platform, i2c, spi, usb) en indiquant les périphériques qu'il sait gérer. Quand un périphérique correspondant apparaît, décrit par le devicetree ou détecté sur USB, le noyau appelle la fonction probe du pilote : c'est là que le pilote initialise le matériel."},
+          {"type": "text", "body": "En situation réelle : avant d'écrire un pilote, on vérifie toujours qu'il n'en existe pas déjà un dans le noyau : la grande majorité des composants courants (capteurs, écrans, contrôleurs) sont déjà supportés, parfois sous un autre nom. Chercher la référence du composant dans les sources du noyau (grep -r) ou dans Documentation/devicetree/bindings évite des semaines de travail. Écrire un pilote se justifie pour un composant spécifique ou un matériel maison."},
+          {"type": "text", "body": "Bon réflexe : lire le code d'un pilote existant proche de son besoin avant d'écrire le sien : les sources du noyau contiennent des milliers de pilotes, dont beaucoup sont courts et bien commentés. Ils montrent les conventions du noyau, la gestion des erreurs et l'enregistrement auprès du sous-système, bien mieux qu'un tutoriel souvent dépassé."},
           {"type": "exercise", "question": "Quel répertoire contient les fichiers de périphériques ?", "answer": "/dev."},
           {"type": "exercise", "question": "Quelle lettre de ls -l identifie un périphérique bloc ? Et caractère ?", "answer": "b pour un périphérique bloc, c pour un périphérique caractère."},
           {"type": "exercise", "question": "Quand le noyau appelle-t-il la fonction probe d'un pilote ?", "answer": "Quand un périphérique correspondant au pilote est trouvé sur son bus (déclaré dans le devicetree, détecté sur USB...)."},
@@ -120,6 +130,7 @@
           {"type": "text", "body": "Un module réel déclare aussi son auteur et sa description (visibles avec modinfo) et peut accepter des paramètres. Dans le noyau, on signale une erreur en renvoyant un code négatif (-ENOMEM, -EINVAL…). Si la fonction d'init renvoie une erreur, le chargement est annulé et insmod affiche le message correspondant."},
           {"type": "code", "title": "Module avec paramètre et gestion d'erreur", "lang": "c", "code": "#include <linux/module.h>\n#include <linux/moduleparam.h>\n\nstatic int repetitions = 1;\nmodule_param(repetitions, int, 0444);   /* lisible dans /sys/module/.../parameters */\nMODULE_PARM_DESC(repetitions, \"Nombre de messages au chargement (1 à 10)\");\n\nstatic int __init bonjour_init(void)\n{\n    int i;\n\n    if (repetitions < 1 || repetitions > 10)\n        return -EINVAL;                  /* insmod : Invalid argument */\n    for (i = 0; i < repetitions; i++)\n        pr_info(\"bonjour %d/%d\\n\", i + 1, repetitions);\n    return 0;\n}\n\nstatic void __exit bonjour_exit(void)\n{\n    pr_info(\"au revoir\\n\");\n}\n\nmodule_init(bonjour_init);\nmodule_exit(bonjour_exit);\nMODULE_LICENSE(\"GPL\");\nMODULE_AUTHOR(\"EmbedForge\");\nMODULE_DESCRIPTION(\"Module d'exemple avec paramètre\");"},
           {"type": "text", "body": "pr_info est le raccourci moderne de printk(KERN_INFO …). Les marqueurs __init et __exit permettent au noyau de libérer le code d'initialisation après le chargement, ou d'omettre le code de sortie s'il est intégré en dur."},
+          {"type": "text", "body": "En situation réelle : un module se développe par petites étapes vérifiables : d'abord le squelette qui se charge et se décharge proprement, puis l'enregistrement auprès du sous-système, puis l'accès au matériel. Après chaque étape, on contrôle dmesg et on décharge le module pour vérifier qu'il ne laisse rien derrière lui. Un module qui ne se décharge pas proprement cache presque toujours une ressource oubliée."},
           {"type": "exercise", "question": "Quelle fonction s'exécute au chargement du module ?", "answer": "Celle désignée par module_init, souvent mon_init."},
           {"type": "exercise", "question": "Comment une fonction d'init de module signale-t-elle une erreur ?", "answer": "En renvoyant un code d'erreur négatif, par exemple -EINVAL ou -ENOMEM ; le chargement est alors annulé."},
           {"type": "exercise", "question": "Pratique : charge ce module avec 3 répétitions, vérifie le paramètre dans sysfs et les messages, puis essaie avec 20.", "answer": "sudo insmod bonjour.ko repetitions=3\ndmesg | tail -n 3          # bonjour 1/3 ... 3/3\ncat /sys/module/bonjour/parameters/repetitions   # 3\nsudo rmmod bonjour\nsudo insmod bonjour.ko repetitions=20\n# insmod: ERROR: could not insert module bonjour.ko: Invalid parameters"},
@@ -138,6 +149,7 @@
           {"type": "warning", "body": "Un pointeur venant de l'espace utilisateur ne doit jamais être déréférencé directement dans le noyau : il peut être invalide ou malveillant. On copie toujours les données avec copy_to_user et copy_from_user, qui vérifient l'adresse et renvoient le nombre d'octets non copiés."},
           {"type": "code", "title": "Pilote caractère qui mémorise un message (noyau 6.4 et plus)", "lang": "c", "code": "#include <linux/module.h>\n#include <linux/fs.h>\n#include <linux/cdev.h>\n#include <linux/device.h>\n#include <linux/uaccess.h>\n\n#define TAILLE 256\nstatic char tampon[TAILLE] = \"Bonjour depuis le noyau\\n\";\nstatic size_t longueur = 24;\nstatic dev_t num;\nstatic struct cdev mon_cdev;\nstatic struct class *classe;\n\nstatic ssize_t mon_read(struct file *f, char __user *buf, size_t n, loff_t *pos)\n{\n    if (*pos >= longueur)\n        return 0;                              /* fin de fichier */\n    n = min(n, longueur - (size_t)*pos);\n    if (copy_to_user(buf, tampon + *pos, n))\n        return -EFAULT;\n    *pos += n;\n    return n;\n}\n\nstatic ssize_t mon_write(struct file *f, const char __user *buf, size_t n, loff_t *pos)\n{\n    n = min(n, (size_t)TAILLE);\n    if (copy_from_user(tampon, buf, n))\n        return -EFAULT;\n    longueur = n;\n    return n;\n}\n\nstatic const struct file_operations mon_fops = {\n    .owner = THIS_MODULE,\n    .read  = mon_read,\n    .write = mon_write,\n};\n\nstatic int __init mon_init(void)\n{\n    int ret = alloc_chrdev_region(&num, 0, 1, \"memo\");\n    if (ret)\n        return ret;\n    cdev_init(&mon_cdev, &mon_fops);\n    ret = cdev_add(&mon_cdev, num, 1);\n    if (ret)\n        goto err_region;\n    classe = class_create(\"memo\");         /* avant 6.4 : class_create(THIS_MODULE, \"memo\") */\n    if (IS_ERR(classe)) {\n        ret = PTR_ERR(classe);\n        goto err_cdev;\n    }\n    device_create(classe, NULL, num, NULL, \"memo\");   /* -> /dev/memo */\n    return 0;\nerr_cdev:\n    cdev_del(&mon_cdev);\nerr_region:\n    unregister_chrdev_region(num, 1);\n    return ret;\n}\n\nstatic void __exit mon_exit(void)\n{\n    device_destroy(classe, num);\n    class_destroy(classe);\n    cdev_del(&mon_cdev);\n    unregister_chrdev_region(num, 1);\n}\n\nmodule_init(mon_init);\nmodule_exit(mon_exit);\nMODULE_LICENSE(\"GPL\");"},
           {"type": "text", "body": "Les goto vers des étiquettes de nettoyage sont l'idiome standard du noyau : en cas d'échec à une étape, on défait exactement ce qui a déjà été fait. Ce pilote simple n'a pas de verrou : deux écritures simultanées pourraient se mélanger ; un vrai pilote protège tampon avec un mutex."},
+          {"type": "text", "body": "En situation réelle : le pilote caractère est la base de nombreux pilotes maison : interface avec un FPGA, accès à un périphérique propriétaire, échange de données avec un coprocesseur. Pour des réglages ponctuels, on complète souvent read et write par des attributs sysfs (un fichier par paramètre) ou par ioctl pour des commandes structurées. Le choix de l'interface conditionne la facilité d'utilisation depuis les scripts et les applications."},
           {"type": "exercise", "question": "Quelle structure relie les appels système aux fonctions du driver ?", "answer": "La struct file_operations."},
           {"type": "exercise", "question": "Pourquoi utiliser copy_to_user au lieu d'un simple memcpy vers le pointeur fourni par l'application ?", "answer": "Le pointeur vient de l'espace utilisateur : il peut être invalide ou viser la mémoire du noyau. copy_to_user vérifie l'adresse et gère les fautes de page sans planter le noyau."},
           {"type": "exercise", "question": "Pratique : charge le pilote memo, lis son message, remplace-le puis relis-le.", "answer": "sudo insmod memo.ko\ncat /dev/memo                     # Bonjour depuis le noyau\necho \"EmbedForge\" | sudo tee /dev/memo\ncat /dev/memo                     # EmbedForge\nsudo rmmod memo\nls /dev/memo                      # n'existe plus"},
@@ -147,7 +159,7 @@
       {
         "id": "ch4",
         "title": "Compiler le module",
-        "duration": 15,
+        "duration": 16,
         "sections": [
           {"type": "code", "code": "obj-m += mon_driver.o\nall:\n\tmake -C /lib/modules/$(shell uname -r)/build M=$(PWD) modules", "lang": "bash", "body": "Un fichier Makefile pour compiler le module contre les sources du noyau."},
           {"type": "text", "body": "Le Makefile utilise le système de compilation du noyau via l'option -C et le répertoire M pointant vers nos sources. obj-m indique qu'on produit un module."},
@@ -157,6 +169,8 @@
           {"type": "code", "title": "Makefile de module, natif ou croisé", "lang": "makefile", "code": "obj-m := memo.o\n\nKDIR ?= /lib/modules/$(shell uname -r)/build\n\nall:\n\t$(MAKE) -C $(KDIR) M=$(CURDIR) modules\n\nclean:\n\t$(MAKE) -C $(KDIR) M=$(CURDIR) clean\n\n# Sur le PC pour le PC :   make\n# Pour la carte arm64 :\n#   make KDIR=~/linux ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu-"},
           {"type": "text", "body": "Le noyau inscrit dans chaque module une « vermagic » : version exacte du noyau et options importantes. Au chargement, si elle ne correspond pas au noyau en cours, insmod refuse avec « Invalid module format » et dmesg précise la différence."},
           {"type": "code", "title": "Diagnostiquer un module refusé", "lang": "bash", "code": "modinfo memo.ko | grep vermagic\n# vermagic: 6.6.31-v8+ SMP preempt mod_unload aarch64\nuname -r\n# 6.6.28-v8+     <- différent : il faut recompiler contre les bonnes sources"},
+          {"type": "text", "body": "En situation réelle : un module hors de l'arbre du noyau doit être recompilé à chaque mise à jour du noyau de l'appareil. Dans un projet Buildroot ou Yocto, on l'intègre comme un paquet (kernel-module) pour qu'il soit recompilé automatiquement avec le bon noyau. À terme, proposer son pilote pour intégration dans le noyau officiel garantit qu'il sera maintenu et adapté aux évolutions."},
+          {"type": "tip", "body": "make W=1 lors de la compilation du module active des avertissements supplémentaires, très utiles pour repérer des erreurs subtiles avant les tests."},
           {"type": "exercise", "question": "Quelle commande charge un module ?", "answer": "insmod mon_module.ko."},
           {"type": "exercise", "question": "Que signifie l'erreur « Invalid module format » au chargement d'un module ?", "answer": "La vermagic du module ne correspond pas au noyau en cours : il a été compilé contre une autre version ou une autre configuration du noyau."},
           {"type": "exercise", "question": "Pratique : tu as les sources configurées du noyau de ta carte dans ~/rpi-linux. Compile memo.ko pour elle et vérifie l'architecture du résultat.", "answer": "make KDIR=~/rpi-linux ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu-\nfile memo.ko\n# memo.ko: ELF 64-bit LSB relocatable, ARM aarch64 ...\nmodinfo memo.ko | grep vermagic   # doit correspondre à uname -r de la carte"},
@@ -172,14 +186,14 @@
     "category": "plateforme",
     "accent": "green",
     "icon": "rocket",
-    "duration": 40,
+    "duration": 45,
     "summary": "Comprenez le rôle du bootloader U-Boot dans l'amorçage de votre système Linux embarqué.",
     "objectives": ["Comprendre la séquence de démarrage", "Interagir avec U-Boot", "Configurer les variables d'environnement", "Charger un noyau"],
     "chapters": [
       {
         "id": "ch1",
         "title": "La séquence de démarrage",
-        "duration": 7,
+        "duration": 8,
         "sections": [
           {"type": "text", "body": "L'amorçage passe par plusieurs étapes : le code de démarrage dans la ROM, le bootloader, puis le noyau Linux. Le bootloader prépare le matériel et lance le noyau."},
           {"type": "list", "title": "Étapes de démarrage", "items": ["Boot ROM du processeur", "Bootloader (U-Boot)", "Chargement du noyau Linux", "Montage du système de fichiers racine", "Démarrage des services"]},
@@ -187,6 +201,8 @@
           {"type": "text", "body": "Sur beaucoup de SoC, le démarrage compte quatre étages. La ROM interne lit un petit programme, le SPL (Secondary Program Loader), qui tient dans la SRAM interne de la puce. Le SPL initialise la DRAM, puis charge U-Boot complet en mémoire. U-Boot charge enfin le noyau, le devicetree et éventuellement un initramfs, puis lui passe la main."},
           {"type": "list", "items": ["ROM du SoC : figée en usine, cherche le SPL sur SD, eMMC, SPI…", "SPL : quelques dizaines de Ko, initialise la DRAM", "U-Boot : console, réseau, systèmes de fichiers, scripts", "Noyau Linux + DTB : monte la racine et lance init"]},
           {"type": "text", "body": "Les Raspberry Pi font exception : c'est le firmware du GPU qui démarre, lit config.txt sur la partition de boot et charge directement le noyau. On peut toutefois y insérer U-Boot comme étape intermédiaire. Les distributions récentes utilisent souvent le « distro boot » d'U-Boot, qui lit un fichier extlinux.conf décrivant les noyaux disponibles."},
+          {"type": "text", "body": "En situation réelle : comprendre la chaîne de démarrage est indispensable pour diagnostiquer une carte qui ne démarre pas : selon le dernier message affiché sur la console série, on sait si le problème vient de la ROM (rien ne s'affiche), du SPL (initialisation de la mémoire), d'U-Boot (noyau introuvable) ou du noyau (racine impossible à monter). Chaque étage a ses propres messages, et la console série est le seul témoin fiable de ces premières secondes."},
+          {"type": "tip", "body": "Sur beaucoup de SoC, des broches de « boot mode » choisissent le support sur lequel la ROM cherche le SPL (SD, eMMC, USB) : utile pour récupérer une carte dont la flash est corrompue."},
           {"type": "exercise", "question": "Quel est le rôle principal d'un bootloader ?", "answer": "Initialiser le matériel et charger puis lancer le noyau Linux."},
           {"type": "exercise", "question": "Pourquoi le SPL est-il nécessaire avant U-Boot sur de nombreux SoC ?", "answer": "Au démarrage, la DRAM n'est pas initialisée : seul un petit programme tenant dans la SRAM interne peut tourner. Le SPL initialise la DRAM, puis charge U-Boot complet, trop gros pour la SRAM."},
           {"type": "exercise", "question": "Remets dans l'ordre : noyau, SPL, ROM, U-Boot.", "answer": "ROM → SPL → U-Boot → noyau."}
@@ -195,7 +211,7 @@
       {
         "id": "ch2",
         "title": "La console U-Boot",
-        "duration": 11,
+        "duration": 13,
         "sections": [
           {"type": "code", "code": "help\nprintenv\nbdi", "lang": "bash", "body": "Aider, afficher les variables d'environnement et les infos de la carte."},
           {"type": "text", "body": "Au démarrage, U-Boot propose une console sur la ligne série avec un prompt. help liste les commandes, printenv affiche les variables d'environnement."},
@@ -203,6 +219,9 @@
           {"type": "code", "title": "Explorer la carte SD depuis la console U-Boot", "lang": "bash", "code": "=> version                    # version d'U-Boot\n=> mmc list                   # contrôleurs SD/eMMC\n=> mmc dev 0                  # choisir le périphérique 0\n=> part list mmc 0            # partitions\n=> ls mmc 0:1                 # fichiers de la partition 1\n=> fatload mmc 0:1 ${kernel_addr_r} Image   # charger le noyau en RAM\n=> md.b ${kernel_addr_r} 40   # afficher les premiers octets chargés"},
           {"type": "text", "body": "La notation mmc 0:1 désigne la partition 1 du périphérique MMC 0. Les variables comme kernel_addr_r et fdt_addr_r, définies pour chaque carte, indiquent des adresses mémoire sûres où charger le noyau et le devicetree sans qu'ils se chevauchent."},
           {"type": "tip", "body": "Sur une partition ext4, utilisez ext4load et ext4ls ; la commande générique load détecte le système de fichiers toute seule : load mmc 0:2 ${kernel_addr_r} /boot/Image."},
+          {"type": "text", "body": "En situation réelle : la console U-Boot est l'outil de dépannage ultime : même si le système Linux est cassé, on peut y lister les fichiers de la carte SD, charger un noyau de secours, modifier les paramètres du noyau pour démarrer en mode dégradé, ou tester la mémoire. Les techniciens de maintenance disposent souvent d'une procédure écrite basée sur ces quelques commandes pour récupérer un appareil sur site."},
+          {"type": "tip", "body": "La commande help suivie d'un nom (help fatload) affiche la syntaxe exacte : les commandes disponibles varient selon la configuration de chaque U-Boot."},
+          {"type": "text", "body": "Erreur fréquente : charger le noyau et le devicetree à des adresses qui se chevauchent : le second écrase une partie du premier, et le démarrage échoue de façon étrange ou silencieuse. Les variables kernel_addr_r, fdt_addr_r et ramdisk_addr_r prévues pour la carte évitent ce piège ; on ne les remplace par des adresses fixes que si l'on sait exactement ce que l'on fait."},
           {"type": "exercise", "question": "Quelle commande affiche les variables d'environnement U-Boot ?", "answer": "printenv."},
           {"type": "exercise", "question": "Que désigne « mmc 1:2 » dans U-Boot ?", "answer": "La partition 2 du périphérique MMC numéro 1 (souvent l'eMMC quand 0 est la carte SD)."},
           {"type": "exercise", "question": "Pratique : depuis la console U-Boot, vérifie que le fichier Image est bien présent sur la partition 1 de la SD et charge-le à l'adresse prévue.", "answer": "=> mmc dev 0\n=> ls mmc 0:1\n=> fatload mmc 0:1 ${kernel_addr_r} Image\n# U-Boot affiche le nombre d'octets lus"},
@@ -212,7 +231,7 @@
       {
         "id": "ch3",
         "title": "Variables d'environnement",
-        "duration": 11,
+        "duration": 12,
         "sections": [
           {"type": "code", "code": "setenv bootcmd 'run distro_bootcmd'\nenv save", "lang": "bash", "body": "Définir une variable d'environnement et la sauvegarder."},
           {"type": "text", "body": "Les variables d'environnement stockent la configuration de démarrage, comme la commande de boot, les chemins du noyau et les paramètres. env save les persiste."},
@@ -220,6 +239,9 @@
           {"type": "text", "body": "L'environnement est stocké à un emplacement choisi à la compilation d'U-Boot : un secteur de l'eMMC, une zone de flash SPI ou un fichier uboot.env sur la partition FAT. Le délai avant démarrage automatique est réglé par bootdelay ; une valeur de -2 désactive toute interruption, ce qui sécurise un produit fini."},
           {"type": "code", "title": "Lire et modifier l'environnement U-Boot depuis Linux", "lang": "bash", "code": "sudo apt install u-boot-tools      # fournit fw_printenv / fw_setenv\ncat /etc/fw_env.config\n# /dev/mmcblk0  0x3F8000  0x4000     (périphérique, offset, taille)\n\nsudo fw_printenv bootdelay\nsudo fw_setenv bootdelay 3"},
           {"type": "text", "body": "fw_setenv est très utile en production : l'application Linux peut, par exemple, changer la partition de démarrage après une mise à jour, sans console série. Le fichier fw_env.config doit décrire exactement l'emplacement utilisé par U-Boot, sinon les outils lisent des données incohérentes."},
+          {"type": "text", "body": "En situation réelle : les variables d'environnement d'U-Boot servent de mémoire entre le système et le bootloader : numéro de la partition active, compteur de démarrages, mode maintenance, numéro de série de l'appareil. Elles doivent être protégées contre la corruption : U-Boot peut stocker deux copies redondantes de l'environnement, pour qu'une coupure de courant pendant une écriture ne rende pas l'appareil inutilisable."},
+          {"type": "tip", "body": "Activez l'environnement redondant (CONFIG_SYS_REDUNDAND_ENVIRONMENT) sur un produit : U-Boot garde alors toujours une copie valide."},
+          {"type": "text", "body": "Erreur fréquente : faire saveenv sur une carte dont l'environnement est stocké à un emplacement que le système utilise aussi, par exemple une partition de la carte SD mal placée : on corrompt alors les données ou le système de fichiers. Vérifiez dans la configuration d'U-Boot où l'environnement est enregistré avant de le sauvegarder pour la première fois sur une nouvelle carte."},
           {"type": "exercise", "question": "Quelle variable contient la commande de démarrage automatique ?", "answer": "bootcmd."},
           {"type": "exercise", "question": "À quoi sert la variable bootdelay ?", "answer": "Elle fixe le nombre de secondes pendant lesquelles on peut interrompre le démarrage automatique pour accéder à la console U-Boot."},
           {"type": "exercise", "question": "Pratique : depuis la console U-Boot, règle le délai à 5 secondes, rends-le permanent et vérifie.", "answer": "=> setenv bootdelay 5\n=> saveenv          # ou : env save\n=> printenv bootdelay\nbootdelay=5"},
@@ -229,7 +251,7 @@
       {
         "id": "ch4",
         "title": "Charger le noyau",
-        "duration": 11,
+        "duration": 12,
         "sections": [
           {"type": "code", "code": "env set bootargs console=ttyS0,115200 root=/dev/mmcblk0p2 ro\nbootm 0x80000000", "lang": "bash", "body": "Définir les arguments du noyau et lancer un noyau chargé en mémoire."},
           {"type": "text", "body": "Les variables bootargs définissent les paramètres passés au noyau : la console et l'emplacement du système de fichiers racine. bootm lance un noyau depuis la mémoire."},
@@ -237,6 +259,9 @@
           {"type": "text", "body": "Pour un noyau arm64, on charge l'Image brute avec booti, en lui donnant trois adresses : le noyau, l'initramfs (ou - s'il n'y en a pas) et le devicetree. bootm sert aux anciennes images uImage et aux images FIT, qui regroupent noyau, DTB et initramfs dans un seul fichier, éventuellement signé."},
           {"type": "code", "title": "Séquence complète de démarrage depuis la carte SD", "lang": "bash", "code": "=> setenv bootargs console=ttyS0,115200 root=/dev/mmcblk0p2 rootwait rw\n=> fatload mmc 0:1 ${kernel_addr_r} Image\n=> fatload mmc 0:1 ${fdt_addr_r} ma-carte.dtb\n=> booti ${kernel_addr_r} - ${fdt_addr_r}"},
           {"type": "text", "body": "Le paramètre rootwait demande au noyau d'attendre que la carte SD soit prête avant de monter la racine ; sans lui, le démarrage échoue parfois avec « VFS: Unable to mount root fs ». En développement, on remplace fatload par tftp pour récupérer le noyau fraîchement compilé sur le PC, sans recopier la carte SD."},
+          {"type": "text", "body": "En situation réelle : en développement, le démarrage par le réseau fait gagner un temps considérable : U-Boot récupère le noyau par TFTP depuis le PC du développeur et peut monter la racine en NFS. Chaque nouvelle compilation est disponible au redémarrage suivant, sans retirer ni réécrire la carte SD. En production, on revient à un démarrage local, plus sûr, souvent avec une image FIT signée."},
+          {"type": "tip", "body": "dhcp suivi de tftp ${kernel_addr_r} Image configure le réseau et télécharge le noyau en deux commandes, si un serveur TFTP tourne sur le PC."},
+          {"type": "text", "body": "Bon réflexe : garder dans l'environnement une commande de démarrage de secours, par exemple une variable bootcmd_secours qui démarre un noyau et une racine de dépannage. En cas de problème, il suffit d'interrompre U-Boot et de taper run bootcmd_secours pour retrouver un système fonctionnel et réparer l'appareil, même sur site."},
           {"type": "exercise", "question": "Quelle variable définit les arguments passés au noyau ?", "answer": "bootargs."},
           {"type": "exercise", "question": "Quelle commande lance une Image arm64 brute, et que signifie le tiret dans « booti ${kernel_addr_r} - ${fdt_addr_r} » ?", "answer": "booti ; le tiret indique qu'aucun initramfs n'est fourni."},
           {"type": "exercise", "question": "Pratique : écris un bootcmd qui démarre automatiquement depuis la SD avec la séquence ci-dessus, puis sauvegarde-le.", "answer": "=> setenv bootcmd 'fatload mmc 0:1 ${kernel_addr_r} Image; fatload mmc 0:1 ${fdt_addr_r} ma-carte.dtb; booti ${kernel_addr_r} - ${fdt_addr_r}'\n=> saveenv\n=> boot      # teste immédiatement bootcmd"},
@@ -252,14 +277,14 @@
     "category": "plateforme",
     "accent": "teal",
     "icon": "layers",
-    "duration": 46,
+    "duration": 51,
     "summary": "Générez une image Linux embarquée complète, simple et reproductible, avec l'outil Buildroot.",
     "objectives": ["Comprendre le principe de Buildroot", "Configurer un projet", "Compiler l'image", "Intégrer des paquets"],
     "chapters": [
       {
         "id": "ch1",
         "title": "Le principe de Buildroot",
-        "duration": 7,
+        "duration": 8,
         "sections": [
           {"type": "text", "body": "Buildroot est un système de construction qui génère une image Linux embarquée complète : toolchain, noyau, bibliothèques et applications, à partir d'une configuration."},
           {"type": "definition", "term": "Image système", "body": "Ensemble des fichiers (noyau, rootfs, bootloader) prêts à être copiés sur une carte SD ou une mémoire flash pour faire démarrer un appareil."},
@@ -267,6 +292,9 @@
           {"type": "text", "body": "À partir d'un seul fichier de configuration, Buildroot produit quatre éléments : une toolchain croisée, un bootloader, un noyau et un système de fichiers racine contenant BusyBox, les bibliothèques et vos applications. Une image minimale tient en quelques mégaoctets et démarre en quelques secondes."},
           {"type": "table", "title": "Buildroot ou Yocto ?", "table": [["Critère", "Buildroot", "Yocto"], ["Prise en main", "quelques heures", "plusieurs jours"], ["Configuration", "menuconfig, un fichier .config", "layers, recettes, bitbake"], ["Mise à jour d'un paquet", "on reconstruit l'image", "gestion de paquets possible"], ["Projet typique", "produit simple, petite équipe", "gamme de produits, long terme"]]},
           {"type": "text", "body": "Buildroot reste volontairement simple : pas de gestionnaire de paquets sur la cible, on reconstruit et on redéploie l'image entière. Pour séparer vos propres paquets et configurations du code de Buildroot, on utilise un arbre externe (BR2_EXTERNAL), versionné à part."},
+          {"type": "text", "body": "En situation réelle : Buildroot est apprécié des petites équipes et des produits à fonction unique : passerelle, automate, caméra, borne. L'image produite contient uniquement ce qui a été sélectionné, ce qui la rend compacte, rapide à démarrer et facile à auditer. Toute la définition du système tient dans quelques fichiers versionnés : n'importe quel membre de l'équipe peut reconstruire exactement la même image."},
+          {"type": "tip", "body": "La documentation officielle de Buildroot (le manuel en ligne) est très complète et à jour : c'est la référence à consulter avant tout tutoriel."},
+          {"type": "text", "body": "Erreur fréquente : modifier directement les fichiers dans output/target pour ajouter un fichier à l'image : ces modifications sont perdues à la prochaine reconstruction complète et ne sont pas versionnées. Tout ajout doit passer par un overlay, un script post-build ou un paquet, afin que l'image puisse être reconstruite à l'identique à partir du dépôt."},
           {"type": "exercise", "question": "Que produit Buildroot à partir de la configuration ?", "answer": "Une image système embarquée complète avec toolchain, noyau et applications."},
           {"type": "exercise", "question": "Quels sont les quatre éléments produits par Buildroot ?", "answer": "La toolchain croisée, le bootloader, le noyau Linux et le système de fichiers racine."},
           {"type": "exercise", "question": "Ton produit doit installer des paquets à la volée sur le terrain. Buildroot est-il adapté ?", "answer": "Pas vraiment : Buildroot ne fournit pas de gestionnaire de paquets sur la cible ; on met à jour l'image entière. Yocto, avec ses flux de paquets, convient mieux à ce besoin."}
@@ -275,7 +303,7 @@
       {
         "id": "ch2",
         "title": "Configurer un projet",
-        "duration": 12,
+        "duration": 13,
         "sections": [
           {"type": "code", "code": "make menuconfig\nmake <nom_carte>_defconfig\nmake savedefconfig", "lang": "bash", "body": "Configurer Buildroot, charger une configuration de carte, ou sauvegarder la sienne."},
           {"type": "text", "body": "make menuconfig ouvre l'interface de configuration. Buildroot fournit des defconfig pour de nombreuses cartes, qu'on charge puis personnalise."},
@@ -283,6 +311,9 @@
           {"type": "text", "body": "Dans menuconfig, quelques réglages comptent dès le départ : le menu Target options (architecture), Toolchain (type de libc : glibc, musl ou uClibc-ng), System configuration (nom d'hôte, mot de passe root, système d'init BusyBox ou systemd) et Kernel (version et configuration)."},
           {"type": "code", "title": "Démarrer un projet et le tester dans QEMU, sans carte", "lang": "bash", "code": "git clone https://gitlab.com/buildroot.org/buildroot.git\ncd buildroot\nmake list-defconfigs | grep qemu_aarch64\nmake qemu_aarch64_virt_defconfig\nmake menuconfig                 # System configuration -> System hostname\nmake -j$(nproc)\n./output/images/start-qemu.sh   # démarre l'image dans QEMU"},
           {"type": "text", "body": "make savedefconfig écrit une configuration minimale (seulement ce qui diffère des valeurs par défaut) dans le fichier defconfig ; copiez-le dans configs/ ou dans votre arbre externe et versionnez-le. N'importe qui pourra reconstruire exactement la même image avec make votre_carte_defconfig."},
+          {"type": "text", "body": "En situation réelle : la configuration d'un produit se fait par étapes : partir du defconfig de la carte, vérifier qu'il démarre tel quel, puis ajouter un à un les éléments du produit (paquets, réglages, overlay), en reconstruisant et en testant à chaque étape. Cette progression permet d'identifier immédiatement l'option qui casse quelque chose, au lieu de chercher parmi vingt changements faits d'un coup."},
+          {"type": "tip", "body": "make menuconfig dispose d'une recherche : tapez / puis un nom d'option ou de paquet pour la trouver et voir ses dépendances."},
+          {"type": "text", "body": "Erreur fréquente : oublier de sauvegarder la configuration après des modifications dans menuconfig : le fichier .config est dans le dossier de build, souvent non versionné, et disparaît avec un make distclean. Lancer make savedefconfig puis commiter le defconfig mis à jour doit devenir un réflexe après chaque changement de configuration."},
           {"type": "exercise", "question": "Quelle commande charge une configuration de carte fournie ?", "answer": "make nom_carte_defconfig."},
           {"type": "exercise", "question": "Que contient un fichier produit par make savedefconfig ?", "answer": "Uniquement les options qui diffèrent des valeurs par défaut : une configuration courte, lisible et facile à versionner."},
           {"type": "exercise", "question": "Pratique : change le nom d'hôte de l'image QEMU en « embedforge » et vérifie au démarrage.", "answer": "make menuconfig\n# System configuration -> System hostname : embedforge\nmake -j$(nproc)\n./output/images/start-qemu.sh\n# connexion root, puis :\nhostname          # embedforge"},
@@ -292,7 +323,7 @@
       {
         "id": "ch3",
         "title": "Compiler l'image",
-        "duration": 12,
+        "duration": 13,
         "sections": [
           {"type": "code", "code": "make\nls output/images/", "lang": "bash", "body": "Compiler tout puis lister les images générées."},
           {"type": "text", "body": "La commande make lance la compilation complète, qui peut prendre du temps la première fois. Les images produites se trouvent dans output/images."},
@@ -300,6 +331,7 @@
           {"type": "text", "body": "Après la première compilation, make ne reconstruit que ce qui a changé… avec une limite importante : Buildroot ne suit pas les changements de configuration globaux. Changer d'architecture, de toolchain ou de libc impose un make clean puis une reconstruction complète."},
           {"type": "code", "title": "Reconstructions ciblées et ajout de fichiers dans l'image", "lang": "bash", "code": "make busybox-rebuild          # recompiler un seul paquet\nmake linux-menuconfig         # configurer le noyau de l'image\nmake linux-rebuild\nmake clean all                # après un changement de toolchain\n\n# overlay : arborescence copiée telle quelle dans la racine\nmkdir -p board/embedforge/overlay/etc\necho \"Bienvenue sur EmbedForge\" > board/embedforge/overlay/etc/issue\n# menuconfig : System configuration -> Root filesystem overlay directories\n#   = board/embedforge/overlay"},
           {"type": "warning", "body": "dd écrit sans confirmation : vérifiez avec lsblk le nom exact de la carte SD avant de lancer « sudo dd if=output/images/sdcard.img of=/dev/sdX bs=4M conv=fsync ». Une erreur de lettre efface le disque de votre PC."},
+          {"type": "text", "body": "En situation réelle : une compilation complète prend de trente minutes à plusieurs heures selon le contenu et la machine. On l'accélère avec le cache de compilation (BR2_CCACHE), le partage du dossier de téléchargements entre projets, et surtout en ne reconstruisant que les paquets modifiés. Une bonne habitude consiste à lancer une reconstruction complète régulièrement, par exemple chaque nuit sur un serveur, pour s'assurer que l'image se reconstruit toujours de zéro."},
           {"type": "exercise", "question": "Dans quel répertoire sont produites les images ?", "answer": "output/images."},
           {"type": "exercise", "question": "Pourquoi faut-il un make clean après un changement de toolchain dans Buildroot ?", "answer": "Buildroot ne suit pas les changements de configuration globaux : les paquets déjà compilés avec l'ancienne toolchain resteraient incompatibles."},
           {"type": "exercise", "question": "Pratique : ajoute dans l'image un script /usr/bin/info.sh qui affiche le nom d'hôte et l'uptime, via un overlay.", "answer": "mkdir -p board/embedforge/overlay/usr/bin\ncat > board/embedforge/overlay/usr/bin/info.sh << 'EOF'\n#!/bin/sh\necho \"Hôte : $(hostname)\"\nuptime\nEOF\nchmod +x board/embedforge/overlay/usr/bin/info.sh\n# BR2_ROOTFS_OVERLAY=\"board/embedforge/overlay\" dans menuconfig\nmake            # l'overlay est recopié à chaque génération de la racine"},
@@ -309,7 +341,7 @@
       {
         "id": "ch4",
         "title": "Ajouter des paquets",
-        "duration": 15,
+        "duration": 17,
         "sections": [
           {"type": "code", "code": "BR2_PACKAGE_LIBCURL=y\nBR2_PACKAGE_PYTHON3=y", "lang": "bash", "body": "Exemples d'options pour activer des paquets dans la configuration."},
           {"type": "text", "body": "Buildroot intègre des milliers de paquets, activables dans menuconfig via le menu Target packages. On choisit seulement ceux nécessaires au produit."},
@@ -317,6 +349,8 @@
           {"type": "text", "body": "Pour intégrer votre propre application, on crée un paquet : un dossier dans package/ (ou dans votre arbre externe) avec deux fichiers. Config.in ajoute l'option dans menuconfig, et le fichier .mk décrit où trouver les sources et comment compiler et installer."},
           {"type": "code", "title": "Paquet Buildroot pour une application C (package/hello/)", "lang": "makefile", "code": "# package/hello/Config.in\nconfig BR2_PACKAGE_HELLO\n\tbool \"hello\"\n\thelp\n\t  Application d'exemple EmbedForge.\n\n# package/hello/hello.mk\nHELLO_VERSION = 1.0\nHELLO_SITE = $(TOPDIR)/../hello-src\nHELLO_SITE_METHOD = local\n\ndefine HELLO_BUILD_CMDS\n\t$(TARGET_CC) $(TARGET_CFLAGS) $(TARGET_LDFLAGS) \\\n\t\t$(@D)/hello.c -o $(@D)/hello\nendef\n\ndefine HELLO_INSTALL_TARGET_CMDS\n\t$(INSTALL) -D -m 0755 $(@D)/hello $(TARGET_DIR)/usr/bin/hello\nendef\n\n$(eval $(generic-package))"},
           {"type": "text", "body": "TARGET_CC est le cross-compilateur de Buildroot ; $(@D) est le dossier de compilation du paquet ; TARGET_DIR est la racine de l'image en construction. Il reste à ajouter la ligne source \"package/hello/Config.in\" dans package/Config.in pour voir l'option apparaître."},
+          {"type": "text", "body": "En situation réelle : chaque application du produit devient un paquet Buildroot, placé dans un arbre externe (BR2_EXTERNAL) avec la configuration et les overlays du projet. Le dépôt Buildroot reste ainsi intact, et la mise à jour vers une nouvelle version de Buildroot se limite à changer de version et à vérifier que les paquets du projet compilent toujours. Pour les projets CMake ou autotools, des infrastructures dédiées (cmake-package, autotools-package) simplifient encore le fichier .mk."},
+          {"type": "text", "body": "Bon réflexe : préférer les infrastructures de paquets existantes (cmake-package, python-package, autotools-package) à generic-package dès que le logiciel utilise l'un de ces systèmes de construction. Le fichier .mk se réduit alors à quelques lignes, et Buildroot gère automatiquement la cross-compilation, l'installation et les dépendances."},
           {"type": "exercise", "question": "Où active-t-on les paquets applicatifs dans Buildroot ?", "answer": "Dans le menu Target packages de menuconfig."},
           {"type": "exercise", "question": "À quoi servent respectivement Config.in et hello.mk dans un paquet Buildroot ?", "answer": "Config.in déclare l'option dans menuconfig ; hello.mk décrit la version, l'emplacement des sources, la compilation et l'installation."},
           {"type": "exercise", "question": "Pratique : une fois le paquet créé, active-le, compile-le seul et vérifie qu'il est dans la racine.", "answer": "make menuconfig            # Target packages -> hello\nmake hello                  # ou make hello-rebuild après une modification\nls -l output/target/usr/bin/hello\nfile output/target/usr/bin/hello   # binaire pour l'architecture cible\nmake                        # régénérer l'image complète"},
@@ -332,20 +366,24 @@
     "category": "plateforme",
     "accent": "orange",
     "icon": "layers",
-    "duration": 44,
+    "duration": 51,
     "summary": "Construisez une distribution Linux embarquée personnalisée et reproductible avec le projet Yocto.",
     "objectives": ["Comprendre l'architecture Yocto", "Utiliser bitbake", "Créer des recettes", "Générer une image"],
     "chapters": [
       {
         "id": "ch1",
         "title": "Le projet Yocto",
-        "duration": 6,
+        "duration": 8,
         "sections": [
           {"type": "text", "body": "Yocto Project offre un ensemble d'outils pour créer des distributions Linux embarquées sur mesure. Il repose sur OpenEmbedded et le moteur de compilation bitbake."},
           {"type": "definition", "term": "Recette (recipe)", "body": "Fichier décrivant comment télécharger, compiler et installer un logiciel particulier dans l'image, au format avec l'extension .bb."},
           {"type": "text", "body": "Yocto est puissant mais a une courbe d'apprentissage raide. Il convient aux projets qui exigent un contrôle fin et une reproductibilité exacte sur le long terme."},
           {"type": "table", "title": "Le vocabulaire Yocto", "table": [["Terme", "Signification"], ["Poky", "distribution de référence du projet Yocto, point de départ habituel"], ["BitBake", "moteur qui exécute les tâches des recettes"], ["Layer (couche)", "dossier meta-… regroupant recettes et configuration"], ["Recette (.bb)", "comment obtenir, compiler et installer un logiciel"], ["Append (.bbappend)", "modification d'une recette existante sans la copier"], ["MACHINE", "la carte cible (raspberrypi4-64, qemuarm64…)"], ["Image", "recette spéciale qui assemble la racine finale"]]},
           {"type": "text", "body": "Yocto publie une version tous les six mois, nommée (Kirkstone, Scarthgap…), dont certaines sont maintenues à long terme (LTS, quatre ans). Tous les layers d'un projet doivent viser la même version : mélanger les branches est la première source d'erreurs pour les débutants."},
+          {"type": "text", "body": "En situation réelle : Yocto est le choix des entreprises qui maintiennent plusieurs produits sur plusieurs années : une même base de layers sert à décliner des variantes (cartes, options, clients), les fondeurs de SoC fournissent leurs layers BSP officiels, et le système de cache permet de reconstruire rapidement. L'investissement initial est important, mais il est rentabilisé par la reproductibilité et la maintenance à long terme."},
+          {"type": "tip", "body": "Choisissez une version LTS de Yocto pour un produit : elle reçoit des correctifs pendant quatre ans, alors que les autres versions ne sont maintenues que quelques mois."},
+          {"type": "text", "body": "Bon réflexe : commencer par construire core-image-minimal pour qemux86-64 ou qemuarm64, sans aucune modification, avant de toucher à quoi que ce soit. Ce premier build, qui peut prendre plusieurs heures, valide la machine de compilation et l'installation. Ensuite, chaque changement (layer BSP, recette, configuration) est ajouté et testé séparément."},
+          {"type": "tip", "body": "Le site layers.openembedded.org recense les layers disponibles et leurs recettes : avant d'écrire une recette, vérifiez qu'elle n'existe pas déjà dans un layer maintenu par la communauté ou un fondeur."},
           {"type": "exercise", "question": "Sur quel moteur de compilation repose Yocto ?", "answer": "bitbake."},
           {"type": "exercise", "question": "Quelle différence entre une recette .bb et un fichier .bbappend ?", "answer": "La recette décrit entièrement la construction d'un logiciel ; le .bbappend modifie ou complète une recette existante sans la recopier."},
           {"type": "exercise", "question": "Quelle variable choisit la carte cible dans un projet Yocto ?", "answer": "MACHINE, définie dans conf/local.conf (par exemple MACHINE = \"qemuarm64\")."}
@@ -354,7 +392,7 @@
       {
         "id": "ch2",
         "title": "Les layers et bitbake",
-        "duration": 12,
+        "duration": 14,
         "sections": [
           {"type": "code", "code": "source oe-init-build-env\nbitbake core-image-minimal", "lang": "bash", "body": "Initialiser l'environnement et construire une image minimale."},
           {"type": "text", "body": "L'environnement est initialisé avec oe-init-build-env, puis bitbake construit l'image demandée. core-image-minimal est une image de base minimale."},
@@ -362,6 +400,10 @@
           {"type": "text", "body": "Le dossier de build contient deux fichiers clés : conf/local.conf (réglages du poste et du projet, dont MACHINE) et conf/bblayers.conf (liste des layers utilisés). L'outil bitbake-layers évite de les modifier à la main."},
           {"type": "code", "title": "Préparer un build pour QEMU ARM64 et ajouter son propre layer", "lang": "bash", "code": "git clone -b scarthgap https://git.yoctoproject.org/poky\nsource poky/oe-init-build-env build      # crée build/ et y entre\necho 'MACHINE = \"qemuarm64\"' >> conf/local.conf\n\nbitbake-layers create-layer ../meta-embedforge\nbitbake-layers add-layer ../meta-embedforge\nbitbake-layers show-layers\n\nbitbake core-image-minimal\nrunqemu qemuarm64 nographic             # quitter : Ctrl+A puis X"},
           {"type": "tip", "body": "Partagez les dossiers downloads/ et sstate-cache/ entre vos builds (variables DL_DIR et SSTATE_DIR dans local.conf) : les reconstructions suivantes passent de plusieurs heures à quelques minutes."},
+          {"type": "text", "body": "En situation réelle : un projet Yocto réel empile typiquement poky (base), meta-openembedded (paquets supplémentaires), le layer BSP du fondeur (par exemple meta-raspberrypi) et un ou plusieurs layers propres à l'entreprise. Un outil comme kas ou repo décrit dans un fichier la liste exacte des layers et leurs versions, pour que chacun récupère et configure l'environnement de build en une commande."},
+          {"type": "tip", "body": "bitbake-layers show-appends liste les fichiers .bbappend actifs : utile pour savoir quel layer modifie une recette."},
+          {"type": "text", "body": "Erreur fréquente : mélanger des layers de versions différentes : un layer de la branche kirkstone avec poky scarthgap, par exemple. BitBake signale souvent une incompatibilité via la variable LAYERSERIES_COMPAT, mais certaines erreurs n'apparaissent qu'à la compilation. Vérifiez toujours que tous les layers sont sur la même branche de version."},
+          {"type": "tip", "body": "bitbake -e nom_recette | grep ^NOM_VARIABLE= affiche la valeur finale d'une variable après l'application de tous les layers, appends et fichiers de configuration : l'outil indispensable pour comprendre d'où vient un réglage."},
           {"type": "exercise", "question": "Quelle commande construit une image Yocto ?", "answer": "bitbake nom_de_l_image."},
           {"type": "exercise", "question": "Quel fichier liste les layers utilisés par un build Yocto ?", "answer": "conf/bblayers.conf, dans le dossier de build (géré avec bitbake-layers)."},
           {"type": "exercise", "question": "Pratique : vérifie quelles recettes de ton layer meta-embedforge sont visibles par BitBake.", "answer": "bitbake-layers show-recipes | grep -A1 embedforge\n# ou, pour une recette précise :\nbitbake-layers show-recipes example"},
@@ -371,7 +413,7 @@
       {
         "id": "ch3",
         "title": "Écrire une recette",
-        "duration": 15,
+        "duration": 16,
         "sections": [
           {"type": "code", "code": "SUMMARY = \"Ma petite application\"\nLICENSE = \"GPL-2.0-only\"\nSRC_URI = \"file://mon_app.c\"\n\ninherit autotools", "lang": "bash", "body": "Une recette Yocto minimale pour une application."},
           {"type": "text", "body": "Une recette déclare les métadonnées, les sources (SRC_URI) et la méthode de compilation (inherit autotools, cmake, etc.). bitbake l'interprète pour fabriquer le paquet."},
@@ -380,6 +422,8 @@
           {"type": "code", "title": "Recette pour une application C (meta-embedforge/recipes-apps/hello/hello_1.0.bb)", "lang": "bitbake", "code": "SUMMARY = \"Application d'exemple EmbedForge\"\nLICENSE = \"MIT\"\nLIC_FILES_CHKSUM = \"file://${COMMON_LICENSE_DIR}/MIT;md5=0835ade698e0bcf8506ecda2f7b4f302\"\n\nSRC_URI = \"file://hello.c\"\nS = \"${WORKDIR}\"\n\ndo_compile() {\n    ${CC} ${CFLAGS} ${LDFLAGS} hello.c -o hello\n}\n\ndo_install() {\n    install -d ${D}${bindir}\n    install -m 0755 hello ${D}${bindir}/hello\n}"},
           {"type": "text", "body": "hello.c se place dans recipes-apps/hello/files/. ${CC} est le cross-compilateur de la machine choisie, ${bindir} vaut /usr/bin. Pour ajouter le paquet à l'image, on écrit IMAGE_INSTALL:append = \" hello\" dans local.conf ou dans une recette d'image (l'espace avant hello est indispensable)."},
           {"type": "warning", "body": "Oublier ${LDFLAGS} provoque l'erreur QA « No GNU_HASH in the ELF binary ». Yocto applique des contrôles qualité stricts : lisez toujours le message, il indique précisément la règle non respectée."},
+          {"type": "text", "body": "En situation réelle : pour une application en développement actif, on écrit la recette de façon à récupérer le code depuis le dépôt Git de l'équipe (SRC_URI = \"git://…;branch=main;protocol=https\" avec SRCREV fixé). Chaque version de l'image référence ainsi un commit précis de l'application. Pour modifier une recette existante d'un autre layer, on écrit un .bbappend dans son propre layer plutôt que de modifier l'original."},
+          {"type": "text", "body": "Bon réflexe : utiliser devtool add pour créer la première version d'une recette à partir d'un dépôt Git ou d'une archive : l'outil détecte le système de construction, calcule les sommes de contrôle de licence et génère un squelette de recette. On l'ajuste ensuite à la main, ce qui est bien plus rapide que de partir d'une page blanche."},
           {"type": "exercise", "question": "Quelle variable indique les sources d'une recette ?", "answer": "SRC_URI."},
           {"type": "exercise", "question": "Pourquoi l'espace est-il indispensable dans IMAGE_INSTALL:append = \" hello\" ?", "answer": ":append colle le texte tel quel à la valeur existante ; sans espace, hello serait fusionné avec le nom du paquet précédent."},
           {"type": "exercise", "question": "Pratique : construis le paquet hello seul, vérifie son contenu, puis reconstruis l'image en l'incluant.", "answer": "bitbake hello\n# contenu installé par le paquet :\nls tmp/work/*/hello/1.0*/image/usr/bin/\necho 'IMAGE_INSTALL:append = \" hello\"' >> conf/local.conf\nbitbake core-image-minimal\nrunqemu qemuarm64 nographic     # puis lancer : hello"},
@@ -389,7 +433,7 @@
       {
         "id": "ch4",
         "title": "Générer l'image résultat",
-        "duration": 11,
+        "duration": 13,
         "sections": [
           {"type": "code", "code": "bitbake core-image-full-cmdline\nls tmp/deploy/images/<machine>/", "lang": "bash", "body": "Construire une image plus complète et lister les artefacts produits."},
           {"type": "text", "body": "Les artefacts finaux, noyau, rootfs et images, se trouvent dans tmp/deploy/images. On copie ensuite cette image sur la cible."},
@@ -397,6 +441,9 @@
           {"type": "text", "body": "Pour les développeurs d'applications qui n'ont pas besoin de reconstruire l'image, Yocto génère un SDK installable : toolchain, sysroot correspondant exactement à l'image, et script d'environnement. devtool, de son côté, facilite la modification d'une recette existante pendant le développement."},
           {"type": "code", "title": "Générer et utiliser le SDK de l'image", "lang": "bash", "code": "bitbake core-image-minimal -c populate_sdk\nls tmp/deploy/sdk/*.sh\n./tmp/deploy/sdk/poky-glibc-x86_64-core-image-minimal-*.sh   # installe dans /opt/poky/...\n\nsource /opt/poky/5.0/environment-setup-cortexa57-poky-linux\necho $CC        # aarch64-poky-linux-gcc --sysroot=...\n$CC hello.c -o hello"},
           {"type": "text", "body": "Les variables comme CC du script d'environnement incluent déjà les bonnes options et le sysroot : on compile en écrivant simplement $CC, ou avec make et CMake qui les reprennent. Le binaire produit est garanti compatible avec l'image, puisqu'ils partagent les mêmes bibliothèques."},
+          {"type": "text", "body": "En situation réelle : dans une équipe, une personne ou un serveur maintient l'image et publie régulièrement le SDK correspondant. Les développeurs d'applications installent ce SDK et travaillent avec leurs outils habituels, sans jamais lancer bitbake. Ils sont certains de compiler contre exactement les mêmes bibliothèques que celles de l'appareil, ce qui supprime une source majeure d'incompatibilités."},
+          {"type": "tip", "body": "devtool modify nom_recette extrait les sources d'une recette dans un espace de travail modifiable, puis devtool finish génère automatiquement les correctifs dans votre layer."},
+          {"type": "text", "body": "Erreur fréquente : distribuer aux développeurs un SDK qui ne correspond plus à l'image réellement déployée, après plusieurs mises à jour de l'image. Les programmes compilés avec ce SDK peuvent alors dépendre de versions de bibliothèques absentes de l'appareil. On régénère et on republie le SDK à chaque changement significatif de l'image."},
           {"type": "exercise", "question": "Dans quel répertoire sont déposés les artefacts finaux ?", "answer": "tmp/deploy/images/nom_de_machine."},
           {"type": "exercise", "question": "Quelle commande génère le SDK d'une image Yocto ?", "answer": "bitbake nom_de_l_image -c populate_sdk (le script d'installation est déposé dans tmp/deploy/sdk/)."},
           {"type": "exercise", "question": "Pratique : avec le SDK installé, compile hello.c et vérifie qu'il cible bien l'architecture de l'image.", "answer": "source /opt/poky/5.0/environment-setup-*\n$CC hello.c -o hello\nfile hello\n# ELF 64-bit LSB ... ARM aarch64 ...\n# (on utilise $CC et non gcc : gcc compilerait pour le PC)"},
@@ -412,14 +459,14 @@
     "category": "plateforme",
     "accent": "purple",
     "icon": "database",
-    "duration": 58,
+    "duration": 62,
     "summary": "Décrivez votre matériel au noyau avec l'arbre de périphériques (devicetree) et ses bindings.",
     "objectives": ["Comprendre le devicetree", "Lire la structure des nœuds", "Compiler le DTB", "Déclarer un périphérique"],
     "chapters": [
       {
         "id": "ch1",
         "title": "Qu'est-ce que le devicetree",
-        "duration": 11,
+        "duration": 12,
         "sections": [
           {"type": "text", "body": "Le devicetree est une structure de données qui décrit le matériel d'une carte au noyau Linux. Il remplace les tables de paramètres codées en dur sur les architectures ARM."},
           {"type": "definition", "term": "DTB", "body": "Device Tree Blob : le devicetree compilé en un fichier binaire, chargé par le bootloader puis transmis au noyau au démarrage."},
@@ -427,6 +474,8 @@
           {"type": "text", "body": "Sur un PC, le matériel se décrit lui-même : les bus PCI et USB savent énumérer les périphériques. Sur un SoC ARM, les contrôleurs sont simplement placés à des adresses fixes, sans moyen de les découvrir. Il faut donc dire au noyau ce qui existe : c'est le rôle du devicetree, qui permet à un même noyau de démarrer sur des centaines de cartes différentes."},
           {"type": "code", "title": "Lire le devicetree utilisé par le système en cours", "lang": "bash", "code": "ls /sys/firmware/devicetree/base/          # aussi accessible via /proc/device-tree\ncat /sys/firmware/devicetree/base/model; echo\n# Raspberry Pi 4 Model B Rev 1.4\n\n# reconstituer une source lisible du DT actif :\ndtc -I fs -O dts /sys/firmware/devicetree/base 2>/dev/null | less"},
           {"type": "text", "body": "Cette lecture « en direct » est précieuse : elle montre le devicetree réellement reçu par le noyau, après les éventuelles modifications du bootloader et des overlays, et non celui qu'on croit avoir installé."},
+          {"type": "text", "body": "En situation réelle : la plupart des modifications matérielles d'une carte dérivée (un capteur en plus, une broche réaffectée, un bus activé) se traduisent par une modification du devicetree, sans toucher au code du noyau. C'est ce qui permet de supporter une nouvelle carte en quelques jours : on part du .dts d'une carte proche et on décrit les différences. Lire le devicetree actif est aussi le meilleur moyen de comprendre comment une carte est câblée."},
+          {"type": "tip", "body": "Le dossier arch/arm64/boot/dts/ des sources du noyau contient les devicetrees de centaines de cartes : une excellente source d'exemples."},
           {"type": "exercise", "question": "Que décrit le devicetree ?", "answer": "Le matériel de la carte : périphériques, adresses mémoire, paramètres."},
           {"type": "exercise", "question": "Pourquoi les cartes ARM ont-elles besoin d'un devicetree, alors qu'un PC s'en passe ?", "answer": "Les périphériques d'un SoC ne sont pas détectables automatiquement : ils sont à des adresses fixes. Le devicetree les décrit au noyau, alors que les bus PCI/USB d'un PC s'énumèrent eux-mêmes."},
           {"type": "exercise", "question": "Pratique : affiche le modèle de ta carte et la propriété compatible de la racine du devicetree.", "answer": "cat /sys/firmware/devicetree/base/model; echo\ntr '\\0' ' ' < /sys/firmware/devicetree/base/compatible; echo\n# les chaînes sont séparées par des octets nuls, d'où le tr"}
@@ -435,7 +484,7 @@
       {
         "id": "ch2",
         "title": "La structure des nœuds",
-        "duration": 15,
+        "duration": 16,
         "sections": [
           {"type": "code", "code": "/dts-v1/;\n/ {\n  compatible = \"exemple,carte\";\n  soc {\n    uart0: serial@10000000 {\n      compatible = \"ns16550a\";\n      reg = <0x10000000 0x1000>;\n    };\n  };\n};", "lang": "bash", "body": "Extrait d'un devicetree avec un nœud décrivant un port série."},
           {"type": "text", "body": "Le devicetree est une arborescence de nœuds. Chaque nœud a un nom, un label optionnel et des propriétés comme compatible et reg."},
@@ -443,6 +492,9 @@
           {"type": "text", "body": "Quelques propriétés reviennent partout. status = \"okay\" active un nœud, \"disabled\" le désactive. #address-cells et #size-cells disent combien de cellules de 32 bits utilisent les reg des nœuds enfants. Une référence &label désigne un autre nœud (phandle), par exemple le contrôleur GPIO ou d'interruptions à utiliser."},
           {"type": "code", "title": "Déclarer un capteur LM75 sur un bus I2C", "lang": "dts", "code": "&i2c1 {\n    status = \"okay\";\n    clock-frequency = <100000>;\n    #address-cells = <1>;\n    #size-cells = <0>;\n\n    temperature-sensor@48 {\n        compatible = \"national,lm75\";\n        reg = <0x48>;          /* adresse I2C sur 7 bits */\n    };\n};"},
           {"type": "text", "body": "Sur un bus I2C, #size-cells vaut 0 et reg contient seulement l'adresse : un périphérique I2C n'occupe pas de plage mémoire. Le nom du nœud se termine par @ suivi de cette même adresse. Au démarrage, le pilote lm75 est automatiquement chargé et le capteur apparaît dans /sys/class/hwmon."},
+          {"type": "text", "body": "En situation réelle : décrire un composant dans le devicetree consiste à recopier, en les adaptant, les exemples de son binding : la documentation précise les propriétés obligatoires (compatible, reg, interruptions, alimentations) et optionnelles. Une propriété manquante ou mal orthographiée ne provoque souvent aucune erreur visible : le pilote ne se lie simplement pas, ou fonctionne en mode dégradé. Vérifier dmesg après chaque ajout est indispensable."},
+          {"type": "tip", "body": "Les fichiers d'en-tête de include/dt-bindings/ (gpio, interruptions, horloges) fournissent des constantes lisibles comme GPIO_ACTIVE_LOW à la place de nombres magiques."},
+          {"type": "text", "body": "Erreur fréquente : se tromper dans le nombre de cellules de reg : si le nœud parent déclare #address-cells = <2> et #size-cells = <2>, chaque reg doit contenir quatre valeurs de 32 bits. Un mauvais compte décale toutes les valeurs, et le périphérique est configuré à une adresse incohérente. dtc signale certaines de ces erreurs par des avertissements qu'il ne faut pas ignorer."},
           {"type": "exercise", "question": "Quelle propriété relie un nœud à son pilote ?", "answer": "La propriété compatible."},
           {"type": "exercise", "question": "Que signifie status = \"disabled\" dans un nœud ?", "answer": "Le périphérique est décrit mais désactivé : le noyau ne l'instancie pas et aucun pilote n'est lié."},
           {"type": "exercise", "question": "Pratique : écris le nœud d'une EEPROM 24c32 (compatible \"atmel,24c32\") à l'adresse 0x50 sur le bus i2c1.", "answer": "&i2c1 {\n    status = \"okay\";\n    #address-cells = <1>;\n    #size-cells = <0>;\n\n    eeprom@50 {\n        compatible = \"atmel,24c32\";\n        reg = <0x50>;\n    };\n};"},
@@ -452,7 +504,7 @@
       {
         "id": "ch3",
         "title": "Compiler le devicetree",
-        "duration": 14,
+        "duration": 15,
         "sections": [
           {"type": "code", "code": "dtc -I dts -O dtb -o carte.dtb carte.dts\ndtc -I dtb -O dts carte.dtb", "lang": "bash", "body": "Compiler un DTS en DTB et l'inverse pour inspecter."},
           {"type": "text", "body": "Le compilateur dtc transforme le fichier source .dts en binaire .dtb. Inversement, on peut décompiler un .dtb pour le lire."},
@@ -460,6 +512,8 @@
           {"type": "text", "body": "Le matériel commun à toutes les cartes d'un même SoC est décrit dans un fichier .dtsi, inclus par le .dts de chaque carte. Le .dts ne fait que compléter : il active les contrôleurs utilisés et ajoute les composants soudés sur la carte, en référençant les nœuds du .dtsi par leur label."},
           {"type": "text", "body": "Un overlay (.dtbo) modifie le devicetree au démarrage sans le recompiler : c'est ainsi qu'on déclare un module ajouté (capteur, écran) sur une carte du commerce. Sur Raspberry Pi, on l'active avec une ligne dtoverlay=nom dans config.txt."},
           {"type": "code", "title": "Overlay qui ajoute le LM75 et sa compilation", "lang": "dts", "code": "/dts-v1/;\n/plugin/;\n\n&i2c1 {\n    #address-cells = <1>;\n    #size-cells = <0>;\n    status = \"okay\";\n\n    lm75@48 {\n        compatible = \"national,lm75\";\n        reg = <0x48>;\n    };\n};\n\n/* compilation : dtc -@ -I dts -O dtb -o lm75.dtbo lm75-overlay.dts\n   Raspberry Pi : copier lm75.dtbo dans /boot/firmware/overlays/\n   puis ajouter dtoverlay=lm75 dans config.txt */"},
+          {"type": "text", "body": "En situation réelle : les overlays sont parfaits pour les cartes d'extension (HAT, cape, shield) : chaque carte d'extension apporte son overlay, que l'on active selon le matériel réellement branché. Sur un produit, on évite en revanche de multiplier les overlays appliqués au démarrage : on intègre la description définitive dans le .dts de la carte, plus simple à maintenir et à vérifier."},
+          {"type": "text", "body": "Bon réflexe : comparer le devicetree compilé avec ce qu'on attend, avant même de démarrer la carte : dtc -I dtb -O dts carte.dtb reconstitue une source lisible, dans laquelle on vérifie que les nœuds ajoutés par les inclusions et les overlays sont bien présents avec les bonnes valeurs. C'est beaucoup plus rapide que de déboguer sur la carte."},
           {"type": "exercise", "question": "Quel outil compile un DTS en DTB ?", "answer": "dtc, le Device Tree Compiler."},
           {"type": "exercise", "question": "Quelle est la différence entre un fichier .dtsi et un fichier .dts ?", "answer": "Le .dtsi décrit ce qui est commun (le SoC) et est inclus ; le .dts décrit une carte précise, en complétant et en activant les nœuds du .dtsi."},
           {"type": "exercise", "question": "Pratique : après avoir activé l'overlay et redémarré, comment vérifier qu'il a bien été appliqué ?", "answer": "ls /sys/firmware/devicetree/base/soc/i2c@*/ | grep lm75   # le nœud existe\nsudo i2cdetect -y 1          # l'adresse 48 affiche UU (prise par le pilote)\ncat /sys/class/hwmon/hwmon*/name   # une entrée lm75"}
@@ -468,7 +522,7 @@
       {
         "id": "ch4",
         "title": "Bindings et framework",
-        "duration": 18,
+        "duration": 19,
         "sections": [
           {"type": "code", "code": "leds {\n  compatible = \"gpio-leds\";\n  led-aliment {\n    label = \"aliment\";\n    gpios = <&gpio4 0 GPIO_ACTIVE_HIGH>;\n  };\n};", "lang": "c", "body": "Un binding gpio-leds déclare une LED pilotée par une broche GPIO."},
           {"type": "text", "body": "Les bindings sont la documentation des propriétés valides pour chaque type de périphérique. Ils sont regroupés dans Documentation/devicetree/bindings du noyau."},
@@ -476,6 +530,8 @@
           {"type": "text", "body": "Côté pilote, la liaison se fait par une table of_match_table qui liste les chaînes compatible gérées. Quand le noyau trouve un nœud dont le compatible figure dans la table, il appelle la fonction probe du pilote, qui lit ensuite les propriétés du nœud."},
           {"type": "code", "title": "Extrait d'un pilote platform lié au devicetree", "lang": "c", "code": "static int mon_probe(struct platform_device *pdev)\n{\n    u32 periode = 500;    /* valeur par défaut */\n\n    of_property_read_u32(pdev->dev.of_node, \"embedforge,periode-ms\", &periode);\n    dev_info(&pdev->dev, \"période : %u ms\\n\", periode);\n    return 0;\n}\n\nstatic const struct of_device_id mon_of_match[] = {\n    { .compatible = \"embedforge,clignotant\" },\n    { }                   /* sentinelle obligatoire */\n};\nMODULE_DEVICE_TABLE(of, mon_of_match);\n\nstatic struct platform_driver mon_driver = {\n    .probe = mon_probe,\n    .driver = {\n        .name = \"clignotant\",\n        .of_match_table = mon_of_match,\n    },\n};\nmodule_platform_driver(mon_driver);"},
           {"type": "text", "body": "MODULE_DEVICE_TABLE exporte la table dans le module : c'est ce qui permet le chargement automatique quand le nœud existe. Les bindings récents sont écrits en YAML (schémas) : make dtbs_check vérifie que vos fichiers .dts respectent ces schémas avant même de démarrer la carte."},
+          {"type": "text", "body": "En situation réelle : quand on écrit un pilote pour un composant maison, on rédige aussi son binding, qui documente les propriétés acceptées. Ce contrat entre le devicetree et le pilote permet à d'autres développeurs d'utiliser le composant sur leurs cartes sans lire le code du pilote. Pour une intégration dans le noyau officiel, le binding au format YAML est exigé et vérifié automatiquement."},
+          {"type": "tip", "body": "make dt_binding_check vérifie la validité de vos fichiers de binding YAML eux-mêmes, avant de vérifier les .dts avec make dtbs_check."},
           {"type": "exercise", "question": "Où trouve-t-on la documentation des bindings ?", "answer": "Dans Documentation/devicetree/bindings de l'arbre source du noyau."},
           {"type": "exercise", "question": "Quel est le rôle de MODULE_DEVICE_TABLE(of, …) ?", "answer": "Exporter la table des compatible gérés dans le module, pour que udev/modprobe le chargent automatiquement quand un nœud correspondant existe."},
           {"type": "exercise", "question": "Pratique : écris le nœud devicetree qui fera appeler mon_probe avec une période de 250 ms.", "answer": "clignotant {\n    compatible = \"embedforge,clignotant\";\n    embedforge,periode-ms = <250>;\n};\n# dmesg affichera : clignotant clignotant: période : 250 ms"},
