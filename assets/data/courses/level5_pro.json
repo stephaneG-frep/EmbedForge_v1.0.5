@@ -6,53 +6,74 @@
     "category": "pro",
     "accent": "red",
     "icon": "timer",
-    "duration": 45,
+    "duration": 49,
     "summary": "Comparez les systèmes temps réel (RTOS) et Linux, et découvrez comment obtenir un comportement temps réel sous Linux.",
     "objectives": ["Comprendre la notion de temps réel", "Comparer RTOS et Linux", "Découvrir les correctifs temps réel", "Mesurer la latence"],
     "chapters": [
       {
         "id": "ch1",
         "title": "La notion de temps réel",
-        "duration": 12,
+        "duration": 9,
         "sections": [
           {"type": "text", "body": "Un système temps réel garantit qu'une tâche s'exécute dans un délai prévisible après un événement. Ce qui compte, c'est le déterminisme, pas la vitesse brute."},
           {"type": "definition", "term": "Latence", "body": "Le délai entre la survenue d'un événement et la réaction du système ; sa variation s'appelle la gigue (jitter)."},
           {"type": "text", "body": "On distingue le temps réel strict (hard), où une échéance manquée est catastrophique, du temps réel souple (soft), où c'est simplement un défaut."},
-          {"type": "exercise", "question": "Quelle est la différence entre vitesse et temps réel ?", "answer": "Le temps réel garantit la prédictibilité du délai, pas simplement une grande vitesse de traitement."}
+          {"type": "text", "body": "Prenons une boucle de régulation de moteur à 1 kHz : toutes les millisecondes, la tâche doit lire un capteur et corriger la commande. Si elle démarre en moyenne 20 µs après son échéance, c'est parfait ; mais si une fois par heure elle démarre 3 ms trop tard, le moteur peut décrocher. En temps réel, c'est le pire cas qui compte, jamais la moyenne."},
+          {"type": "table", "title": "Temps réel strict ou souple ?", "table": [["Exemple", "Échéance manquée", "Type"], ["Airbag, freinage ABS", "accident possible", "strict (hard)"], ["Régulation de moteur industriel", "pièce rebutée, arrêt machine", "strict ou ferme"], ["Lecture audio ou vidéo", "craquement, image sautée", "souple (soft)"], ["Affichage d'un tableau de bord", "léger retard visible", "souple"]]},
+          {"type": "text", "body": "On caractérise un système par sa latence maximale observée et par sa gigue, l'écart entre les latences. Une latence de 100 µs stable est souvent préférable à une latence moyenne de 10 µs avec des pointes imprévisibles à 5 ms."},
+          {"type": "exercise", "question": "Quelle est la différence entre vitesse et temps réel ?", "answer": "Le temps réel garantit la prédictibilité du délai, pas simplement une grande vitesse de traitement."},
+          {"type": "exercise", "question": "Pourquoi la latence moyenne ne suffit-elle pas à juger un système temps réel ?", "answer": "Une seule échéance manquée peut être grave : c'est le pire cas (latence maximale) qui doit rester sous l'échéance, pas la moyenne."},
+          {"type": "exercise", "question": "Pratique : une boucle tourne à 2 kHz et le traitement prend 150 µs. Quelle latence maximale de réveil peut-on tolérer ?", "answer": "Période = 1 / 2000 = 500 µs.\nMarge = 500 − 150 = 350 µs : la tâche doit être réveillée\nen moins de 350 µs dans le pire cas (en pratique, garder une marge)."}
         ]
       },
       {
         "id": "ch2",
         "title": "RTOS et Linux",
-        "duration": 11,
+        "duration": 13,
         "sections": [
           {"type": "text", "body": "Un RTOS, comme FreeRTOS, offre un ordonnancement déterministe avec une faible latence, mais un écosystème limité. Linux offre une richesse de fonctionnalités mais une latence moins prédictible."},
           {"type": "table", "title": "Comparaison RTOS et Linux", "table": [["Critère", "RTOS", "Linux"], ["Latence", "Très faible", "Variable"], ["Écosystème", "Restreint", "Riche"], ["Mémoire", "Minimale", "Plus consommatrice"], ["Complexité", "Simple", "Élevée"]]},
           {"type": "text", "body": "Le choix dépend du besoin : un contrôle motorisé strict privilégie un RTOS, un produit avec réseau et interface graphique peut tolérer Linux."},
-          {"type": "exercise", "question": "Pour quel type de contrôle privilégie-t-on un RTOS ?", "answer": "Pour des besoins de latence strictes et déterministes, comme le contrôle de moteurs."}
+          {"type": "text", "body": "Beaucoup de produits combinent les deux mondes. Des SoC comme le STM32MP1 ou l'i.MX 8M intègrent des cœurs Cortex-A pour Linux et un cœur Cortex-M pour un RTOS. Linux gère le réseau, l'interface et les mises à jour ; le Cortex-M assure la boucle temps réel. Les deux échangent des messages par RPMsg, et Linux peut même démarrer le firmware du Cortex-M via remoteproc."},
+          {"type": "code", "title": "Tâche périodique FreeRTOS à 1 kHz, sans dérive", "lang": "c", "code": "#include \"FreeRTOS.h\"\n#include \"task.h\"\n\nstatic void tache_regulation(void *arg)\n{\n    TickType_t prochain = xTaskGetTickCount();\n    const TickType_t periode = pdMS_TO_TICKS(1);   /* 1 ms */\n\n    for (;;) {\n        lire_capteur();\n        calculer_commande();\n        vTaskDelayUntil(&prochain, periode);   /* réveil à date absolue */\n    }\n}\n\nvoid app_main(void)\n{\n    xTaskCreate(tache_regulation, \"regul\", 512, NULL,\n                configMAX_PRIORITIES - 1, NULL);\n    vTaskStartScheduler();\n}"},
+          {"type": "text", "body": "vTaskDelayUntil calcule le réveil par rapport à l'échéance précédente, pas par rapport à la fin du traitement : la période reste exacte même si le traitement dure plus ou moins longtemps. Avec un simple vTaskDelay, chaque retard s'ajouterait au suivant."},
+          {"type": "exercise", "question": "Pour quel type de contrôle privilégie-t-on un RTOS ?", "answer": "Pour des besoins de latence strictes et déterministes, comme le contrôle de moteurs."},
+          {"type": "exercise", "question": "Pourquoi utiliser vTaskDelayUntil plutôt que vTaskDelay pour une tâche périodique ?", "answer": "vTaskDelayUntil se réveille à une date absolue calculée depuis l'échéance précédente : la période ne dérive pas. vTaskDelay attend une durée à partir de maintenant, donc la durée du traitement s'accumule."},
+          {"type": "exercise", "question": "Un produit a besoin d'un écran tactile, du Wi-Fi et d'une boucle de commande à 10 kHz. Quelle architecture proposer ?", "answer": "Un SoC hybride : Linux sur le Cortex-A pour l'interface et le réseau, un RTOS (ou du bare metal) sur un Cortex-M pour la boucle à 10 kHz, avec échange de consignes par RPMsg."}
         ]
       },
       {
         "id": "ch3",
         "title": "Linux temps réel",
-        "duration": 11,
+        "duration": 17,
         "sections": [
           {"type": "code", "code": "uname -r\ngrep PREEMPT /boot/config-$(uname -r)", "lang": "bash", "body": "Vérifier la version du noyau et la configuration de préemption (PREEMPT)."},
-          {"type": "text", "body": "Le correctif PREEMPT_RT rend le noyau entièrement préemptible, réduisant la latence. Plusieurs niveaux de préemption existent selon la configuration."},
+          {"type": "text", "body": "PREEMPT_RT rend le noyau presque entièrement préemptible, réduisant la latence. Longtemps distribué comme correctif externe, il est intégré au noyau officiel depuis Linux 6.12. Plusieurs niveaux de préemption existent selon la configuration."},
           {"type": "text", "body": "La priorité des processus se règle avec chrt ou les appels système sched_setscheduler. De bonnes priorités et l'isolation des cœurs améliorent le déterminisme."},
-          {"type": "exercise", "question": "Quel correctif rend le noyau Linux entièrement préemptible ?", "answer": "PREEMPT_RT."},
+          {"type": "text", "body": "Depuis Linux 6.12, PREEMPT_RT fait partie du noyau officiel : il suffit d'activer CONFIG_PREEMPT_RT, sans appliquer de correctif externe. Il rend préemptibles presque toutes les sections du noyau et transforme les gestionnaires d'interruptions en threads dont on peut régler la priorité."},
+          {"type": "text", "body": "Côté application, quatre règles : un ordonnancement SCHED_FIFO avec une priorité élevée (1 à 99), le verrouillage de la mémoire avec mlockall pour éviter les fautes de page, un réveil à date absolue avec clock_nanosleep, et idéalement un cœur réservé (isolcpus) sur lequel on place la tâche."},
+          {"type": "code", "title": "Boucle périodique temps réel en C sous Linux", "lang": "c", "code": "#include <sched.h>\n#include <sys/mman.h>\n#include <time.h>\n\n#define PERIODE_NS 1000000L               /* 1 ms */\n\nint main(void)\n{\n    struct sched_param sp = { .sched_priority = 80 };\n    struct timespec t;\n\n    mlockall(MCL_CURRENT | MCL_FUTURE);   /* pas de faute de page en route */\n    sched_setscheduler(0, SCHED_FIFO, &sp);\n\n    clock_gettime(CLOCK_MONOTONIC, &t);\n    for (;;) {\n        t.tv_nsec += PERIODE_NS;\n        if (t.tv_nsec >= 1000000000L) {\n            t.tv_nsec -= 1000000000L;\n            t.tv_sec++;\n        }\n        clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &t, NULL);\n        /* travail périodique ici */\n    }\n}"},
+          {"type": "warning", "body": "Une tâche SCHED_FIFO de haute priorité qui ne rend jamais la main bloque tout le reste du cœur, y compris le shell. Testez toujours avec une condition de sortie, et gardez au moins un cœur pour le système."},
+          {"type": "exercise", "question": "Quelle option rend le noyau Linux presque entièrement préemptible ?", "answer": "PREEMPT_RT."},
+          {"type": "exercise", "question": "Pourquoi appeler mlockall dans une application temps réel ?", "answer": "Pour charger et verrouiller toute la mémoire du processus en RAM : sinon, une faute de page (chargement depuis le disque, allocation) peut ajouter une latence imprévisible."},
+          {"type": "exercise", "question": "Pratique : lance ./regul en SCHED_FIFO priorité 80 sur le cœur 3 seulement, puis vérifie sa politique d'ordonnancement.", "answer": "sudo chrt -f 80 taskset -c 3 ./regul &\nchrt -p $(pidof regul)\n# current scheduling policy: SCHED_FIFO\n# current scheduling priority: 80"},
           {"type": "warning", "body": "Les garanties temps réel de Linux restent souples : il ne convient pas aux contraintes hard indispensables à la sécurité."}
         ]
       },
       {
         "id": "ch4",
         "title": "Mesurer la latence",
-        "duration": 11,
+        "duration": 10,
         "sections": [
           {"type": "code", "code": "cyclictest -m -t1 -p99 -n -l 100000", "lang": "bash", "body": "Exécuter un test de latence avec cyclictest."},
           {"type": "text", "body": "cyclictest mesure la latence de planification d'une tâche périodique et en affiche les valeurs minimale, moyenne et maximale."},
           {"type": "text", "body": "La latence maximale indique le pire cas observé. Une baisse du déterminisme peut venir de la charge du système ou de la configuration."},
+          {"type": "text", "body": "cyclictest crée des threads qui se réveillent périodiquement et mesure l'écart entre l'heure prévue et l'heure réelle de réveil. Les options courantes : -m verrouille la mémoire, -t1 un thread, -p99 priorité maximale, -i1000 réveil toutes les 1000 µs, -l100000 nombre de cycles, -h activant un histogramme."},
+          {"type": "text", "body": "Une mesure n'a de valeur que sous charge : on lance en parallèle une charge CPU, mémoire et entrées-sorties (par exemple avec stress-ng) pendant plusieurs heures, car les pires latences sont rares. Sur un Raspberry Pi 4, on observe typiquement quelques millisecondes de pire cas avec un noyau standard chargé, et quelques dizaines de microsecondes avec PREEMPT_RT."},
+          {"type": "code", "title": "Mesure de latence sous charge", "lang": "bash", "code": "sudo stress-ng --cpu 4 --io 2 --vm 1 --vm-bytes 256M --timeout 2h &\nsudo cyclictest -m -t1 -p99 -i1000 -l7200000 -q\n# T: 0 ( 1234) P:99 I:1000 C:7200000 Min:   6 Act:   11 Avg:   10 Max:   58\n#                                    (valeurs en microsecondes)"},
           {"type": "exercise", "question": "Quel outil mesure la latence de planification ?", "answer": "cyclictest, souvent inclus dans les outils de test temps réel."},
+          {"type": "exercise", "question": "Pourquoi faut-il mesurer la latence sous charge et pendant longtemps ?", "answer": "Les pires latences surviennent rarement et surtout quand le système est chargé ; une mesure courte à vide donne une image beaucoup trop optimiste."},
+          {"type": "exercise", "question": "Pratique : ta boucle à 1 kHz tolère 400 µs de retard. cyclictest sous charge donne Min 8, Avg 15, Max 950. Le système convient-il ? Que tenter ?", "answer": "Non : le pire cas (950 µs) dépasse 400 µs.\nPistes : noyau PREEMPT_RT, isoler un cœur (isolcpus) et y placer la tâche,\ndésactiver la gestion d'énergie du CPU (governor performance),\npuis remesurer plusieurs heures sous charge."},
           {"type": "tip", "body": "Supprimez les processus perturbateurs et isolez un cœur pour réduire la gigue lors des tests."}
         ]
       }
@@ -65,54 +86,76 @@
     "category": "pro",
     "accent": "green",
     "icon": "shield",
-    "duration": 45,
+    "duration": 48,
     "summary": "Renforcez la sécurité de votre système embarqué : durcissement, chiffrement et boot sécurisé.",
     "objectives": ["Évaluer la surface d'attaque", "Durcir le système", "Utiliser le chiffrement", "Comprendre le boot sécurisé"],
     "chapters": [
       {
         "id": "ch1",
         "title": "La surface d'attaque",
-        "duration": 12,
+        "duration": 11,
         "sections": [
           {"type": "text", "body": "Un système embarqué est vulnérable à travers ses interfaces : réseau, USB, console série, stockage. Réduire la surface d'attaque est la première défense."},
           {"type": "list", "title": "Interfaces exposées typiques", "items": ["Réseau (Wi-Fi, Ethernet)", "Ports USB", "Console série de debug", "Stockage amovible"]},
           {"type": "text", "body": "Désactivez tout service inutile et toute interface de debug non requise en production. Un service de plus est un point d'entrée potentiel de plus."},
-          {"type": "exercise", "question": "Quelle est la première défense contre les attaques ?", "answer": "Réduire la surface d'attaque en désactivant interfaces et services inutiles."}
+          {"type": "text", "body": "Avant de sécuriser, on inventorie : quels services écoutent sur le réseau, quels ports physiques sont accessibles (série, USB, JTAG), quelles données sont stockées. Chaque entrée de cet inventaire doit être soit justifiée, soit supprimée. C'est le modèle de menace : qui pourrait attaquer, par où, et pour obtenir quoi."},
+          {"type": "code", "title": "Lister ce qui est exposé sur l'appareil", "lang": "bash", "code": "sudo ss -tulpn\n# Netid State  Local Address:Port  Process\n# tcp   LISTEN 0.0.0.0:22          users:((\"sshd\",...))\n# udp   UNCONN 0.0.0.0:5353        users:((\"avahi-daemon\",...))\n\n# depuis un PC du réseau :\nnmap -sV 192.168.1.50"},
+          {"type": "text", "body": "Une console série laissée active en production donne souvent un shell root à quiconque ouvre le boîtier. Les ports de debug JTAG/SWD permettent de lire la mémoire et la flash. Sur un produit fini, on les désactive ou on les verrouille (fusibles du SoC), et on retire l'interruption d'U-Boot (bootdelay = -2)."},
+          {"type": "exercise", "question": "Quelle est la première défense contre les attaques ?", "answer": "Réduire la surface d'attaque en désactivant interfaces et services inutiles."},
+          {"type": "exercise", "question": "Pourquoi une console série active est-elle un risque sur un produit vendu ?", "answer": "Quiconque ouvre le boîtier peut s'y connecter et obtenir un shell, souvent root, ou interrompre le bootloader pour modifier le démarrage."},
+          {"type": "exercise", "question": "Pratique : repère un service réseau inutile sur ta carte et désactive-le définitivement.", "answer": "sudo ss -tulpn                       # ex. avahi-daemon sur 5353/udp\nsudo systemctl disable --now avahi-daemon.service avahi-daemon.socket\nsudo ss -tulpn | grep 5353           # plus rien"}
         ]
       },
       {
         "id": "ch2",
         "title": "Durcir le système",
-        "duration": 11,
+        "duration": 16,
         "sections": [
-          {"type": "code", "code": "chmod 600 /etc/shadow\nPassRoot {\n  deny\n}\nsshd PermitRootLogin no", "lang": "bash", "body": "Exemple de restrictions sur un fichier sensible et sur SSH."},
+          {"type": "code", "code": "sudo chmod 640 /etc/shadow\nsudo chown root:shadow /etc/shadow\n\n# /etc/ssh/sshd_config\nPermitRootLogin no", "lang": "bash", "body": "Restreindre l'accès à un fichier sensible et interdire la connexion SSH directe en root."},
           {"type": "text", "body": "Restreignez les permissions des fichiers de configuration, évitez les mots de passe par défaut et désactivez les comptes inutiles. Le principe du moindre privilège s'applique partout."},
           {"type": "list", "title": "Mesures de durcissement", "items": ["Retirer les outils de debug en production", "Désactiver les services inutilisés", "Planifier des mises à jour de sécurité", "Limiter les utilisateurs et privilèges"]},
+          {"type": "code", "title": "Configuration SSH durcie (/etc/ssh/sshd_config.d/durcissement.conf)", "lang": "ini", "code": "PermitRootLogin no\nPasswordAuthentication no\nKbdInteractiveAuthentication no\nPubkeyAuthentication yes\nAllowUsers maintenance\nMaxAuthTries 3\n\n# puis : sudo sshd -t && sudo systemctl reload ssh"},
+          {"type": "text", "body": "Avec l'authentification par clé uniquement, un attaquant ne peut plus deviner un mot de passe. Testez la configuration avec sshd -t et gardez une session ouverte pendant le rechargement : en cas d'erreur, vous ne serez pas enfermé dehors."},
+          {"type": "code", "title": "Pare-feu nftables minimal : tout refuser sauf SSH", "lang": "nft", "code": "table inet filtre {\n  chain entree {\n    type filter hook input priority 0; policy drop;\n    iif \"lo\" accept\n    ct state established,related accept\n    tcp dport 22 accept\n    icmp type echo-request accept\n  }\n}\n# chargement : sudo nft -f /etc/nftables.conf"},
+          {"type": "text", "body": "Une racine en lecture seule (squashfs, ou ext4 monté ro) complète le durcissement : un attaquant ne peut pas modifier les programmes, et le système résiste mieux aux coupures de courant. Les données modifiables vont sur une partition séparée."},
           {"type": "exercise", "question": "Quel principe guide le durcissement ?", "answer": "Le moindre privilège : ne donner que les droits strictement nécessaires."},
+          {"type": "exercise", "question": "Pourquoi désactiver PasswordAuthentication dans SSH ?", "answer": "Pour n'accepter que les clés : les attaques par essai de mots de passe deviennent impossibles."},
+          {"type": "exercise", "question": "Pratique : ajoute au pare-feu l'accès au serveur web local sur le port 8080, uniquement depuis le réseau 192.168.1.0/24.", "answer": "# dans la chaîne entree :\nip saddr 192.168.1.0/24 tcp dport 8080 accept\n\nsudo nft -f /etc/nftables.conf\nsudo nft list ruleset   # vérifier"},
           {"type": "warning", "body": "Les mots de passe d'usine non modifiés sont une faille triviale. Changez toujours les identifiants par défaut."}
         ]
       },
       {
         "id": "ch3",
         "title": "Le chiffrement",
-        "duration": 11,
+        "duration": 12,
         "sections": [
           {"type": "code", "code": "update-ca-certificates\nopenssl version", "lang": "bash", "body": "Gérer les certificats et vérifier la version d'OpenSSL."},
           {"type": "text", "body": "Chiffrez les communications (TLS/SSL) et les données sensibles au repos. Les certificats racines installés permettent de vérifier l'authenticité des serveurs."},
           {"type": "text", "body": "Pour les données au repos, des mécanismes comme LUKS ou dm-crypt chiffrent le système de fichiers. La performance doit être évaluée sur le matériel cible."},
+          {"type": "text", "body": "Chiffrer ne suffit pas : il faut aussi vérifier à qui l'on parle. Un client TLS doit valider le certificat du serveur (chaîne de confiance et nom d'hôte). Pour une flotte, on va plus loin avec le TLS mutuel : chaque appareil possède son propre certificat, et le serveur refuse ceux qu'il ne connaît pas."},
+          {"type": "code", "title": "Vérifier un serveur TLS et utiliser un certificat d'appareil", "lang": "bash", "code": "openssl s_client -connect serveur.example:443 -verify_return_error </dev/null | head\n# Verify return code: 0 (ok)\n\n# TLS mutuel avec curl : certificat et clé propres à l'appareil\ncurl --cacert /etc/ssl/ca-flotte.pem \\\n     --cert /etc/appareil/cert.pem --key /etc/appareil/key.pem \\\n     https://serveur.example/api/etat"},
+          {"type": "text", "body": "Pour les données au repos, LUKS chiffre une partition entière. La vraie difficulté en embarqué est de stocker la clé : un appareil sans écran ne peut pas demander de mot de passe au démarrage. On la scelle dans un TPM ou un élément sécurisé, qui ne la libère que si la chaîne de démarrage n'a pas été modifiée."},
+          {"type": "warning", "body": "Ne désactivez jamais la vérification des certificats (curl -k, verify=False) en production : le chiffrement devient inutile face à une attaque de l'homme du milieu."},
           {"type": "exercise", "question": "Quel protocole chiffre les communications réseau ?", "answer": "TLS/SSL, exposé par OpenSSL et d'autres bibliothèques."},
+          {"type": "exercise", "question": "Qu'apporte le TLS mutuel par rapport au TLS classique ?", "answer": "Le serveur authentifie aussi le client : chaque appareil présente son certificat, et le serveur peut refuser ou révoquer un appareil précis."},
+          {"type": "exercise", "question": "Pratique : affiche la date d'expiration du certificat d'appareil et le nombre de jours restants.", "answer": "openssl x509 -in /etc/appareil/cert.pem -noout -enddate\n# notAfter=Nov 20 12:00:00 2027 GMT\nfin=$(date -d \"$(openssl x509 -in /etc/appareil/cert.pem -noout -enddate | cut -d= -f2)\" +%s)\necho $(( (fin - $(date +%s)) / 86400 )) jours"},
           {"type": "tip", "body": "Évaluez la surcharge du chiffrement sur votre processeur : certains cœurs disposent d'accélération matérielle dédiée."}
         ]
       },
       {
         "id": "ch4",
         "title": "Le boot sécurisé",
-        "duration": 11,
+        "duration": 9,
         "sections": [
           {"type": "text", "body": "Le boot sécurisé (secure boot) vérifie la signature de chaque étape de démarrage, de la ROM au noyau, empêchant l'exécution de code falsifié."},
           {"type": "text", "body": "U-Boot peut vérifier la signature du devicetree et du noyau avant de les charger. Si la signature est invalide, le démarrage est refusé."},
           {"type": "text", "body": "Les clés de vérification sont ancrées dans du matériel sécurisé (eFuse, TPM). Une chaîne de confiance se construit de la racine jusqu'aux applications."},
+          {"type": "table", "title": "Une chaîne de confiance complète", "table": [["Étape", "Vérifiée par", "Comment"], ["SPL / bootloader", "la ROM du SoC", "empreinte de la clé publique gravée dans des fusibles (eFuse)"], ["U-Boot complet", "le SPL", "signature de l'image"], ["Noyau + devicetree", "U-Boot", "image FIT signée"], ["Système de fichiers racine", "le noyau", "dm-verity : hachage de chaque bloc"]]},
+          {"type": "code", "title": "Signer une image FIT et intégrer la clé publique dans U-Boot", "lang": "bash", "code": "openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out keys/dev.key\nopenssl req -batch -new -x509 -key keys/dev.key -out keys/dev.crt\n\n# image.its décrit noyau + DTB et demande une signature avec la clé « dev »\nmkimage -f image.its -k keys -K u-boot.dtb -r image.fit\n#  -k : dossier des clés   -K : DTB d'U-Boot qui recevra la clé publique\n#  -r : la vérification devient obligatoire"},
+          {"type": "text", "body": "dm-verity protège la racine en lecture seule : le noyau vérifie l'empreinte de chaque bloc lu par rapport à un arbre de hachage dont la racine est elle-même signée. La moindre modification du système de fichiers est détectée au moment de la lecture."},
           {"type": "exercise", "question": "Que vérifie le boot sécurisé ?", "answer": "La signature de chaque étape de démarrage, du bootloader jusqu'au noyau."},
+          {"type": "exercise", "question": "Que protège dm-verity ?", "answer": "L'intégrité du système de fichiers racine (en lecture seule) : chaque bloc lu est vérifié contre un arbre de hachage dont la racine est signée."},
+          {"type": "exercise", "question": "Pratique : un fournisseur propose de livrer les cartes avec le secure boot activé et la clé de développement. Quel est le problème ?", "answer": "La clé de développement est souvent partagée ou peu protégée : n'importe qui la possédant pourrait signer un firmware malveillant accepté par toute la flotte. Il faut une clé de production propre, stockée de façon sécurisée (HSM), avec des sauvegardes."},
           {"type": "warning", "body": "Perdre les clés de signature empêche toute mise à jour future. Gardez des sauvegardes sécurisées des clés."},
           {"type": "tip", "body": "Concevez une politique de gestion des clés dès le début du projet pour éviter des verrouillages incompatibles."}
         ]
@@ -126,55 +169,76 @@
     "category": "pro",
     "accent": "red",
     "icon": "bug",
-    "duration": 45,
+    "duration": 51,
     "summary": "Déboguez efficacement votre système embarqué avec GDB, les journaux et les outils de traçage.",
     "objectives": ["Interagir avec GDB en ligne de commande", "Déboguer à distance", "Utiliser les journaux", "Explorer le tracing FTrace"],
     "chapters": [
       {
         "id": "ch1",
         "title": "GDB en ligne de commande",
-        "duration": 12,
+        "duration": 15,
         "sections": [
           {"type": "code", "code": "gdb mon_programme\nbreak main\nrun\nprint variable\ncontinue", "lang": "bash", "body": "Lancer GDB, poser un point d'arrêt, afficher une variable et continuer."},
           {"type": "text", "body": "GDB permet d'exécuter un programme pas à pas, d'inspecter les variables et d'analyser un crash. Les points d'arrêt suspendent l'exécution à un endroit précis."},
           {"type": "code", "code": "bt\ninfo locals\nlist", "lang": "bash", "body": "Afficher la pile d'appels, les variables locales et le code source."},
+          {"type": "text", "body": "Quand un programme plante en production, on ne peut pas toujours le relancer sous GDB. On demande alors au noyau d'écrire un core dump : une image de la mémoire au moment du crash. GDB l'ouvre ensuite avec le binaire (compilé avec -g) pour montrer exactement la ligne fautive et la pile d'appels."},
+          {"type": "code", "title": "Analyser un crash après coup avec un core dump", "lang": "bash", "code": "cat > crash.c << 'EOF'\n#include <stdio.h>\nint main(void) {\n    int *p = NULL;\n    printf(\"avant\\n\");\n    *p = 42;              /* déréférencement de NULL */\n    return 0;\n}\nEOF\ngcc -g -O0 crash.c -o crash\nulimit -c unlimited       # autoriser les core dumps dans ce shell\n./crash                   # Segmentation fault (core dumped)\ncoredumpctl gdb crash     # avec systemd ; sinon : gdb ./crash core\n(gdb) bt\n#0  main () at crash.c:5"},
+          {"type": "text", "body": "Les points d'arrêt conditionnels et les points de surveillance accélèrent la chasse aux bugs : break fichier.c:42 if i == 100 n'arrête qu'au bon passage, et watch compteur arrête le programme dès que la variable change, ce qui révèle qui l'écrase."},
           {"type": "exercise", "question": "Quelle commande GDB pose un point d'arrêt ?", "answer": "break, par exemple break main."},
+          {"type": "exercise", "question": "Qu'est-ce qu'un core dump ?", "answer": "Une image de la mémoire du processus au moment du crash, qui permet d'examiner après coup la pile et les variables avec GDB."},
+          {"type": "exercise", "question": "Pratique : une variable globale « etat » prend une valeur incohérente à un moment inconnu. Comment trouver l'instruction qui la modifie ?", "answer": "gdb ./programme\n(gdb) break main\n(gdb) run\n(gdb) watch etat        # point de surveillance\n(gdb) continue          # s'arrête à chaque modification\n(gdb) bt                # qui a écrit ?"},
           {"type": "tip", "body": "La commande bt (backtrace) est indispensable après un crash pour connaître la pile d'appels."}
         ]
       },
       {
         "id": "ch2",
         "title": "Déboguer à distance",
-        "duration": 11,
+        "duration": 14,
         "sections": [
           {"type": "code", "code": "gdbserver :2345 mon_programme\ngdb mon_programme", "lang": "bash", "body": "Lancer un serveur de debug sur la cible puis s'y connecter avec GDB."},
           {"type": "text", "body": "gdbserver s'exécute sur la cible embarquée et expose un port. GDB sur l'hôte s'y connecte pour contrôler le programme distant."},
           {"type": "code", "code": "target remote <ip_cible>:2345\ncontinue", "lang": "bash", "body": "Depuis GDB, se connecter à la cible et reprendre l'exécution."},
           {"type": "warning", "body": "Le programme distant doit être compilé avec les symboles de débogage (-g) et sans optimisation agressive pour un débogage fiable."},
+          {"type": "text", "body": "Sur la cible, on installe uniquement gdbserver et une copie allégée du binaire (sans symboles, avec strip) : la carte manque souvent d'espace. Sur le PC, on garde le binaire complet avec ses symboles et on utilise un GDB capable de lire l'architecture de la cible : gdb-multiarch, ou le GDB de la toolchain."},
+          {"type": "code", "title": "Session de debug distante complète", "lang": "bash", "code": "# sur le PC : compiler avec symboles, copier une version allégée\naarch64-linux-gnu-gcc -g -O0 app.c -o app\naarch64-linux-gnu-strip -o app-strip app\nscp app-strip pi@192.168.1.50:/tmp/app\n\n# sur la cible :\ngdbserver :2345 /tmp/app\n\n# sur le PC :\ngdb-multiarch ./app\n(gdb) set sysroot /chemin/vers/sysroot-cible   # bibliothèques de la cible\n(gdb) target remote 192.168.1.50:2345\n(gdb) break main\n(gdb) continue"},
+          {"type": "text", "body": "set sysroot indique à GDB où trouver les bibliothèques partagées de la cible (libc…) pour afficher correctement la pile quand le programme est dans une bibliothèque. Avec un SDK Buildroot ou Yocto, ce sysroot est fourni."},
+          {"type": "tip", "body": "gdbserver --attach :2345 PID permet de s'attacher à un programme déjà en cours d'exécution, par exemple un service qui se bloque après plusieurs heures."},
           {"type": "exercise", "question": "Quel outil sert de serveur de debug sur la cible ?", "answer": "gdbserver."},
+          {"type": "exercise", "question": "Pourquoi peut-on déployer un binaire « strippé » sur la cible tout en déboguant avec les symboles ?", "answer": "GDB, sur le PC, lit les symboles dans le binaire complet ; gdbserver n'a besoin que du code exécutable. Il faut juste que les deux binaires viennent de la même compilation."},
+          {"type": "exercise", "question": "Pratique : un service tourne depuis des heures sur la cible et semble bloqué. Comment voir où il en est sans le redémarrer ?", "answer": "# cible :\nsudo gdbserver --attach :2345 $(pidof mon_service)\n# PC :\ngdb-multiarch ./mon_service\n(gdb) target remote 192.168.1.50:2345\n(gdb) thread apply all bt     # pile de tous les threads"},
           {"type": "tip", "body": "Compilez avec -g pour conserver les symboles et -O0 ou une optimisation modérée pour faciliter le pas-à-pas."}
         ]
       },
       {
         "id": "ch3",
         "title": "Les journaux applicatifs",
-        "duration": 11,
+        "duration": 10,
         "sections": [
           {"type": "code", "code": "dmesg | grep -i erreur\njournalctl -k", "lang": "bash", "body": "Afficher les messages du noyau et les journaux du noyau systemd."},
           {"type": "text", "body": "dmesg montre les messages du noyau, utiles lors des erreurs de pilotes ou de montage. journalctl -k filtre le journal pour ne garder que ceux du noyau."},
           {"type": "text", "body": "Dans votre application, loguez avec des niveaux et du contexte. Un bon journal indique quand et où l'erreur est survenue."},
-          {"type": "exercise", "question": "Quelle commande affiche les messages du noyau ?", "answer": "dmesg."}
+          {"type": "text", "body": "Avec systemd, une application n'a rien de spécial à faire : tout ce qu'elle écrit sur sa sortie standard et sa sortie d'erreur part dans le journal, horodaté et associé au service. Un préfixe comme <3> en début de ligne fixe même la priorité (3 = erreur, 4 = avertissement, 6 = information, 7 = debug)."},
+          {"type": "code", "title": "Filtrer efficacement le journal d'un service", "lang": "bash", "code": "journalctl -u mon_service -b            # depuis le dernier démarrage\njournalctl -u mon_service -p warning     # avertissements et pires\njournalctl -u mon_service --since \"10 min ago\" -f   # suivi en direct\njournalctl -b -1 -p err                  # erreurs du démarrage précédent"},
+          {"type": "text", "body": "Par défaut, sur beaucoup de systèmes embarqués, le journal est en RAM et disparaît au redémarrage, ce qui empêche d'analyser un plantage. Storage=persistent dans /etc/systemd/journald.conf le conserve sur disque ; SystemMaxUse limite sa taille pour ne pas user ni remplir la flash."},
+          {"type": "exercise", "question": "Quelle commande affiche les messages du noyau ?", "answer": "dmesg."},
+          {"type": "exercise", "question": "Comment rendre le journal systemd persistant entre deux redémarrages ?", "answer": "Mettre Storage=persistent dans /etc/systemd/journald.conf (ou créer /var/log/journal), puis redémarrer systemd-journald."},
+          {"type": "exercise", "question": "Pratique : configure un journal persistant limité à 50 Mo, puis affiche les erreurs du démarrage précédent.", "answer": "sudo mkdir -p /etc/systemd/journald.conf.d\nprintf '[Journal]\\nStorage=persistent\\nSystemMaxUse=50M\\n' | \\\n  sudo tee /etc/systemd/journald.conf.d/persistant.conf\nsudo systemctl restart systemd-journald\n# après un redémarrage :\njournalctl -b -1 -p err"}
         ]
       },
       {
         "id": "ch4",
         "title": "Le tracing avec FTrace",
-        "duration": 11,
+        "duration": 12,
         "sections": [
           {"type": "code", "code": "echo function > /sys/kernel/tracing/current_tracer\necho mon_fonction > /sys/kernel/tracing/set_ftrace_filter\ncat /sys/kernel/tracing/trace", "lang": "bash", "body": "Activer le traçage de fonctions et lire la trace produite."},
           {"type": "text", "body": "FTrace est un traceur intégré au noyau. Il peut enregistrer l'appel des fonctions, les événements et les fautes de page sans trop ralentir le système."},
           {"type": "text", "body": "Le traçage révèle quelles fonctions sont appelées et combien de temps elles prennent, précieux pour comprendre une latence ou une consommation de ressources."},
+          {"type": "text", "body": "Le traceur function_graph montre l'imbrication des appels de fonctions du noyau et la durée de chacun. Les événements de trace (tracepoints), eux, enregistrent des moments précis : changements de contexte de l'ordonnanceur, interruptions, accès au stockage. trace-cmd simplifie toutes ces manipulations de /sys/kernel/tracing."},
+          {"type": "code", "title": "Tracer l'ordonnanceur pendant 5 secondes avec trace-cmd", "lang": "bash", "code": "sudo trace-cmd record -e sched_switch -e irq_handler_entry sleep 5\nsudo trace-cmd report | head\n#  <idle>-0  [002]  1234.5678: sched_switch: prev_comm=swapper ... next_comm=regul\n\n# graphe d'appels d'une fonction précise :\nsudo trace-cmd record -p function_graph -g i2c_transfer sleep 2\nsudo trace-cmd report | less"},
+          {"type": "text", "body": "Pour comprendre une latence temps réel, on trace sched_switch sur le cœur de la tâche : on voit qui occupait le processeur quand la tâche aurait dû se réveiller. Le fichier trace.dat peut aussi être ouvert sur le PC avec l'interface graphique KernelShark."},
           {"type": "exercise", "question": "Où lire la trace produite par FTrace ?", "answer": "Dans le fichier /sys/kernel/tracing/trace."},
+          {"type": "exercise", "question": "Quelle différence entre le traceur function et les événements de trace (tracepoints) ?", "answer": "function enregistre les appels de fonctions du noyau (très détaillé) ; les tracepoints enregistrent des événements choisis et nommés (sched_switch, irq…), plus légers et avec des données utiles."},
+          {"type": "exercise", "question": "Pratique : ta tâche « regul » rate parfois son échéance. Comment voir quels processus ont occupé son cœur (cœur 3) pendant une minute ?", "answer": "sudo trace-cmd record -e sched_switch -M 8 sleep 60\n#   -M 8 = masque CPU (bit 3) : seulement le cœur 3\nsudo trace-cmd report | grep -v \"next_comm=regul\" | less"},
           {"type": "tip", "body": "Désactivez le tracing en fin de session (echo nop > current_tracer) pour limiter l'impact sur les performances."}
         ]
       }
@@ -196,33 +260,48 @@
         "title": "Mesurer avant d'optimiser",
         "duration": 12,
         "sections": [
-          {"type": "code", "code": "perf stat ./mon_programme\nls /sys/kernel/debug/tracing", "lang": "bash", "body": "Mesurer les compteurs de performance d'un programme avec perf."},
+          {"type": "code", "code": "perf stat ./mon_programme", "lang": "bash", "body": "Mesurer les compteurs de performance d'un programme avec perf."},
           {"type": "text", "body": "On ne doit pas optimiser à l'aveugle : il faut d'abord mesurer. L'outil perf fournit des compteurs précis de CPU, de fautes de page et de temps d'exécution."},
           {"type": "text", "body": "Identifier le goulot d'étranglement permet de concentrer les efforts là où le gain est le plus important, au lieu d'optimiser sans cible."},
-          {"type": "exercise", "question": "Pourquoi mesurer avant d'optimiser ?", "answer": "Pour identifier le vrai goulot d'étranglement et concentrer les efforts sur les gains significatifs."}
+          {"type": "text", "body": "perf stat donne une vue globale (temps, cycles, instructions, fautes de cache). Pour savoir où le temps est passé, perf record échantillonne régulièrement le programme, et perf report classe les fonctions par part du temps CPU. On optimise alors la fonction en tête de liste, et seulement elle."},
+          {"type": "code", "title": "Trouver la fonction la plus coûteuse", "lang": "bash", "code": "gcc -O2 -g app.c -o app            # -g : noms de fonctions et lignes\nperf stat ./app\n#   1 254,32 msec task-clock\n#   4 102 345 678 instructions  #  1,62 insn per cycle\n\nperf record -g ./app               # -g : enregistre aussi les piles d'appels\nperf report --stdio | head -n 20\n#  62.10%  app  app   [.] calcul_filtre\n#  21.43%  app  libc  [.] memcpy"},
+          {"type": "text", "body": "La loi d'Amdahl rappelle l'intérêt de cibler : si une fonction ne représente que 5 % du temps, même la rendre infiniment rapide ne gagne que 5 %. Dans l'exemple ci-dessus, calcul_filtre (62 %) est la seule cible qui vaille au départ."},
+          {"type": "exercise", "question": "Pourquoi mesurer avant d'optimiser ?", "answer": "Pour identifier le vrai goulot d'étranglement et concentrer les efforts sur les gains significatifs."},
+          {"type": "exercise", "question": "Une fonction prend 10 % du temps total. Quel gain maximal peut-on espérer en l'optimisant ?", "answer": "Au mieux 10 % (si son temps tombait à zéro) : c'est la loi d'Amdahl."},
+          {"type": "exercise", "question": "Pratique : mesure le programme ./app, identifie sa fonction la plus coûteuse, puis compare le temps avant et après ton optimisation.", "answer": "perf stat -r 5 ./app        # -r 5 : moyenne sur 5 exécutions\nperf record -g ./app\nperf report --stdio | head\n# ... optimisation de la fonction en tête ...\nperf stat -r 5 ./app        # comparer task-clock et l'écart (+-)"}
         ]
       },
       {
         "id": "ch2",
         "title": "Optimiser la CPU",
-        "duration": 11,
+        "duration": 10,
         "sections": [
-          {"type": "code", "code": "gcc -O2 -march=native -O3 -o app app.c", "lang": "bash", "body": "Compiler avec les optimisations du processeur hôte."},
+          {"type": "code", "code": "gcc -O2 -march=native -o app app.c", "lang": "bash", "body": "Compiler avec les optimisations du processeur hôte."},
           {"type": "text", "body": "Les niveaux d'optimisation du compilateur (-O2, -O3) et l'utilisation des instructions spécifiques au processeur améliorent les performances."},
           {"type": "text", "body": "Pour une cible embarquée, compilons plutôt avec -mcpu=cortex-a7 ou l'option adaptée, car -march=native ne correspond pas à la cible."},
+          {"type": "text", "body": "Avant de jouer sur les options du compilateur, regardez l'algorithme : passer d'une recherche linéaire à une table de hachage gagne souvent bien plus que n'importe quel drapeau. Ensuite, indiquez au compilateur le cœur exact de la cible : -mcpu=cortex-a53, cortex-a72… Il peut alors utiliser les instructions vectorielles NEON et ordonnancer le code pour ce cœur."},
+          {"type": "table", "title": "Options de compilation courantes", "table": [["Option", "Effet"], ["-O2", "optimisations sûres : le bon choix par défaut"], ["-O3", "plus agressif (vectorisation, déroulage de boucles), code plus gros"], ["-Os", "privilégie la taille du code"], ["-mcpu=cortex-a72", "instructions et ordonnancement adaptés à ce cœur"], ["-flto", "optimisation à l'édition de liens, entre fichiers"]]},
+          {"type": "text", "body": "Le processeur lui-même peut brider les performances : le pilote cpufreq baisse la fréquence pour économiser l'énergie et la remonte selon la charge. Pour des mesures reproductibles ou un traitement critique, on fixe le gouverneur sur performance ; pour un appareil sur batterie, on garde schedutil ou ondemand."},
           {"type": "exercise", "question": "Quel niveau d'optimisation du compilateur est courant ?", "answer": "-O2 pour un bon compromis, -O3 pour maximiser la performance."},
+          {"type": "exercise", "question": "Pourquoi ne pas utiliser -march=native lors d'une cross-compilation ?", "answer": "native désigne le processeur de la machine qui compile (le PC) ; le binaire pourrait utiliser des instructions absentes de la cible. On précise -mcpu du cœur de la cible."},
+          {"type": "exercise", "question": "Pratique : fixe le gouverneur CPU sur performance pour une mesure, puis rétablis l'ancien.", "answer": "cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor   # noter : ex. ondemand\necho performance | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor\nperf stat -r 5 ./app\necho ondemand | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor"},
           {"type": "warning", "body": "Ne confondez pas -march=native (pour la machine hôte) avec l'optimisation cible : utilisez -mcpu adapté sur la cible embarquée."}
         ]
       },
       {
         "id": "ch3",
         "title": "Réduire la mémoire",
-        "duration": 11,
+        "duration": 12,
         "sections": [
           {"type": "code", "code": "free -m\ncat /proc/meminfo", "lang": "bash", "body": "Afficher l'utilisation de la mémoire du système."},
           {"type": "text", "body": "La mémoire est souvent la ressource critique en embarqué. free montre la mémoire utilisée et disponible, /proc/meminfo détaille l'usage du noyau."},
           {"type": "code", "code": "size mon_binaire\nstrip mon_binaire", "lang": "bash", "body": "Afficher la taille des sections puis retirer les symboles inutiles."},
+          {"type": "text", "body": "Pour un processus, deux chiffres comptent : RSS, la mémoire physique réellement occupée, et PSS, qui répartit équitablement les pages partagées (bibliothèques) entre les processus qui les utilisent. La somme des PSS donne une image fidèle de la consommation totale, alors que la somme des RSS compte plusieurs fois la libc."},
+          {"type": "code", "title": "Mesurer la mémoire d'un processus et réduire un binaire", "lang": "bash", "code": "grep -E \"VmRSS|VmHWM\" /proc/$(pidof mon_service)/status\n# VmRSS:   5320 kB   (actuel)     VmHWM:   9104 kB   (pic)\ngrep -E \"^(Rss|Pss):\" /proc/$(pidof mon_service)/smaps_rollup\n\n# binaire plus petit : taille, sections inutilisées retirées, symboles enlevés\ngcc -Os -ffunction-sections -fdata-sections -Wl,--gc-sections app.c -o app\nstrip app\nsize app"},
+          {"type": "text", "body": "Le choix de la bibliothèque C pèse aussi : musl produit des binaires statiques de quelques dizaines de Ko, contre plusieurs centaines avec glibc. Buildroot permet de choisir musl ou uClibc-ng pour une image très compacte, au prix d'une compatibilité parfois moindre avec certains logiciels."},
           {"type": "exercise", "question": "Quelle commande affiche la quantité de mémoire libre ?", "answer": "free, et /proc/meminfo pour le détail."},
+          {"type": "exercise", "question": "Pourquoi additionner les RSS de tous les processus surestime-t-il la mémoire utilisée ?", "answer": "Les pages partagées (bibliothèques comme la libc) sont comptées dans le RSS de chaque processus qui les utilise ; le PSS les répartit entre eux."},
+          {"type": "exercise", "question": "Pratique : compare la taille de hello.c compilé en -O2 normal et en version réduite (-Os, gc-sections, strip).", "answer": "gcc -O2 hello.c -o h1\ngcc -Os -ffunction-sections -fdata-sections -Wl,--gc-sections hello.c -o h2\nstrip h2\nls -l h1 h2\nsize h1 h2"},
           {"type": "tip", "body": "Les options de compilation -Os réduisent la taille du code pour les systèmes dont la mémoire est très limitée."}
         ]
       },
@@ -234,7 +313,12 @@
           {"type": "code", "code": "systemd-analyze\nsystemd-analyze blame", "lang": "bash", "body": "Analyser le temps de démarrage et l'apparition des services."},
           {"type": "text", "body": "systemd-analyze indique le temps total de démarrage et le temps passé dans chaque unité. systemd-analyze blame liste les services par ordre de durée."},
           {"type": "list", "title": "Techniques d'accélération", "items": ["Désactiver les services inutiles", "Paralléliser les initialisations", "Réduire la taille du noyau", "Utiliser l'initialisation lazy-loaded"]},
+          {"type": "text", "body": "Le démarrage se découpe en trois phases à mesurer séparément : firmware et bootloader, noyau, espace utilisateur. systemd-analyze les affiche ; ajouter initcall_debug à la ligne de commande du noyau détaille la durée d'initialisation de chaque pilote dans dmesg."},
+          {"type": "code", "title": "Trouver ce qui ralentit le démarrage", "lang": "bash", "code": "systemd-analyze\n# Startup finished in 2.1s (kernel) + 6.8s (userspace) = 8.9s\nsystemd-analyze critical-chain     # la chaîne qui détermine la fin du boot\nsystemd-analyze plot > boot.svg    # chronologie complète, à ouvrir dans un navigateur\n\n# pilotes les plus lents (avec initcall_debug dans bootargs) :\ndmesg | grep \"initcall.*after\" | awk '{print $(NF-1), $0}' | sort -n | tail -n 5   # durée en µs en tête"},
+          {"type": "list", "items": ["Bootloader : bootdelay=0 (ou -2), ne charger que le nécessaire", "Noyau : retirer les pilotes inutiles, intégrer en =y ceux du démarrage, ajouter quiet", "Espace utilisateur : désactiver les services inutiles, retarder les non urgents", "Application : démarrer le service métier tôt, avant les services de confort"]},
           {"type": "exercise", "question": "Quelle commande liste les services selon leur temps de démarrage ?", "answer": "systemd-analyze blame."},
+          {"type": "exercise", "question": "Quelle différence entre systemd-analyze blame et systemd-analyze critical-chain ?", "answer": "blame liste la durée de chaque service, même ceux qui démarrent en parallèle sans retarder la fin ; critical-chain montre la chaîne qui détermine réellement la durée totale."},
+          {"type": "exercise", "question": "Pratique : ton appareil met 9 s à démarrer, dont 6,8 s en espace utilisateur. Décris ta démarche pour gagner du temps.", "answer": "1. systemd-analyze critical-chain : trouver le service qui bloque la chaîne.\n2. systemd-analyze blame : repérer les services lents ou inutiles.\n3. Désactiver l'inutile : sudo systemctl disable --now service.\n4. Retarder le non urgent (After=, timers).\n5. Remesurer à chaque modification pour vérifier le gain."},
           {"type": "tip", "body": "Décomposez le démarrage en le mesurant régulièrement pour suivre l'impact de chaque optimisation."}
         ]
       }
@@ -247,30 +331,39 @@
     "category": "pro",
     "accent": "blue",
     "icon": "layers",
-    "duration": 45,
+    "duration": 40,
     "summary": "Gérez la mise à jour et la maintenance de flottes d'appareils embarqués déployés sur le terrain.",
     "objectives": ["Comprendre les défis des mises à jour", "Mettre en place un système A/B", "Gérer le déploiement en flotte", "Assurer le retour arrière"],
     "chapters": [
       {
         "id": "ch1",
         "title": "Les défis de la mise à jour",
-        "duration": 12,
+        "duration": 9,
         "sections": [
           {"type": "text", "body": "Mettre à jour un appareil déployé est délicat : réseau instable, interruption possible et impossibilité de réparer physiquement. Chaque étape doit être robuste."},
           {"type": "list", "title": "Défis de la mise à jour distante", "items": ["Batterie ou alimentation limitées", "Coupures réseau pendant le transfert", "Stockage limité pour deux images", "Retour arrière en cas d'image corrompue"]},
           {"type": "text", "body": "Une mise à jour doit être atomique : soit elle réussit complètement, soit le système revient à l'état précédent sans être endommagé."},
-          {"type": "exercise", "question": "Pourquoi une mise à jour doit-elle être atomique ?", "answer": "Pour éviter qu'une interruption laisse le système dans un état inutilisable."}
+          {"type": "list", "items": ["Coupure de courant au milieu de l'écriture de la nouvelle image", "Image corrompue pendant le téléchargement", "Nouvelle version qui démarre mais dont l'application plante", "Perte de réseau : l'appareil ne peut plus recevoir de correctif", "Image falsifiée envoyée par un attaquant"]},
+          {"type": "text", "body": "Deux approches s'opposent. La mise à jour par paquets (apt, opkg) est légère, mais un appareil peut se retrouver dans un état intermédiaire jamais testé. La mise à jour par image remplace tout le système d'un coup : chaque appareil est exactement dans une version connue. C'est l'approche dominante en embarqué ; les mises à jour différentielles (delta) réduisent alors le volume téléchargé."},
+          {"type": "exercise", "question": "Pourquoi une mise à jour doit-elle être atomique ?", "answer": "Pour éviter qu'une interruption laisse le système dans un état inutilisable."},
+          {"type": "exercise", "question": "Pourquoi les mises à jour par image sont-elles préférées en embarqué ?", "answer": "Chaque appareil se retrouve dans une version complète, connue et testée ; il n'y a pas de combinaisons intermédiaires de paquets."},
+          {"type": "exercise", "question": "Pratique : pour chacun des cinq scénarios d'échec ci-dessus, cite le mécanisme qui protège l'appareil.", "answer": "Coupure de courant -> écriture sur la partition inactive (A/B).\nImage corrompue -> somme de contrôle vérifiée avant l'installation.\nApplication qui plante -> compteur de démarrages et retour arrière.\nPerte de réseau -> l'ancienne version reste fonctionnelle, nouvel essai plus tard.\nImage falsifiée -> vérification de signature avant l'installation."}
         ]
       },
       {
         "id": "ch2",
         "title": "Le système A/B",
-        "duration": 11,
+        "duration": 9,
         "sections": [
           {"type": "text", "body": "Le système A/B utilise deux partitions système : on écrit la mise à jour sur la partition inactive pendant que la partition active fonctionne, puis on bascule."},
           {"type": "definition", "term": "Partition A/B", "body": "Deux zones système identiques : l'une active, l'autre inactive, permettant une mise à jour sûre et un retour arrière immédiat."},
           {"type": "text", "body": "Si la nouvelle image ne démarre pas correctement, le bootloader bascule automatiquement sur l'autre partition. Ce mécanisme est un filet de sécurité essentiel."},
+          {"type": "text", "body": "U-Boot sait compter les démarrages. Après une mise à jour, l'appareil met upgrade_available à 1 ; U-Boot incrémente alors bootcount à chaque démarrage. Si bootcount dépasse bootlimit, U-Boot exécute altbootcmd, qui démarre l'ancienne partition. Une fois le système déclaré sain, un service remet les compteurs à zéro."},
+          {"type": "code", "title": "Marquer le démarrage comme réussi après vérification", "lang": "bash", "code": "#!/bin/sh\n# /usr/sbin/confirmer-mise-a-jour : lancé par un service en fin de démarrage\nset -e\nsystemctl is-active --quiet mon_application      # l'application tourne ?\nping -c1 -W3 serveur.example > /dev/null         # le réseau répond ?\nfw_setenv upgrade_available 0                    # la version est validée\nfw_setenv bootcount 0\nlogger \"mise à jour confirmée\""},
+          {"type": "text", "body": "Si la nouvelle version plante ou ne parvient pas à joindre le serveur, ce script ne va jamais au bout : au bout de bootlimit redémarrages (souvent forcés par le watchdog), U-Boot revient automatiquement à la version précédente, sans intervention humaine."},
           {"type": "exercise", "question": "Comment le système A/B permet-il le retour arrière ?", "answer": "En gardant la partition précédente intacte et en basculant dessus en cas d'échec."},
+          {"type": "exercise", "question": "Que fait U-Boot quand bootcount dépasse bootlimit ?", "answer": "Il exécute altbootcmd au lieu de bootcmd, ce qui démarre en général l'autre partition (la version précédente)."},
+          {"type": "exercise", "question": "Pratique : pourquoi faut-il vérifier l'application et le réseau avant de remettre bootcount à zéro, plutôt que dès le début du démarrage ?", "answer": "Un système peut démarrer mais être inutilisable (application qui plante, réseau cassé). Si on valide trop tôt, on perd la possibilité de revenir automatiquement en arrière, et l'appareil reste bloqué sur une version défectueuse, sans pouvoir recevoir de correctif."},
           {"type": "tip", "body": "Le stockage double double le coût, mais la robustesse mérite ce compromis pour les appareils critiques."}
         ]
       },
@@ -282,7 +375,12 @@
           {"type": "text", "body": "Pour un grand nombre d'appareils, on utilise un serveur de gestion de flotte (OTA). Le déploiement se fait en plusieurs vagues pour limiter l'impact d'un défaut."},
           {"type": "code", "code": "curl -s -X POST https://serveur-ota.example/api/update -d '{\"image\":\"img-v2\"}' ", "lang": "bash", "body": "Exemple d'appel d'une API de mise à jour depuis un appareil."},
           {"type": "text", "body": "Le déploiement par vagues permet de tester sur un petit nombre avant d'étendre. Chaque appareil peut aussi vérifier la signature de l'image avant de l'installer."},
+          {"type": "text", "body": "On n'écrit pas soi-même ce mécanisme : des outils libres éprouvés existent. RAUC, SWUpdate et Mender gèrent côté appareil l'installation A/B, la vérification de signature et l'intégration avec U-Boot ; des serveurs comme hawkBit ou Mender orchestrent le déploiement sur la flotte."},
+          {"type": "code", "title": "Installer et contrôler une mise à jour avec RAUC", "lang": "bash", "code": "rauc info mise-a-jour-v2.raucb      # contenu et signature du bundle\nsudo rauc install mise-a-jour-v2.raucb\nrauc status\n# Booted from: rootfs.0 (A)\n# Activated:   rootfs.1 (B)     <- démarrera au prochain boot\nsudo reboot\n# après validation de la nouvelle version :\nsudo rauc status mark-good"},
+          {"type": "text", "body": "Le déploiement se fait par vagues : 1 % de la flotte, puis 10 %, puis le reste, avec à chaque fois une période d'observation du taux d'échec. Le serveur doit pouvoir suspendre la campagne d'un clic si les erreurs augmentent. On commence souvent par les appareils internes de l'entreprise."},
           {"type": "exercise", "question": "Pourquoi déployer une mise à jour en plusieurs vagues ?", "answer": "Pour limiter l'impact d'un défaut en testant d'abord sur un petit ensemble d'appareils."},
+          {"type": "exercise", "question": "Quel est l'intérêt d'un outil comme RAUC, SWUpdate ou Mender plutôt qu'un script maison ?", "answer": "Ils gèrent de façon éprouvée les cas difficiles : écriture atomique A/B, vérification de signature, intégration au bootloader, retour arrière ; un script maison oublie facilement un cas d'échec."},
+          {"type": "exercise", "question": "Pratique : propose un plan de déploiement pour 5 000 appareils.", "answer": "1. Appareils de test internes (≈ 20) : 48 h d'observation.\n2. 1 % de la flotte (50) : 24 h, surveiller retours arrière et erreurs.\n3. 10 % (500) : 24 h.\n4. Le reste, par tranches.\nCritère d'arrêt automatique : taux d'échec ou de retour arrière > 1 %."},
           {"type": "warning", "body": "Vérifiez toujours la signature de l'image téléchargée pour empêcher l'installation de code malveillant."}
         ]
       },
@@ -294,7 +392,12 @@
           {"type": "text", "body": "Après déploiement, on surveille l'état des appareils : version installée, erreurs, indicateurs de santé. Cette télémétrie guide les prochaines mises à jour."},
           {"type": "text", "body": "La rotation des clés et l'expiration des certificats exigent une planification. Les appareils avec des clés compromises doivent pouvoir être revoqués."},
           {"type": "list", "title": "Éléments à surveiller en flotte", "items": ["Version du logiciel installée", "Taux de réussite des mises à jour", "Erreurs et crashs signalés", "Durée de vie des certificats"]},
+          {"type": "text", "body": "Un appareil isolé ne peut pas appeler à l'aide : il doit se surveiller lui-même. Le watchdog matériel redémarre la carte si le logiciel cesse de lui envoyer un signal. systemd l'alimente directement (RuntimeWatchdogSec dans system.conf) et peut aussi redémarrer un service qui ne donne plus signe de vie (WatchdogSec dans l'unité)."},
+          {"type": "code", "title": "Activer le watchdog matériel et surveiller un service", "lang": "ini", "code": "# /etc/systemd/system.conf.d/watchdog.conf\n[Manager]\nRuntimeWatchdogSec=15s     # la carte redémarre si systemd se bloque 15 s\n\n# dans l'unité du service :\n[Service]\nWatchdogSec=30s            # le service doit appeler sd_notify(\"WATCHDOG=1\")\nRestart=on-watchdog"},
+          {"type": "text", "body": "Côté serveur, chaque appareil envoie régulièrement un battement de cœur : version installée, temps de fonctionnement, espace libre, température, nombre de redémarrages. On surveille l'absence de battement autant que les valeurs anormales. Les dates d'expiration des certificats font partie des indicateurs à suivre, des mois à l'avance."},
           {"type": "exercise", "question": "Pourquoi surveiller l'état des appareils après un déploiement ?", "answer": "Pour détecter les échecs, mesurer l'adoption et guider les mises à jour suivantes."},
+          {"type": "exercise", "question": "À quoi sert le watchdog matériel sur un appareil déployé ?", "answer": "À redémarrer automatiquement la carte si le logiciel se bloque et cesse de le réarmer, sans intervention humaine."},
+          {"type": "exercise", "question": "Pratique : liste cinq indicateurs qu'un appareil devrait envoyer dans son battement de cœur, et pourquoi.", "answer": "- Version du firmware : suivre l'avancement des déploiements.\n- Nombre de redémarrages / retours arrière : détecter une version instable.\n- Espace disque libre : éviter les pannes de stockage.\n- Température : prévenir une panne matérielle.\n- Jours avant expiration du certificat : anticiper sa rotation."},
           {"type": "tip", "body": "Planifiez la rotation des certificats dès la conception pour éviter de bloquer des flottes entières à leur expiration."}
         ]
       }

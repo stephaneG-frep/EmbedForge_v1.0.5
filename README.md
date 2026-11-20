@@ -20,7 +20,7 @@ aucun abonnement.
 
 | Dossier | Quantité | Détail |
 |---|---|---|
-| Cours | 31 modules | ~124 chapitres, 5 niveaux (Fondamentaux → Pro) |
+| Cours | 31 modules | 124 chapitres, 5 niveaux (Fondamentaux → Pro), 368 exercices corrigés dont ~110 pratiques |
 | Commandes | 79 | exemples réels, exercices, défis, erreurs courantes |
 | Quiz | 4 | 32 questions (Débutant → Expert) |
 | Projets | 11 | 10 mini-projets + 1 projet final « Smart Environment Monitor » |
@@ -50,6 +50,7 @@ assets/
   images/         icône générée par tool/make_icon.py
 tool/
   make_icon.py    générateur d'icône (PCB + prompt)
+  content_durations.py  recalcule les durées des cours à partir du contenu
 test/             tests unitaires + validation du contenu
 ```
 
@@ -90,7 +91,7 @@ Les contenus sont des fichiers JSON chargés au démarrage :
 ```bash
 flutter pub get
 flutter analyze        # 0 problème
-flutter test           # 41 tests
+flutter test           # 45 tests (python3 requis, voir ci-dessous)
 dart run flutter_launcher_icons
 flutter build apk --release
 ```
@@ -141,7 +142,22 @@ label `EmbedForge`, ABIs `arm64-v8a`, `armeabi-v7a`, `x86_64`.
   JSON, stockage de repli, taille du texte).
 - `test/content_test.dart` : charge les JSON, vérifie les quantités,
   l'existence des modules référencés par les badges et la roadmap,
-  la cohérence des quiz et des chapitres.
+  la cohérence des quiz et des chapitres, au moins 2 exercices corrigés
+  par chapitre, et des durées synchronisées avec le contenu (ce dernier
+  test lance `python3 tool/content_durations.py --check`).
+
+## Modifier le contenu des cours
+
+Après toute modification d'un fichier `assets/data/courses/level*.json`,
+recalculer les durées affichées dans l'appli :
+
+```bash
+python3 tool/content_durations.py
+```
+
+Barème : texte lu à 110 mots/min, 0,3 min par ligne de code, 1,5 min par
+question de cours, 4 min par exercice pratique (correction sur plusieurs
+lignes), 3 min minimum par chapitre.
 
 ## Licence
 

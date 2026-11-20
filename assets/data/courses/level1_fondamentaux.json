@@ -6,41 +6,47 @@
     "category": "fondamentaux",
     "accent": "green",
     "icon": "linux",
-    "duration": 35,
+    "duration": 25,
     "summary": "Découvrez ce qu'est le Linux embarqué, ses domaines d'application et son écosystème matériel.",
     "objectives": ["Comprendre ce qu'est un système embarqué", "Reconnaître les usages de Linux en embarqué", "Distinguer les composants d'un système Linux", "Identifier les cartes de développement courantes"],
     "chapters": [
       {
         "id": "ch1",
         "title": "Qu'est-ce qu'un système embarqué",
-        "duration": 10,
+        "duration": 4,
         "sections": [
           {"type": "text", "title": "Définition", "body": "Un système embarqué est un système informatique dédié à une tâche précise, intégré dans un appareil plus vaste. Il a des ressources limitées en mémoire, en stockage et en énergie. Linux y est adapté grâce à sa modularité et sa flexibilité."},
           {"type": "definition", "term": "Système embarqué", "body": "Matériel et logiciel dédiés à une fonction spécifique, souvent contraints par la taille, la consommation et le coût, intégré dans un produit comme une voiture ou un routeur."},
           {"type": "list", "title": "Domaines d'application", "items": ["Électronique grand public : téléviseurs, box internet", "Automobile : navigation, contrôle moteur", "Industrie : automates, capteurs", "IoT : objets connectés, thermostats", "Médical : appareils de surveillance"]},
-          {"type": "text", "body": "Le choix de Linux dépend des contraintes : la puissance de calcul, la mémoire disponible et la latence exigée. Linux convient quand on a besoin d'un système de fichiers, de réseau et de multitâche."}
+          {"type": "text", "body": "Le choix de Linux dépend des contraintes : la puissance de calcul, la mémoire disponible et la latence exigée. Linux convient quand on a besoin d'un système de fichiers, de réseau et de multitâche."},
+          {"type": "exercise", "question": "Cite trois systèmes embarqués que tu utilises chaque jour.", "answer": "Par exemple : une box internet, un téléviseur connecté, une voiture (calculateurs), un lave-linge, un thermostat connecté, une montre connectée."},
+          {"type": "exercise", "question": "Qu'est-ce qui distingue un système embarqué d'un ordinateur de bureau ?", "answer": "Il est dédié à une fonction précise, avec des ressources limitées (mémoire, énergie, coût), souvent sans écran, et doit fonctionner longtemps sans intervention."}
         ]
       },
       {
         "id": "ch2",
         "title": "Les composants d'un système Linux",
-        "duration": 10,
+        "duration": 7,
         "sections": [
           {"type": "text", "body": "Un système Linux embarqué se compose de plusieurs couches logicielles empilées sur le matériel. Chaque couche a un rôle précis et communique avec les autres."},
           {"type": "list", "title": "Les couches d'un système", "items": ["Le matériel : CPU, mémoire, périphériques", "Le noyau Linux : gestion du matériel et des processus", "Les bibliothèques : libc, outils de base", "Les applications : programme principal du produit"]},
           {"type": "text", "body": "Le noyau Linux gère les pilotes de périphériques, la mémoire, les processus et le réseau. Les bibliothèques offrent des fonctions réutilisables aux applications, comme la glibc ou musl sur les systèmes plus légers."},
-          {"type": "tip", "body": "Sur un système embarqué, on privilégie souvent la bibliothèque musl, plus légère et plus rapide à charger que la glibc, pour économiser la mémoire."}
+          {"type": "tip", "body": "Sur un système embarqué, on privilégie souvent la bibliothèque musl, plus légère et plus rapide à charger que la glibc, pour économiser la mémoire."},
+          {"type": "exercise", "question": "Quels sont les quatre composants logiciels principaux d'un système Linux embarqué ?", "answer": "Le bootloader, le noyau Linux, le système de fichiers racine (avec les bibliothèques et outils) et les applications."},
+          {"type": "exercise", "question": "Pratique : sur une machine Linux, affiche la version du noyau et le nom de la distribution.", "answer": "uname -r                # version du noyau\ncat /etc/os-release     # nom et version de la distribution"}
         ]
       },
       {
         "id": "ch3",
         "title": "Le matériel embarqué",
-        "duration": 8,
+        "duration": 7,
         "sections": [
           {"type": "text", "body": "Le cœur d'une carte embarquée est le SoC, System-on-Chip, qui regroupe processeur, mémoire et périphériques sur une seule puce. Les architectures dominantes sont ARM et RISC-V."},
           {"type": "definition", "term": "SoC", "body": "Circuit intégré réunissant un processeur, des contrôleurs mémoire et des périphériques sur une même puce, réduisant taille et consommation."},
           {"type": "table", "title": "Cartes de développement courantes", "table": [["Carte", "Processeur", "Usage"], ["Raspberry Pi", "ARM Cortex-A", "Prototypage, média"], ["BeagleBone Black", "ARM Cortex-A8", "Contrôle, GPIO"], ["STM32MP1", "ARM à deux cœurs", "Industrie"], ["Orange Pi", "ARM", "Alternatif abordable"]]},
-          {"type": "tip", "body": "Pour débuter, choisissez une carte bien documentée comme la Raspberry Pi : la communauté est vaste et les exemples abondent."}
+          {"type": "tip", "body": "Pour débuter, choisissez une carte bien documentée comme la Raspberry Pi : la communauté est vaste et les exemples abondent."},
+          {"type": "exercise", "question": "Que regroupe un SoC (System on Chip) ?", "answer": "Sur une seule puce : le ou les cœurs de processeur et de nombreux périphériques (contrôleurs mémoire, USB, réseau, GPIO, UART, I2C, SPI...)."},
+          {"type": "exercise", "question": "Pratique : sur une carte Linux, affiche le modèle de processeur et la quantité de mémoire vive.", "answer": "lscpu | grep \"Model name\"\nfree -h"}
         ]
       },
       {
@@ -51,7 +57,9 @@
           {"type": "text", "body": "Linux apporte un écosystème riche : un grand nombre de pilotes, un réseau, une sécurité évoluée et une grande communauté. Il réduit le coût de développement par rapport à un OS propriétaire."},
           {"type": "list", "title": "Avantages de Linux", "items": ["Gratuit et open source", "Large support matériel", "Outils de développement éprouvés", "Modulaire et personnalisable"]},
           {"type": "text", "body": "Cependant, Linux n'est pas temps réel par nature. Pour des contraintes de latence strictes, on utilise des correctifs temps réel ou d'autres solutions comme des RTOS. Ce choix dépend du besoin du produit."},
-          {"type": "tip", "body": "Même sur un système embarqué, on peut utiliser un shell et les commandes usuelles : c'est un grand avantage pour le débogage sur la cible."}
+          {"type": "tip", "body": "Même sur un système embarqué, on peut utiliser un shell et les commandes usuelles : c'est un grand avantage pour le débogage sur la cible."},
+          {"type": "exercise", "question": "Donne deux avantages et un inconvénient de Linux en embarqué.", "answer": "Avantages : gratuit et ouvert, énorme choix de pilotes et de logiciels, réseau et sécurité éprouvés.\nInconvénient : demande plus de ressources qu'un RTOS et n'offre pas nativement des garanties temps réel strictes."},
+          {"type": "exercise", "question": "Pour un capteur sur pile qui mesure une température toutes les minutes, choisirais-tu Linux ? Pourquoi ?", "answer": "Plutôt non : un microcontrôleur avec un RTOS ou du bare metal consomme beaucoup moins d'énergie et suffit largement. Linux se justifie quand il faut réseau riche, interface, stockage ou logiciels complexes."}
         ]
       }
     ]
@@ -76,18 +84,22 @@
           {"type": "code", "code": "pwd\nls -l\ncd /etc", "lang": "bash", "body": "pwd affiche le chemin courant, ls -l une liste détaillée, cd change de répertoire."},
           {"type": "text", "body": "Le chemin est décrit depuis la racine / avec des barres obliques. Le point . désigne le répertoire courant et .. le répertoire parent."},
           {"type": "exercise", "question": "Quelle commande affiche le répertoire de travail courant ?", "answer": "pwd (print working directory)"},
+          {"type": "exercise", "question": "Quelle est la différence entre un chemin absolu et un chemin relatif ?", "answer": "Un chemin absolu part de la racine / (ex. /etc/hostname) ; un chemin relatif part du répertoire courant (ex. ../log)."},
+          {"type": "exercise", "question": "Pratique : depuis ton dossier personnel, va dans /var/log, liste son contenu trié par date (le plus récent en dernier), puis reviens au dossier précédent.", "answer": "cd /var/log\nls -ltr\ncd -        # revient au dossier précédent"},
           {"type": "tip", "body": "Utilisez la touche Tab pour compléter automatiquement les noms de fichiers et de commandes, et les flèches pour rappeler les commandes précédentes."}
         ]
       },
       {
         "id": "ch2",
         "title": "Manipuler les fichiers",
-        "duration": 10,
+        "duration": 9,
         "sections": [
           {"type": "code", "code": "touch nouveau.txt\nmkdir mon_dossier\ncp fichier.txt copie.txt\nmv ancien.txt nouveau.txt\nrm fichier.txt", "lang": "bash", "body": "Création, répertoire, copie, déplacement et suppression."},
           {"type": "text", "body": "cp copie un fichier, mv déplace ou renomme, rm supprime définitivement. Sans récupération possible, soyez prudent avec rm."},
           {"type": "warning", "body": "La commande rm supprime les fichiers sans corbeille. Une suppression est définitive, vérifiez toujours votre cible."},
           {"type": "exercise", "question": "Quelle commande déplace et renomme un fichier ?", "answer": "mv (move), ex : mv ancien.txt nouveau.txt"},
+          {"type": "exercise", "question": "Quelle option permet à cp de copier un dossier et tout son contenu ?", "answer": "L'option -r (récursive) : cp -r source/ destination/"},
+          {"type": "exercise", "question": "Pratique : crée l'arborescence projet/src et projet/doc en une commande, crée projet/src/main.c, puis copie tout le projet dans sauvegarde/.", "answer": "mkdir -p projet/src projet/doc\ntouch projet/src/main.c\ncp -r projet sauvegarde\nls -R sauvegarde"},
           {"type": "tip", "body": "Avec cp -r on copie un répertoire complet, et cp -a conserve les métadonnées comme les dates et permissions."}
         ]
       },
@@ -100,17 +112,21 @@
           {"type": "text", "body": "less permet de naviguer dans un fichier long avec les flèches et la touche q pour quitter. tail -f suit les nouvelles lignes ajoutées, idéal pour les journaux."},
           {"type": "code", "code": "grep erreur journal.log", "lang": "bash", "body": "grep cherche les lignes contenant le mot demandé dans un fichier."},
           {"type": "exercise", "question": "Quelle option de tail permet de suivre un fichier en continu ?", "answer": "L'option -f, par exemple tail -f journal.log"},
+          {"type": "exercise", "question": "Que fait le symbole | (pipe) entre deux commandes ?", "answer": "Il envoie la sortie de la première commande en entrée de la seconde, par exemple : dmesg | grep usb"},
+          {"type": "exercise", "question": "Pratique : compte combien de lignes de /var/log/syslog contiennent « error », sans tenir compte des majuscules.", "answer": "grep -ic error /var/log/syslog\n# -i : ignore la casse, -c : compte les lignes\n# (sur un système sans syslog : journalctl | grep -ic error)"},
           {"type": "tip", "body": "Combinez grep avec d'autres commandes via un tube : ls -l | grep txt filtre la liste des fichiers contenant txt."}
         ]
       },
       {
         "id": "ch4",
         "title": "Obtenir de l'aide",
-        "duration": 7,
+        "duration": 8,
         "sections": [
           {"type": "code", "code": "man ls\nls --help", "lang": "bash", "body": "man affiche le manuel complet, --help un aide-mémoire rapide."},
           {"type": "text", "body": "La commande man ouvre la documentation détaillée d'une commande. Utilisez les sections numérotées pour les fonctions, par exemple man 3 printf."},
           {"type": "exercise", "question": "Quelle commande ouvre le manuel d'une autre commande ?", "answer": "man, par exemple man ls"},
+          {"type": "exercise", "question": "Comment chercher une commande dans le manuel quand on ne connaît que sa fonction ?", "answer": "Avec apropos mot_cle (ou man -k mot_cle), qui cherche dans les descriptions des pages de manuel."},
+          {"type": "exercise", "question": "Pratique : trouve dans le manuel de ls l'option qui affiche les tailles en format lisible (K, M, G).", "answer": "man ls        # puis taper /human et Entrée pour chercher\n# réponse : -h (--human-readable), à combiner avec -l : ls -lh"},
           {"type": "tip", "body": "Tapez /mot dans un manuel pour rechercher un terme, et q pour quitter."}
         ]
       }
@@ -123,7 +139,7 @@
     "category": "fondamentaux",
     "accent": "green",
     "icon": "code",
-    "duration": 35,
+    "duration": 38,
     "summary": "Écrivez vos premiers scripts Bash pour automatiser des tâches dans un environnement embarqué.",
     "objectives": ["Créer et exécuter un script", "Utiliser des variables", "Écrire des structures conditionnelles", "Construire des boucles simples"],
     "chapters": [
@@ -136,7 +152,9 @@
           {"type": "text", "body": "La ligne shebang #!/bin/bash précise quel interpréteur exécute le script. Pour un script embarqué léger, on peut utiliser #!/bin/sh avec la syntaxe Dash compatible."},
           {"type": "code", "code": "chmod +x mon_script.sh\n./mon_script.sh", "lang": "bash", "body": "Rendre le script exécutable, puis le lancer avec ./"},
           {"type": "warning", "body": "sans le droit d'exécution, un script ne se lance pas. Utilisez chmod +x pour l'activer."},
-          {"type": "exercise", "question": "Que signifie la ligne shebang ?", "answer": "Elle indique l'interpréteur à utiliser, par exemple #!/bin/bash."}
+          {"type": "exercise", "question": "Que signifie la ligne shebang ?", "answer": "Elle indique l'interpréteur à utiliser, par exemple #!/bin/bash."},
+          {"type": "exercise", "question": "Pourquoi faut-il faire chmod +x avant de lancer ./mon_script.sh ?", "answer": "Pour donner le droit d'exécution au fichier ; sans lui, le shell refuse avec « Permission denied »."},
+          {"type": "exercise", "question": "Pratique : écris un script infos.sh qui affiche la date, le nom de la machine et l'utilisateur courant.", "answer": "#!/bin/bash\necho \"Date        : $(date)\"\necho \"Machine     : $(hostname)\"\necho \"Utilisateur : $(whoami)\"\n\n# puis : chmod +x infos.sh && ./infos.sh"}
         ]
       },
       {
@@ -148,30 +166,36 @@
           {"type": "text", "body": "Une variable se définit sans espace autour du signe égal. Pour la lire, on précède son nom d'un $. Récupérez la sortie d'une commande avec $(commande)."},
           {"type": "code", "code": "DATE=$(date)\necho \"Nous sommes le $DATE\"", "lang": "bash", "body": "La substitution $(...) exécute la commande et stocke sa sortie."},
           {"type": "exercise", "question": "Comment récupérer la sortie d'une commande dans une variable ?", "answer": "Avec $(commande), par exemple MA_VAL=$(date)."},
+          {"type": "exercise", "question": "Pourquoi écrire NOM=\"capteur\" sans espace autour du signe égal ?", "answer": "Avec des espaces, Bash comprend NOM comme une commande à exécuter avec les arguments = et \"capteur\", ce qui échoue."},
+          {"type": "exercise", "question": "Pratique : stocke dans une variable le nombre de fichiers de /etc, puis affiche une phrase qui l'utilise.", "answer": "#!/bin/bash\nNB=$(ls /etc | wc -l)\necho \"Le dossier /etc contient $NB entrées.\""},
           {"type": "tip", "body": "Entourez vos variables de guillemets doubles pour préserver les espaces : echo \"$NOM\"."}
         ]
       },
       {
         "id": "ch3",
         "title": "Les conditions",
-        "duration": 9,
+        "duration": 10,
         "sections": [
           {"type": "code", "code": "if [ -e /dev/ttyUSB0 ]; then\n  echo \"Le port serie existe\"\nelse\n  echo \"Port absent\"\nfi", "lang": "bash", "body": "Teste l'existence d'un fichier, ici un port série."},
           {"type": "text", "body": "La syntaxe if teste une condition entre crochets. Le test -e vérifie l'existence, -f un fichier régulier, -d un répertoire."},
           {"type": "code", "code": "if [ \"$VAL\" -gt 10 ]; then\n  echo \"Grande valeur\"\nfi", "lang": "bash", "body": "Comparaison numérique avec -gt (supérieur à)."},
           {"type": "exercise", "question": "Quel test vérifie l'existence d'un répertoire ?", "answer": "Le test -d : if [ -d /chemin ]."},
+          {"type": "exercise", "question": "Pourquoi mettre la variable entre guillemets dans [ \"$VAL\" -gt 10 ] ?", "answer": "Si la variable est vide ou contient des espaces, le test resterait correct ; sans guillemets, il provoquerait une erreur de syntaxe."},
+          {"type": "exercise", "question": "Pratique : écris un script qui affiche « chaud » si la température passée en argument dépasse 30, « normal » sinon.", "answer": "#!/bin/bash\nTEMP=$1\nif [ \"$TEMP\" -gt 30 ]; then\n  echo \"chaud\"\nelse\n  echo \"normal\"\nfi\n\n# ./temp.sh 35  -> chaud"},
           {"type": "tip", "body": "Pour comparer des chaînes, utilisez = et != ; pour des nombres, -eq, -ne, -lt, -gt, -le, -ge."}
         ]
       },
       {
         "id": "ch4",
         "title": "Les boucles",
-        "duration": 8,
+        "duration": 10,
         "sections": [
           {"type": "code", "code": "for i in 1 2 3 4 5; do\n  echo \"Iteration $i\"\ndone", "lang": "bash", "body": "Boucle pour qui parcourt une liste de valeurs."},
           {"type": "text", "body": "La boucle while répète tant qu'une condition est vraie. On utilise souvent for pour parcourir des fichiers ou des valeurs."},
           {"type": "code", "code": "compteur=0\nwhile [ $compteur -lt 3 ]; do\n  echo \"valeur $compteur\"\n  compteur=$((compteur + 1))\ndone", "lang": "bash", "body": "Boucle while avec incrément arithmétique."},
           {"type": "exercise", "question": "Que fait la boucle for ci-dessus ?", "answer": "Elle affiche Iteration pour chaque valeur de la liste, de 1 à 5."},
+          {"type": "exercise", "question": "Comment écrire une boucle for de 1 à 10 sans taper tous les nombres ?", "answer": "for i in $(seq 1 10); do ... done   ou   for i in {1..10}; do ... done"},
+          {"type": "exercise", "question": "Pratique : écris un script qui vérifie toutes les 2 secondes si /dev/ttyUSB0 existe, et s'arrête en l'annonçant dès qu'il apparaît.", "answer": "#!/bin/bash\nwhile [ ! -e /dev/ttyUSB0 ]; do\n  echo \"en attente de l'adaptateur...\"\n  sleep 2\ndone\necho \"/dev/ttyUSB0 détecté\""},
           {"type": "tip", "body": "L'arithmétique se fait entre doubles parenthèses : $((x + 1))."}
         ]
       }
@@ -184,30 +208,34 @@
     "category": "fondamentaux",
     "accent": "blue",
     "icon": "storage",
-    "duration": 35,
+    "duration": 33,
     "summary": "Comprenez l'arborescence Linux, les permissions de fichiers et la gestion des propriétaires.",
     "objectives": ["Comprendre l'arborescence Linux", "Lire et modifier les permissions", "Gérer les propriétaires de fichiers", "Utiliser des liens symboliques"],
     "chapters": [
       {
         "id": "ch1",
         "title": "L'arborescence Linux",
-        "duration": 9,
+        "duration": 8,
         "sections": [
           {"type": "text", "body": "Linux organise tout dans une arborescence unique partant de la racine /. Chaque répertoire standard a une fonction précise, normalisée."},
           {"type": "table", "title": "Répertoires standard", "table": [["Répertoire", "Contenu"], ["/bin", "Exécutables essentiels"], ["/etc", "Fichiers de configuration"], ["/dev", "Périphériques"], ["/proc", "Informations système en direct"], ["/home", "Fichiers des utilisateurs"], ["/tmp", "Fichiers temporaires"]]},
           {"type": "text", "body": "Sur un système embarqué, /dev contient les périphériques comme /dev/ttyUSB0 pour un port série. /proc donne accès à des informations dynamiques du noyau."},
-          {"type": "exercise", "question": "Où se trouvent les fichiers de configuration système ?", "answer": "Dans /etc."}
+          {"type": "exercise", "question": "Où se trouvent les fichiers de configuration système ?", "answer": "Dans /etc."},
+          {"type": "exercise", "question": "Que contient le répertoire /dev ?", "answer": "Les fichiers de périphériques (disques, ports série, GPIO, etc.) qui donnent accès au matériel."},
+          {"type": "exercise", "question": "Pratique : associe chaque répertoire à son rôle : /home, /var/log, /tmp, /boot.", "answer": "/home     : dossiers personnels des utilisateurs\n/var/log  : journaux du système et des services\n/tmp      : fichiers temporaires (souvent vidés au redémarrage)\n/boot     : noyau et fichiers de démarrage"}
         ]
       },
       {
         "id": "ch2",
         "title": "Lire les permissions",
-        "duration": 10,
+        "duration": 8,
         "sections": [
           {"type": "code", "code": "ls -l mon_fichier.txt", "lang": "bash", "body": "Affiche les permissions sous forme de symboles."},
           {"type": "text", "body": "La sortie montre dix caractères : le type puis trois groupes de permissions pour le propriétaire, le groupe et les autres. r = lecture, w = écriture, x = exécution."},
           {"type": "table", "title": "Déchiffrer rwxr-xr--", "table": [["Groupe", "Symboles", "Droits"], ["Propriétaire", "rwx", "Lecture, écriture, exécution"], ["Groupe", "r-x", "Lecture, exécution"], ["Autres", "r--", "Lecture seule"]]},
-          {"type": "exercise", "question": "Quels droits possède un fichier noté rw-r--r-- ?", "answer": "Le propriétaire lit et écrit, le groupe et les autres ne lisent que."}
+          {"type": "exercise", "question": "Quels droits possède un fichier noté rw-r--r-- ?", "answer": "Le propriétaire lit et écrit, le groupe et les autres ne lisent que."},
+          {"type": "exercise", "question": "Que signifie le premier caractère « d » dans drwxr-xr-x ?", "answer": "Que l'entrée est un répertoire (directory) ; un « - » indique un fichier ordinaire, « l » un lien symbolique."},
+          {"type": "exercise", "question": "Pratique : affiche les permissions de /etc/shadow et explique qui peut le lire.", "answer": "ls -l /etc/shadow\n# -rw-r----- 1 root shadow ... /etc/shadow\n# propriétaire root : lecture/écriture ; groupe shadow : lecture ;\n# les autres : aucun droit."}
         ]
       },
       {
@@ -219,18 +247,22 @@
           {"type": "text", "body": "En mode numérique, chaque droit a une valeur : r=4, w=2, x=1. Le total représente chaque groupe. 755 signifie rwxr-xr-x."},
           {"type": "code", "code": "chmod +x fichier.sh\nchmod o-w fichier.txt", "lang": "bash", "body": "Ajouter l'exécution à tous, retirer l'écriture aux autres."},
           {"type": "warning", "body": "Le mode 777 donne tous les droits à tout le monde : risqué sur un système en production. Privilégiez des droits minimaux."},
-          {"type": "exercise", "question": "Quelle valeur numérique correspond à rwxr-xr-x ?", "answer": "755 (7=propriétaire, 5=groupe, 5=autres)."}
+          {"type": "exercise", "question": "Quelle valeur numérique correspond à rwxr-xr-x ?", "answer": "755 (7=propriétaire, 5=groupe, 5=autres)."},
+          {"type": "exercise", "question": "Quelle valeur numérique correspond à rw-r----- ?", "answer": "640 : rw- = 4+2 = 6, r-- = 4, --- = 0."},
+          {"type": "exercise", "question": "Pratique : crée un fichier secret.txt lisible et modifiable par toi seul, puis vérifie.", "answer": "touch secret.txt\nchmod 600 secret.txt\nls -l secret.txt\n# -rw------- ... secret.txt"}
         ]
       },
       {
         "id": "ch4",
         "title": "Propriétaires et liens",
-        "duration": 7,
+        "duration": 8,
         "sections": [
-          {"type": "code", "code": "chown root:fichier\nchown utilisateur:groupe fichier", "lang": "bash", "body": "Change le propriétaire et le groupe d'un fichier."},
+          {"type": "code", "code": "sudo chown root fichier\nsudo chown utilisateur:groupe fichier", "lang": "bash", "body": "Change le propriétaire et le groupe d'un fichier."},
           {"type": "text", "body": "chown exige souvent les droits root. Un lien symbolique est un raccourci vers un autre fichier, utile pour versionner des chemins."},
           {"type": "code", "code": "ln -s /etc/fichier.reel mon_lien", "lang": "bash", "body": "Crée un lien symbolique nommé mon_lien."},
           {"type": "exercise", "question": "Quelle commande crée un lien symbolique ?", "answer": "ln -s cible nom_du_lien."},
+          {"type": "exercise", "question": "Que se passe-t-il pour un lien symbolique si on supprime le fichier qu'il désigne ?", "answer": "Le lien devient « cassé » : il existe toujours mais pointe vers un fichier absent, et y accéder échoue."},
+          {"type": "exercise", "question": "Pratique : crée un lien symbolique « dernier.log » vers /var/log/syslog et affiche vers quoi il pointe.", "answer": "ln -s /var/log/syslog dernier.log\nls -l dernier.log\n# dernier.log -> /var/log/syslog\nreadlink dernier.log"},
           {"type": "tip", "body": "Sur une cible embarquée, ls -l affiche la cible d'un lien avec la flèche ->."}
         ]
       }
@@ -243,19 +275,21 @@
     "category": "fondamentaux",
     "accent": "blue",
     "icon": "speed",
-    "duration": 35,
+    "duration": 33,
     "summary": "Inspectez les processus en cours, gérez leur priorité et comprenez la gestion des utilisateurs.",
     "objectives": ["Lister et analyser les processus", "Gérer les processus en arrière-plan", "Comprendre le rôle de root", "Changer l'utilisateur courant"],
     "chapters": [
       {
         "id": "ch1",
         "title": "Observer les processus",
-        "duration": 9,
+        "duration": 8,
         "sections": [
           {"type": "code", "code": "ps aux\ntop", "lang": "bash", "body": "ps liste les processus, top les affiche en direct."},
           {"type": "text", "body": "Chaque processus a un identifiant PID unique. ps aux montre tous les processus avec leur utilisateur, leur CPU et leur mémoire."},
           {"type": "text", "body": "top fournit une vue dynamique qui se rafraîchit. Sur un système embarqué à faibles ressources, ces commandes aident à détecter une consommation excessive."},
           {"type": "exercise", "question": "Quel identifiant unique porte chaque processus ?", "answer": "Le PID, Process IDentifier."},
+          {"type": "exercise", "question": "Quel processus porte le PID 1 sur un système Linux ?", "answer": "Le processus init (systemd sur la plupart des distributions, BusyBox init sur beaucoup de systèmes embarqués) : le premier lancé par le noyau."},
+          {"type": "exercise", "question": "Pratique : affiche les 5 processus qui consomment le plus de mémoire.", "answer": "ps aux --sort=-%mem | head -n 6\n# la première ligne est l'en-tête"},
           {"type": "tip", "body": "Utilisez q pour quitter top, et la touche P pour trier par utilisation du CPU."}
         ]
       },
@@ -268,7 +302,9 @@
           {"type": "text", "body": "kill envoie un signal au processus. Le signal par défaut TERM demande un arrêt propre, alors que KILL force la terminaison immédiate."},
           {"type": "code", "code": "commande &\nfg\njobs", "lang": "bash", "body": "Lancer un processus en arrière-plan, le ramener au premier plan, lister les tâches."},
           {"type": "warning", "body": "kill -9 ne laisse aucune chance au processus de sauvegarder ses données. Préférez un arrêt propre avec SIGTERM avant."},
-          {"type": "exercise", "question": "Que fait kill -9 ?", "answer": "Il force l'arrêt immédiat d'un processus avec le signal SIGKILL."}
+          {"type": "exercise", "question": "Que fait kill -9 ?", "answer": "Il force l'arrêt immédiat d'un processus avec le signal SIGKILL."},
+          {"type": "exercise", "question": "Pourquoi essayer kill (signal TERM) avant kill -9 ?", "answer": "TERM laisse au programme le temps de s'arrêter proprement (fermer ses fichiers, libérer ses ressources) ; -9 (KILL) le tue immédiatement sans nettoyage."},
+          {"type": "exercise", "question": "Pratique : lance « sleep 300 » en arrière-plan, retrouve son PID, puis arrête-le proprement.", "answer": "sleep 300 &\njobs -l            # ou : pgrep sleep\nkill %1            # ou : kill PID\njobs"}
         ]
       },
       {
@@ -280,18 +316,22 @@
           {"type": "text", "body": "root est l'utilisateur administrateur avec tous les droits sur le système. Sur une cible embarquée, on utilise parfois root pour simplifier, mais c'est un risque de sécurité."},
           {"type": "list", "title": "Pourquoi éviter root en permanence", "items": ["Un bug peut endommager tout le système", "Une faille donne un accès total", "Les journaux sont moins précis"]},
           {"type": "exercise", "question": "Quelle commande affiche l'utilisateur courant ?", "answer": "whoami."},
+          {"type": "exercise", "question": "Pourquoi éviter de travailler en permanence sous le compte root ?", "answer": "Une erreur de commande peut détruire le système, et un programme compromis aurait tous les droits ; on n'utilise root que pour les tâches qui l'exigent."},
+          {"type": "exercise", "question": "Pratique : affiche les groupes auxquels tu appartiens et vérifie si tu fais partie de sudo.", "answer": "id\ngroups\ngroups | grep -w sudo && echo \"membre de sudo\""},
           {"type": "tip", "body": "Sur un système embarqué en production, créez un utilisateur restreint et n'utilisez root que pour l'administration."}
         ]
       },
       {
         "id": "ch4",
         "title": "Changer d'utilisateur",
-        "duration": 9,
+        "duration": 8,
         "sections": [
           {"type": "code", "code": "su\nsudo apt update", "lang": "bash", "body": "su bascule l'utilisateur, sudo exécute une commande en tant qu'administrateur."},
           {"type": "text", "body": "sudo permet d'élever brièvement ses privilèges et journalise la commande. su ouvre un shell en tant qu'un autre utilisateur."},
           {"type": "warning", "body": "sudo n'existe pas sur toutes les images embarquées. Certaines n'ont que su ou un accès root direct. Adaptez-vous à la cible."},
           {"type": "exercise", "question": "Quelle est la différence entre sudo et su ?", "answer": "sudo exécute une seule commande en privilégié, su ouvre une session en tant qu'un autre utilisateur."},
+          {"type": "exercise", "question": "Où sont configurés les droits accordés par sudo ?", "answer": "Dans /etc/sudoers et /etc/sudoers.d/, à modifier uniquement avec visudo, qui vérifie la syntaxe."},
+          {"type": "exercise", "question": "Pratique : exécute la commande « id » en tant qu'utilisateur root grâce à sudo, puis compare avec id sans sudo.", "answer": "id          # uid de ton utilisateur\nsudo id     # uid=0(root) gid=0(root) ..."},
           {"type": "tip", "body": "Utilisez sudo -i pour obtenir un shell root interactif quand c'est nécessaire."}
         ]
       }
@@ -304,31 +344,35 @@
     "category": "fondamentaux",
     "accent": "orange",
     "icon": "code",
-    "duration": 35,
+    "duration": 39,
     "summary": "Approfondissez Bash : fonctions, arguments, fichiers, et bonnes pratiques pour des scripts robustes.",
     "objectives": ["Écrire des fonctions réutilisables", "Gérer les arguments en ligne de commande", "Traiter des fichiers en boucle", "Appliquer les bonnes pratiques d'écriture"],
     "chapters": [
       {
         "id": "ch1",
         "title": "Les fonctions",
-        "duration": 9,
+        "duration": 10,
         "sections": [
           {"type": "code", "code": "afficher() {\n  echo \"Message: $1\"\n}\nafficher \"debut\"", "lang": "bash", "body": "Définition et appel d'une fonction, accès au premier argument."},
           {"type": "text", "body": "Les fonctions permettent de structurer le code et d'éviter la duplication. Elles reçoivent leurs arguments via $1, $2, etc."},
           {"type": "code", "code": "compter() {\n  echo \"Total: $#\"\n}\ncompter un deux trois", "lang": "bash", "body": "$# donne le nombre d'arguments passés à la fonction."},
           {"type": "exercise", "question": "Comment accéder au premier argument d'une fonction ?", "answer": "Avec $1."},
+          {"type": "exercise", "question": "Comment une fonction Bash renvoie-t-elle un résultat texte à l'appelant ?", "answer": "En l'affichant avec echo ; l'appelant le récupère avec $(ma_fonction). return ne renvoie qu'un code de statut numérique (0 à 255)."},
+          {"type": "exercise", "question": "Pratique : écris une fonction celsius_vers_f qui affiche la conversion d'une température en Fahrenheit (F = C × 9 / 5 + 32).", "answer": "celsius_vers_f() {\n  echo $(( $1 * 9 / 5 + 32 ))\n}\nF=$(celsius_vers_f 25)\necho \"25 °C = $F °F\"     # 77 °F\n# (arithmétique Bash entière : pour des décimales, utiliser bc ou awk)"},
           {"type": "tip", "body": "Déclarez les fonctions avant de les appeler, sinon le shell ne les connaît pas encore."}
         ]
       },
       {
         "id": "ch2",
         "title": "Les arguments de script",
-        "duration": 9,
+        "duration": 11,
         "sections": [
           {"type": "code", "code": "#!/bin/bash\nif [ $# -ne 2 ]; then\n  echo \"Usage: $0 fichier valeur\"\n  exit 1\nfi\necho \"Fichier: $1, Valeur: $2\"", "lang": "bash", "body": "Vérifie que deux arguments ont été fournis."},
           {"type": "text", "body": "$0 est le nom du script, $1 et $2 les deux premiers arguments. $# indique leur nombre. Un bon script vérifie ses arguments avant de continuer."},
           {"type": "code", "code": "shift\nwhile [ $# -gt 0 ]; do\n  echo \"Argument: $1\"\n  shift\ndone", "lang": "bash", "body": "shift décale les arguments, utile pour les parcourir."},
           {"type": "exercise", "question": "Que représente $1 dans un script ?", "answer": "Le premier argument passé au script en ligne de commande."},
+          {"type": "exercise", "question": "Que contiennent $0 et $# dans un script ?", "answer": "$0 : le nom du script ; $# : le nombre d'arguments passés."},
+          {"type": "exercise", "question": "Pratique : écris un script qui affiche un message d'usage et quitte avec le code 1 s'il ne reçoit pas exactement un argument.", "answer": "#!/bin/bash\nif [ $# -ne 1 ]; then\n  echo \"Usage : $0 FICHIER\" >&2\n  exit 1\nfi\necho \"Traitement de $1\""},
           {"type": "tip", "body": "Vérifiez toujours le nombre d'arguments avec $# pour éviter des erreurs obscures."}
         ]
       },
@@ -341,19 +385,23 @@
           {"type": "text", "body": "Le motif glob /etc/*.conf est développé par le shell en une liste de fichiers. C'est pratique pour appliquer une opération à plusieurs fichiers."},
           {"type": "code", "code": "while IFS= read -r ligne; do\n  echo \"Ligne: $ligne\"\ndone < fichier.txt", "lang": "bash", "body": "Lit un fichier ligne par ligne dans une boucle."},
           {"type": "exercise", "question": "Comment boucler sur tous les fichiers .conf d'un répertoire ?", "answer": "Avec for f in /chemin/*.conf ; do ... done."},
+          {"type": "exercise", "question": "Pourquoi utiliser « while IFS= read -r ligne » plutôt que « for ligne in $(cat fichier) » ?", "answer": "for découpe sur chaque espace et interprète certains caractères ; while read lit vraiment ligne par ligne, en conservant les espaces et les antislashs."},
+          {"type": "exercise", "question": "Pratique : écris un script qui lit un fichier capteurs.csv (lignes « nom;valeur ») et affiche les capteurs dont la valeur dépasse 50.", "answer": "#!/bin/bash\nwhile IFS=';' read -r nom valeur; do\n  if [ \"$valeur\" -gt 50 ]; then\n    echo \"$nom : $valeur\"\n  fi\ndone < capteurs.csv"},
           {"type": "tip", "body": "Si aucun fichier ne correspond au motif glob, le motif est passé tel quel. Vérifiez avec -e pour éviter les surprises."}
         ]
       },
       {
         "id": "ch4",
         "title": "Bonnes pratiques",
-        "duration": 8,
+        "duration": 9,
         "sections": [
           {"type": "code", "code": "#!/bin/bash\nset -euo pipefail\nLOG=/var/log/app.log\necho \"Demarrage\" >> $LOG", "lang": "bash", "body": "En-tête robuste avec arrêt sur erreur et options strictes."},
           {"type": "text", "body": "set -e stoppe le script à la première erreur, -u signale les variables non définies, -o pipefail propage l'erreur dans les tubes. Ce trio rend les scripts plus sûrs."},
           {"type": "list", "title": "Bonnes pratiques", "items": ["Toujours mettre #!/bin/bash en tête", "Activer set -euo pipefail", "Commenter les passages complexes", "Vérifier la valeur de retour des commandes"]},
           {"type": "warning", "body": "set -e ne capture pas les erreurs dans certaines conditions, comme les commandes suivies de ||. Restez vigilant dans vos tests."},
           {"type": "exercise", "question": "Que fait set -e ?", "answer": "Il termine le script dès qu'une commande retourne une erreur."},
+          {"type": "exercise", "question": "Que change l'option -u de set -euo pipefail ?", "answer": "Le script s'arrête avec une erreur si on utilise une variable non définie, au lieu de la remplacer silencieusement par une chaîne vide."},
+          {"type": "exercise", "question": "Pratique : ajoute à un script une fonction de nettoyage qui supprime son fichier temporaire, même en cas d'erreur ou de Ctrl+C.", "answer": "#!/bin/bash\nset -euo pipefail\nTMP=$(mktemp)\nnettoyer() { rm -f \"$TMP\"; }\ntrap nettoyer EXIT      # appelée à toute sortie du script\n\necho \"données\" > \"$TMP\"\n# ... traitement ..."},
           {"type": "tip", "body": "Testez vos scripts sur une copie d'essai avant de les déployer sur la cible embarquée."}
         ]
       }
@@ -366,19 +414,21 @@
     "category": "fondamentaux",
     "accent": "purple",
     "icon": "code",
-    "duration": 35,
+    "duration": 39,
     "summary": "Apprenez les bases du langage C, le langage de référence du développement embarqué Linux.",
     "objectives": ["Écrire et compiler un premier programme", "Déclarer variables et types", "Utiliser les conditions et boucles", "Créer des fonctions"],
     "chapters": [
       {
         "id": "ch1",
         "title": "Premier programme C",
-        "duration": 9,
+        "duration": 10,
         "sections": [
           {"type": "code", "code": "#include <stdio.h>\nint main(void) {\n  printf(\"Bonjour\\n\");\n  return 0;\n}", "lang": "c", "body": "Un programme minimal qui affiche du texte et retourne zéro."},
           {"type": "text", "body": "La fonction main est le point d'entrée de tout programme C. stdio.h fournit printf pour l'affichage. Le retour 0 signale la réussite."},
           {"type": "code", "code": "gcc -Wall -o mon_prog mon_prog.c\n./mon_prog", "lang": "bash", "body": "Compiler avec gcc puis exécuter le programme."},
           {"type": "exercise", "question": "Quel retour indique le succès d'un programme C ?", "answer": "return 0 dans main."},
+          {"type": "exercise", "question": "À quoi sert l'option -Wall de gcc ?", "answer": "Elle active la plupart des avertissements, qui signalent des erreurs probables (variable non initialisée, format printf incorrect...)."},
+          {"type": "exercise", "question": "Pratique : écris, compile et lance un programme qui affiche ton prénom et l'année en cours sur deux lignes.", "answer": "#include <stdio.h>\n\nint main(void)\n{\n    printf(\"Prénom : Alex\\n\");\n    printf(\"Année  : 2026\\n\");\n    return 0;\n}\n\n/* gcc -Wall -o bonjour bonjour.c && ./bonjour */"},
           {"type": "tip", "body": "Utilisez toujours -Wall lors de la compilation pour activer les avertissements et repérer les erreurs."}
         ]
       },
@@ -391,30 +441,36 @@
           {"type": "text", "body": "Le C propose des types entiers comme int et char, et flottants comme float. unsigned int ne stocke que des valeurs positives, doubles la plage maximale."},
           {"type": "text", "body": "En embarqué, la taille des types importe : char fait généralement un octet, int souvent quatre. Pour être précis, on utilise les types de stdint.h."},
           {"type": "exercise", "question": "Quel type stocke un caractère unique ?", "answer": "char, par exemple char lettre = 'A';."},
+          {"type": "exercise", "question": "Pourquoi utiliser uint8_t ou uint32_t (de <stdint.h>) plutôt que int en embarqué ?", "answer": "Leur taille est garantie quelle que soit l'architecture, ce qui est indispensable pour manipuler des registres ou des trames de taille fixe."},
+          {"type": "exercise", "question": "Pratique : affiche la taille en octets des types char, int, long et double sur ta machine.", "answer": "#include <stdio.h>\n\nint main(void)\n{\n    printf(\"char   : %zu\\n\", sizeof(char));\n    printf(\"int    : %zu\\n\", sizeof(int));\n    printf(\"long   : %zu\\n\", sizeof(long));\n    printf(\"double : %zu\\n\", sizeof(double));\n    return 0;\n}\n/* long vaut 8 sur Linux 64 bits, 4 sur ARM 32 bits */"},
           {"type": "tip", "body": "Pour des tailles garanties, incluez <stdint.h> et utilisez uint8_t, uint16_t, uint32_t selon le besoin."}
         ]
       },
       {
         "id": "ch3",
         "title": "Conditions et boucles",
-        "duration": 9,
+        "duration": 10,
         "sections": [
           {"type": "code", "code": "if (temperature > 40) {\n  printf(\"Alerte chaleur\\n\");\n} else {\n  printf(\"OK\\n\");\n}", "lang": "c", "body": "Structure conditionnelle if/else."},
           {"type": "code", "code": "for (int i = 0; i < 5; i++) {\n  printf(\"i = %d\\n\", i);\n}", "lang": "c", "body": "Boucle for répétant cinq fois une action."},
           {"type": "text", "body": "Le C offre if/else et switch pour les conditions, et for, while, do while pour les boucles. Ces structures sont essentielles pour piloter le matériel."},
           {"type": "exercise", "question": "Quelle boucle garantit l'exécution d'au moins une itération ?", "answer": "La boucle do while."},
+          {"type": "exercise", "question": "Que fait l'instruction break dans une boucle ?", "answer": "Elle sort immédiatement de la boucle en cours, sans exécuter les itérations restantes."},
+          {"type": "exercise", "question": "Pratique : écris un programme qui affiche les nombres de 1 à 20, en remplaçant les multiples de 5 par « LED ».", "answer": "#include <stdio.h>\n\nint main(void)\n{\n    for (int i = 1; i <= 20; i++) {\n        if (i % 5 == 0)\n            printf(\"LED\\n\");\n        else\n            printf(\"%d\\n\", i);\n    }\n    return 0;\n}"},
           {"type": "warning", "body": "Oublier l'incrémentation i++ produit une boucle infinie qui peut figer votre programme embarqué."}
         ]
       },
       {
         "id": "ch4",
         "title": "Les fonctions",
-        "duration": 8,
+        "duration": 10,
         "sections": [
           {"type": "code", "code": "int carre(int x) {\n  return x * x;\n}\nint resultat = carre(4);", "lang": "c", "body": "Définition d'une fonction qui calcule un carré."},
           {"type": "text", "body": "Une fonction a un type de retour, un nom, des paramètres et un corps. Le main peut appeler d'autres fonctions pour organiser le code."},
           {"type": "code", "code": "void allumer(void) {\n  printf(\"LED allumee\\n\");\n}\nallumer();", "lang": "c", "body": "Une fonction void ne retourne rien, utile pour des actions."},
           {"type": "exercise", "question": "Que retourne une fonction déclarée void ?", "answer": "Elle ne retourne aucune valeur."},
+          {"type": "exercise", "question": "Pourquoi déclarer le prototype d'une fonction avant main ?", "answer": "Pour que le compilateur connaisse son type de retour et ses paramètres quand elle est appelée avant sa définition ; il peut ainsi vérifier les appels."},
+          {"type": "exercise", "question": "Pratique : écris une fonction int maximum(int a, int b) et utilise-la pour afficher le plus grand de deux nombres.", "answer": "#include <stdio.h>\n\nint maximum(int a, int b)\n{\n    return (a > b) ? a : b;\n}\n\nint main(void)\n{\n    printf(\"%d\\n\", maximum(12, 7));   /* 12 */\n    return 0;\n}"},
           {"type": "tip", "body": "Déclarez une fonction avant de l'appeler, sinon le compilateur émet un avertissement."}
         ]
       }

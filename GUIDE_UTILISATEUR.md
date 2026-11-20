@@ -67,6 +67,12 @@ de sections : texte, code, astuces, avertissements, définitions,
 exercices, tableaux… Marquez un chapitre ou un module comme terminé pour
 faire avancer votre progression.
 
+Chaque chapitre propose au moins deux exercices : une question de cours et,
+le plus souvent, un exercice pratique (script, commande, programme C…) à
+faire sur votre machine ou votre carte. Cherchez d'abord, puis touchez
+« Voir la correction ». La durée affichée pour chaque chapitre inclut la
+lecture, le code et les exercices.
+
 **Commandes** : 79 commandes Linux classées par catégorie. Chaque fiche
 contient la définition, la syntaxe, un exemple, les options, un exercice,
 l'erreur fréquente et un **défi** :

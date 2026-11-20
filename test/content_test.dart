@@ -112,6 +112,40 @@ void main() {
     expect(sections, greaterThanOrEqualTo(400));
   });
 
+  test('chaque chapitre a au moins 2 exercices corrigés', () {
+    for (final c in repo.courses) {
+      for (final ch in c.chapters) {
+        final exos = ch.sections.where((s) => s.type == SectionType.exercise);
+        expect(
+          exos.length,
+          greaterThanOrEqualTo(2),
+          reason: '${c.id}/${ch.id}',
+        );
+        for (final e in exos) {
+          expect(e.question?.trim(), isNotEmpty, reason: '${c.id}/${ch.id}');
+          expect(e.answer?.trim(), isNotEmpty, reason: '${c.id}/${ch.id}');
+        }
+      }
+    }
+  });
+
+  test('durées cohérentes (tool/content_durations.py --check)', () {
+    for (final c in repo.courses) {
+      for (final ch in c.chapters) {
+        expect(
+          ch.durationMinutes,
+          greaterThanOrEqualTo(3),
+          reason: '${c.id}/${ch.id}',
+        );
+      }
+    }
+    final r = Process.runSync('python3', [
+      'tool/content_durations.py',
+      '--check',
+    ]);
+    expect(r.exitCode, 0, reason: '${r.stdout}${r.stderr}');
+  });
+
   test('chaque quiz a des réponses cohérentes', () {
     for (final q in repo.quizzes) {
       expect(q.questions, hasLength(8));

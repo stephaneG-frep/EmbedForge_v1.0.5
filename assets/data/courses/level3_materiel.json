@@ -6,56 +6,78 @@
     "category": "materiel",
     "accent": "teal",
     "icon": "code",
-    "duration": 40,
+    "duration": 53,
     "summary": "Interagissez avec le matériel Linux en lisant et écrivant dans sysfs, du Python pour piloter la cible.",
     "objectives": ["Comprendre le pseudo-système sysfs", "Lire l'état des périphériques", "Écrire des valeurs dans sysfs", "Piloter le matériel avec Python"],
     "chapters": [
       {
         "id": "ch1",
         "title": "Découvrir sysfs",
-        "duration": 10,
+        "duration": 11,
         "sections": [
           {"type": "text", "body": "sysfs est un pseudo-système de fichiers monté sur /sys qui expose une vue du matériel détecté par le noyau. Chaque périphérique y est représenté par un répertoire."},
           {"type": "code", "code": "mount | grep sysfs\nls /sys/class", "lang": "bash", "body": "Vérifier le montage de sysfs et lister les classes de périphériques."},
           {"type": "text", "body": "sysfs n'occupe pas d'espace sur le disque : c'est une interface virtuelle. Lire un fichier de /sys interroge le noyau, et y écrire lui envoie une commande."},
           {"type": "list", "title": "Répertoires utiles de /sys", "items": ["/sys/class/gpio : ports d'entrée-sortie", "/sys/class/leds : voyants", "/sys/class/net : interfaces réseau", "/sys/devices : arbre des périphériques"]},
+          {"type": "text", "body": "sysfs est organisé en plusieurs vues du même matériel. /sys/devices contient l'arbre physique réel (bus, contrôleurs, périphériques). /sys/class regroupe les périphériques par fonction (net, leds, thermal, tty) et /sys/bus par type de bus (i2c, spi, usb, platform). Les entrées de /sys/class et /sys/bus sont des liens symboliques vers /sys/devices."},
+          {"type": "code", "title": "Suivre un lien de /sys/class vers le matériel réel", "lang": "bash", "code": "ls -l /sys/class/net/\n# eth0 -> ../../devices/platform/soc/fe300000.ethernet/net/eth0\n\nreadlink -f /sys/class/net/eth0\n# /sys/devices/platform/soc/fe300000.ethernet/net/eth0"},
+          {"type": "text", "body": "La règle d'or de sysfs : un attribut = un fichier = une valeur, au format texte. Pas de format binaire ni de tableau dans un même fichier. On peut donc tout explorer avec cat, echo et ls, sans outil spécial, ce qui en fait l'interface idéale pour découvrir une carte inconnue."},
+          {"type": "tip", "body": "Les fichiers de /sys affichent souvent une taille de 4096 octets : c'est une valeur fictive. Leur contenu est généré par le noyau au moment de la lecture."},
           {"type": "exercise", "question": "Sur quel répertoire est monté sysfs ?", "answer": "Sur /sys."},
+          {"type": "exercise", "question": "Quelle est la règle de sysfs concernant le contenu d'un fichier d'attribut ?", "answer": "Un attribut par fichier, une seule valeur, au format texte."},
+          {"type": "exercise", "question": "Pratique : trouve à quel contrôleur physique est rattachée ta première interface réseau, puis le pilote qui la gère.", "answer": "readlink -f /sys/class/net/eth0\n# donne le chemin réel dans /sys/devices\n\nreadlink /sys/class/net/eth0/device/driver\n# ../../../bus/platform/drivers/bcmgenet  (le nom du pilote est à la fin)"},
           {"type": "tip", "body": "Dans sysfs, une simple lecture ou écriture de fichier avec un shell suffit pour agir sur le matériel."}
         ]
       },
       {
         "id": "ch2",
         "title": "Lire les périphériques",
-        "duration": 10,
+        "duration": 11,
         "sections": [
           {"type": "code", "code": "cat /sys/class/net/eth0/address\ncat /sys/class/net/eth0/speed", "lang": "bash", "body": "Lire l'adresse MAC et la vitesse d'une interface réseau."},
           {"type": "text", "body": "De nombreux attributs matériels sont lisibles dans /sys : adresses MAC, vitesses, températures, fréquences. Le noyau les met à jour dynamiquement."},
           {"type": "code", "code": "ls /sys/class/leds\ncat /sys/class/leds/led0/brightness", "lang": "bash", "body": "Lister les voyants disponibles et lire leur luminosité."},
           {"type": "text", "body": "Les fichiers brightness ou intensity représentent l'état de sortie. Leur plage est indiquée par les attributs max_brightness."},
+          {"type": "text", "body": "Les unités sont un piège classique. La température d'une zone thermique (/sys/class/thermal/thermal_zone0/temp) est donnée en millidegrés : 48312 signifie 48,312 °C. La fréquence CPU (/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq) est en kilohertz. Lisez toujours la documentation du noyau (Documentation/ABI) avant d'interpréter une valeur."},
+          {"type": "code", "title": "Afficher la température et la fréquence du processeur", "lang": "bash", "code": "#!/bin/sh\nt=$(cat /sys/class/thermal/thermal_zone0/temp)\nf=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq)\necho \"Température : $((t / 1000)).$(( (t % 1000) / 100 )) °C\"\necho \"Fréquence   : $((f / 1000)) MHz\""},
+          {"type": "text", "body": "Certains attributs ne sont lisibles que par root, d'autres changent en permanence. Lire un attribut est peu coûteux, mais pas gratuit : chaque lecture fait travailler le noyau. Pour surveiller une valeur, une lecture par seconde suffit largement."},
           {"type": "exercise", "question": "Comment lire l'adresse MAC d'une interface ?", "answer": "Avec cat /sys/class/net/ceci/address."},
+          {"type": "exercise", "question": "Le fichier temp d'une zone thermique contient 61250. Quelle est la température ?", "answer": "61,25 °C : la valeur est exprimée en millidegrés Celsius."},
+          {"type": "exercise", "question": "Pratique : écris un script qui affiche la température du CPU en °C toutes les 2 secondes jusqu'à Ctrl+C.", "answer": "#!/bin/sh\nZONE=/sys/class/thermal/thermal_zone0/temp\nwhile true; do\n  t=$(cat \"$ZONE\")\n  echo \"$(date +%T)  $((t / 1000)) °C\"\n  sleep 2\ndone"},
           {"type": "tip", "body": "Le répertoire /sys/class regroupe les périphériques par fonction, ce qui simplifie la recherche."}
         ]
       },
       {
         "id": "ch3",
         "title": "Écrire dans sysfs",
-        "duration": 10,
+        "duration": 11,
         "sections": [
           {"type": "code", "code": "echo 255 > /sys/class/leds/led0/brightness\necho 0 > /sys/class/leds/led0/brightness", "lang": "bash", "body": "Allumer un voyant à pleine puissance puis l'éteindre."},
           {"type": "text", "body": "Écrire dans un fichier de /sys envoie une requête au noyau. Ici, on fixe la luminosité d'un voyant entre 0 et la valeur maximale."},
           {"type": "warning", "body": "Le matériel peut imposer des plages et des valeurs autorisées. Écrivez des valeurs valides, sinon le noyau refuse avec une erreur."},
-          {"type": "exercise", "question": "Comment éteindre un voyant dans sysfs ?", "answer": "Écrire 0 dans son fichier brightness : echo 0 > /sys/class/leds/led0/brightness."}
+          {"type": "text", "body": "Écrire dans /sys demande en général les droits root. Plutôt que de lancer toute une application en root, on donne l'accès à un groupe par une règle udev : le fichier est alors modifiable par les utilisateurs de ce groupe, et seulement lui."},
+          {"type": "code", "title": "Confier un voyant à un déclencheur du noyau (trigger)", "lang": "bash", "code": "cat /sys/class/leds/led0/trigger\n# none [mmc0] timer heartbeat default-on ...   (entre crochets : le déclencheur actif)\n\necho heartbeat | sudo tee /sys/class/leds/led0/trigger   # battement de cœur\necho timer     | sudo tee /sys/class/leds/led0/trigger\necho 100 | sudo tee /sys/class/leds/led0/delay_on        # 100 ms allumé\necho 900 | sudo tee /sys/class/leds/led0/delay_off       # 900 ms éteint"},
+          {"type": "text", "body": "Le déclencheur timer fait clignoter le voyant dans le noyau, sans aucun processus utilisateur : c'est plus précis et ne consomme presque rien. Remarquez sudo tee : avec sudo echo 1 > fichier, la redirection est faite par votre shell non privilégié et échoue."},
+          {"type": "warning", "body": "Les écritures dans sysfs ne survivent pas au redémarrage. Pour une configuration permanente, utilisez une règle udev, un service systemd au démarrage ou le devicetree."},
+          {"type": "exercise", "question": "Comment éteindre un voyant dans sysfs ?", "answer": "Écrire 0 dans son fichier brightness : echo 0 > /sys/class/leds/led0/brightness."},
+          {"type": "exercise", "question": "Pourquoi « sudo echo 1 > /sys/class/leds/led0/brightness » échoue-t-il ?", "answer": "La redirection > est exécutée par le shell de l'utilisateur, sans droits root ; seul echo est lancé avec sudo. Il faut utiliser : echo 1 | sudo tee /sys/class/leds/led0/brightness"},
+          {"type": "exercise", "question": "Pratique : fais clignoter led0 à 2 Hz (250 ms allumé, 250 ms éteint) sans écrire de boucle, puis rends-lui son déclencheur d'origine.", "answer": "cat /sys/class/leds/led0/trigger          # noter le déclencheur actif, ex. mmc0\necho timer | sudo tee /sys/class/leds/led0/trigger\necho 250 | sudo tee /sys/class/leds/led0/delay_on\necho 250 | sudo tee /sys/class/leds/led0/delay_off\n# ... puis pour revenir :\necho mmc0 | sudo tee /sys/class/leds/led0/trigger"}
         ]
       },
       {
         "id": "ch4",
         "title": "Python et sysfs",
-        "duration": 10,
+        "duration": 20,
         "sections": [
-          {"type": "code", "code": "chemin = \"/sys/class/leds/led0/brightness\"\nwith open(chemin, \"w\") as f:\n    f.write(\"255\")", "lang": "c", "body": "Exemple d'écriture dans sysfs, ici montré en langage C conventionnel."},
+          {"type": "code", "code": "chemin = \"/sys/class/leds/led0/brightness\"\nwith open(chemin, \"w\") as f:\n    f.write(\"255\")", "lang": "python", "body": "Écrire dans sysfs depuis Python : on ouvre le fichier comme un fichier ordinaire."},
           {"type": "text", "body": "En Python, on contrôle le matériel en ouvrant et écrivant les fichiers de /sys comme des fichiers ordinaires. C'est simple et portable, mais chaque opération passe par le système de fichiers."},
           {"type": "code", "code": "import time\nwhile True:\n    with open(chemin, \"w\") as f:\n        f.write(\"255\")\n    time.sleep(0.5)\n    with open(chemin, \"w\") as f:\n        f.write(\"0\")\n    time.sleep(0.5)", "lang": "python", "body": "Clignoter un voyant en alternant allumage et extinction."},
+          {"type": "text", "body": "Pour un vrai programme, on regroupe l'accès au matériel dans une petite classe, on gère les erreurs (fichier absent, permission refusée) et on remet le matériel dans un état sûr à la sortie, même après Ctrl+C. Le bloc try/finally garantit cette remise à zéro."},
+          {"type": "code", "title": "Classe Python de pilotage d'un voyant et lecture de température", "lang": "python", "code": "import time\nfrom pathlib import Path\n\nclass Led:\n    def __init__(self, name):\n        self.base = Path(\"/sys/class/leds\") / name\n        self.max = int((self.base / \"max_brightness\").read_text())\n        (self.base / \"trigger\").write_text(\"none\")  # reprendre la main\n\n    def set(self, on):\n        (self.base / \"brightness\").write_text(str(self.max if on else 0))\n\ndef cpu_temp():\n    raw = Path(\"/sys/class/thermal/thermal_zone0/temp\").read_text()\n    return int(raw) / 1000\n\nled = Led(\"led0\")\ntry:\n    while True:\n        led.set(True); time.sleep(0.2)\n        led.set(False); time.sleep(0.8)\n        print(f\"{cpu_temp():.1f} °C\")\nexcept PermissionError:\n    print(\"Accès refusé : lancer avec sudo ou ajouter une règle udev\")\nfinally:\n    led.set(False)"},
+          {"type": "text", "body": "Path.write_text ouvre, écrit et ferme le fichier à chaque appel : c'est voulu, car le noyau traite l'écriture à la fermeture. Garder le fichier ouvert et écrire plusieurs fois sans flush donnerait des comportements surprenants."},
           {"type": "exercise", "question": "Quel langage simple permet de piloter sysfs en écrivant dans des fichiers ?", "answer": "Python, en utilisant open() et write()."},
+          {"type": "exercise", "question": "Pourquoi met-on le voyant à 0 dans un bloc finally ?", "answer": "Pour laisser le matériel dans un état sûr quelle que soit la sortie du programme : fin normale, exception ou Ctrl+C (KeyboardInterrupt)."},
+          {"type": "exercise", "question": "Pratique : en réutilisant Led et cpu_temp, écris un programme qui allume led0 quand le CPU dépasse 60 °C et l'éteint en dessous de 55 °C (hystérésis), avec une mesure par seconde.", "answer": "import time\nled = Led(\"led0\")\nchaud = False\ntry:\n    while True:\n        t = cpu_temp()\n        if not chaud and t > 60:\n            chaud = True\n        elif chaud and t < 55:\n            chaud = False\n        led.set(chaud)\n        time.sleep(1)\nfinally:\n    led.set(False)\n# L'écart 55/60 °C évite que le voyant clignote\n# quand la température oscille autour du seuil."},
           {"type": "tip", "body": "Pour des opérations fréquentes et performantes, préférez C ou les ioctl aux écritures sysfs répétées, plus lentes."}
         ]
       }
@@ -68,54 +90,76 @@
     "category": "materiel",
     "accent": "green",
     "icon": "bolt",
-    "duration": 40,
+    "duration": 46,
     "summary": "Maîtrisez les broches GPIO pour allumer des LEDs et lire des entrées sur votre carte embarquée.",
     "objectives": ["Comprendre les broches GPIO", "Exporter et configurer une broche", "Allumer et éteindre une LED", "Lire une entrée"],
     "chapters": [
       {
         "id": "ch1",
         "title": "Les broches GPIO",
-        "duration": 10,
+        "duration": 7,
         "sections": [
           {"type": "text", "body": "GPIO signifie General Purpose Input/Output : des broches de la carte configurables en entrée ou en sortie. En sortie, elles peuvent alimenter une LED ; en entrée, lire un bouton."},
           {"type": "definition", "term": "GPIO", "body": "Broche de traitement numérique configurable par logiciel pour lire un niveau d'entrée ou piloter une sortie, utilisée pour interagir avec des périphériques simples."},
           {"type": "list", "title": "Usages courants des GPIO", "items": ["Allumer des LEDs", "Lire des boutons poussoirs", "Détecter un capteur numérique", "Activer un relais"]},
           {"type": "text", "body": "Chaque broche est identifiée par un numéro dans la notation du fabricant. Sous Linux, on y accède via sysfs ou un gestionnaire plus récent comme libgpiod."},
-          {"type": "exercise", "question": "Que signifie GPIO ?", "answer": "General Purpose Input/Output."}
+          {"type": "text", "body": "Électriquement, une broche GPIO de SoC fonctionne en 3,3 V (parfois 1,8 V) et ne fournit que quelques milliampères. Elle n'est généralement pas tolérante au 5 V : appliquer 5 V sur une entrée peut détruire le SoC. Pour piloter un moteur, un relais ou une forte charge, on passe toujours par un transistor ou un circuit dédié."},
+          {"type": "table", "title": "Trois façons de numéroter une même broche (exemple Raspberry Pi)", "table": [["Numérotation", "Exemple", "Utilisée par"], ["Broche physique du connecteur", "11", "le schéma de la carte"], ["Numéro BCM / SoC", "GPIO17", "la documentation du SoC"], ["Ligne d'un gpiochip", "gpiochip0, ligne 17", "libgpiod, le noyau"]]},
+          {"type": "text", "body": "Une sortie peut être active-haut (la charge s'allume quand la broche vaut 1) ou active-bas (elle s'allume à 0, par exemple une LED reliée entre le 3,3 V et la broche). Le logiciel doit connaître ce sens : libgpiod permet de le déclarer pour raisonner en « actif / inactif » plutôt qu'en niveaux électriques."},
+          {"type": "exercise", "question": "Que signifie GPIO ?", "answer": "General Purpose Input/Output."},
+          {"type": "exercise", "question": "Pourquoi ne faut-il pas relier un signal 5 V directement à une GPIO de Raspberry Pi ?", "answer": "Ses GPIO fonctionnent en 3,3 V et ne tolèrent pas le 5 V : on risque de détruire le SoC. Il faut un pont diviseur ou un adaptateur de niveau."},
+          {"type": "exercise", "question": "Le schéma indique « broche 11 = GPIO17 ». Quelle ligne utiliser avec libgpiod ?", "answer": "La ligne 17 du gpiochip principal (gpiochip0 sur la plupart des Raspberry Pi). Vérifier avec : gpioinfo | grep -i gpio17"}
         ]
       },
       {
         "id": "ch2",
         "title": "Exporter une broche",
-        "duration": 10,
+        "duration": 11,
         "sections": [
           {"type": "code", "code": "echo 4 > /sys/class/gpio/export\necho out > /sys/class/gpio/gpio4/direction", "lang": "bash", "body": "Exporter la broche 4 et la configurer en sortie."},
           {"type": "text", "body": "L'ancienne interface sysfs requiert d'exporter la broche en écrivant son numéro dans export, puis de configurer sa direction en in ou out."},
           {"type": "warning", "body": "L'interface GPIO par sysfs est considérée comme dépréciée en faveur de libgpiod. Vérifiez laquelle est disponible sur votre noyau."},
-          {"type": "exercise", "question": "Comment configurer une broche exportée en sortie ?", "answer": "En écrivant out dans son fichier direction."}
+          {"type": "text", "body": "Depuis le noyau 4.8, l'interface recommandée est le périphérique caractère /dev/gpiochipN, utilisé par la bibliothèque libgpiod et ses outils. Plus besoin d'exporter : un programme demande les lignes dont il a besoin, les détient tant qu'il tourne, et le noyau les libère automatiquement s'il s'arrête, même brutalement."},
+          {"type": "code", "title": "Découvrir les contrôleurs et les lignes GPIO", "lang": "bash", "code": "gpiodetect\n# gpiochip0 [pinctrl-bcm2711] (58 lines)\n\ngpioinfo gpiochip0 | head\n# line  17: \"GPIO17\" unused input active-high\n# line  18: \"GPIO18\" \"led\" output active-high [used]"},
+          {"type": "text", "body": "La sortie de gpioinfo montre pour chaque ligne son nom, son utilisateur actuel (consumer), sa direction et son sens actif. Une ligne marquée [used] est déjà réservée par un pilote ou un programme : la demander une seconde fois échouera avec « Device or resource busy »."},
+          {"type": "warning", "body": "La syntaxe des outils change entre libgpiod 1.x et 2.x (par exemple gpioset gpiochip0 17=1 en 1.x, gpioset -c gpiochip0 17=1 en 2.x, qui garde en plus la ligne tant que la commande tourne). Vérifiez votre version avec gpioset --version."},
+          {"type": "exercise", "question": "Comment configurer une broche exportée en sortie ?", "answer": "En écrivant out dans son fichier direction."},
+          {"type": "exercise", "question": "Quel avantage a /dev/gpiochipN sur l'ancienne interface sysfs quand un programme plante ?", "answer": "Le noyau libère automatiquement les lignes demandées par le programme : aucune broche ne reste « exportée » ou bloquée."},
+          {"type": "exercise", "question": "Pratique : trouve si la ligne 17 est libre, et qui l'utilise sinon.", "answer": "gpioinfo gpiochip0 | grep \"line  17\"\n# « unused » = libre ; sinon le nom entre guillemets\n# après le nom de ligne indique le consumer qui la détient."}
         ]
       },
       {
         "id": "ch3",
         "title": "Piloter une LED",
-        "duration": 10,
+        "duration": 14,
         "sections": [
           {"type": "code", "code": "echo 1 > /sys/class/gpio/gpio4/value\necho 0 > /sys/class/gpio/gpio4/value", "lang": "bash", "body": "Mettre la broche à l'état haut (LED allumée) puis bas (éteinte)."},
           {"type": "text", "body": "Le fichier value prend la valeur 1 pour un niveau haut et 0 pour un niveau bas. Selon le montage de la LED, le niveau haut l'allume ou l'éteint."},
           {"type": "text", "body": "En Python, on écrit ces valeurs dans les mêmes fichiers. La commande libgpiod gpioget et gpioset offrent une alternative moderne sans export préalable."},
+          {"type": "text", "body": "Une LED doit toujours avoir une résistance en série pour limiter le courant. On la calcule avec la loi d'Ohm : R = (Valim − Vled) / I. Pour une LED rouge (environ 2 V) alimentée en 3,3 V avec 5 mA : R = (3,3 − 2) / 0,005 = 260 Ω, arrondi à la valeur normalisée supérieure, 270 ou 330 Ω."},
+          {"type": "code", "title": "Faire clignoter une LED avec la bibliothèque Python gpiod (libgpiod 2.x)", "lang": "python", "code": "import time\nimport gpiod\nfrom gpiod.line import Direction, Value\n\nLIGNE = 17\nwith gpiod.request_lines(\n    \"/dev/gpiochip0\",\n    consumer=\"clignotant\",\n    config={LIGNE: gpiod.LineSettings(direction=Direction.OUTPUT)},\n) as req:\n    for _ in range(10):\n        req.set_value(LIGNE, Value.ACTIVE)\n        time.sleep(0.5)\n        req.set_value(LIGNE, Value.INACTIVE)\n        time.sleep(0.5)\n# en sortant du bloc with, la ligne est libérée"},
+          {"type": "text", "body": "Le nom donné dans consumer apparaît dans gpioinfo : pratique pour savoir quel programme tient une broche. Le bloc with garantit la libération de la ligne, même en cas d'exception."},
           {"type": "exercise", "question": "Quelle valeur met une broche à l'état haut ?", "answer": "La valeur 1 écrite dans le fichier value."},
+          {"type": "exercise", "question": "Calcule la résistance pour une LED verte (Vled = 2,2 V) alimentée en 3,3 V à 10 mA.", "answer": "R = (3,3 − 2,2) / 0,010 = 110 Ω → valeur normalisée 120 Ω (on arrondit au-dessus pour rester sous 10 mA)."},
+          {"type": "exercise", "question": "Pratique : modifie le programme pour faire 5 clignotements à 2 Hz, puis laisser la LED allumée 2 secondes.", "answer": "with gpiod.request_lines(\"/dev/gpiochip0\", consumer=\"clignotant\",\n        config={17: gpiod.LineSettings(direction=Direction.OUTPUT)}) as req:\n    for _ in range(5):              # 2 Hz = période de 0,5 s\n        req.set_value(17, Value.ACTIVE);   time.sleep(0.25)\n        req.set_value(17, Value.INACTIVE); time.sleep(0.25)\n    req.set_value(17, Value.ACTIVE)\n    time.sleep(2)"},
           {"type": "tip", "body": "Vérifiez le câblage et la résistance de limitation de courant avant d'alimenter une LED directement par une broche GPIO."}
         ]
       },
       {
         "id": "ch4",
         "title": "Lire une entrée",
-        "duration": 10,
+        "duration": 14,
         "sections": [
           {"type": "code", "code": "echo in > /sys/class/gpio/gpio5/direction\ncat /sys/class/gpio/gpio5/value", "lang": "bash", "body": "Configurer une broche en entrée et lire son état."},
           {"type": "text", "body": "En entrée, une broche lit le niveau appliqué par un composant externe, comme un bouton relié à la masse. La valeur lue est 0 ou 1."},
           {"type": "text", "body": "Une résistance de tirage (pull-up ou pull-down) fixe l'état par défaut quand rien n'est connecté, évitant des lectures aléatoires."},
+          {"type": "text", "body": "Lire un bouton en boucle (polling) gaspille du processeur et peut rater un appui bref. La bonne méthode est d'attendre un événement de front : front descendant (passage de 1 à 0) ou montant. Le programme dort jusqu'à ce que le noyau le réveille, avec un horodatage précis."},
+          {"type": "text", "body": "Un bouton mécanique « rebondit » : à l'appui, le contact s'ouvre et se ferme plusieurs fois en quelques millisecondes, ce qui produit plusieurs fronts. On filtre ces rebonds (debounce) en ignorant les fronts trop rapprochés, souvent 10 à 50 ms."},
+          {"type": "code", "title": "Attendre les appuis sur un bouton (pull-up interne, anti-rebond 20 ms)", "lang": "python", "code": "from datetime import timedelta\nimport gpiod\nfrom gpiod.line import Bias, Edge\n\nwith gpiod.request_lines(\n    \"/dev/gpiochip0\",\n    consumer=\"bouton\",\n    config={27: gpiod.LineSettings(\n        edge_detection=Edge.FALLING,\n        bias=Bias.PULL_UP,\n        debounce_period=timedelta(milliseconds=20),\n    )},\n) as req:\n    while True:\n        for ev in req.read_edge_events():   # bloque jusqu'au prochain front\n            print(\"appui à\", ev.timestamp_ns / 1e9, \"s\")"},
+          {"type": "code", "title": "Même chose en ligne de commande", "lang": "bash", "code": "gpiomon -c gpiochip0 -e falling -b pull-up 27   # libgpiod 2.x"},
           {"type": "exercise", "question": "Quelle valeur une broche d'entrée lit-elle quand le bouton appuie sur la masse ?", "answer": "Une valeur basse, généralement 0."},
+          {"type": "exercise", "question": "Pourquoi préférer l'attente d'événements au polling pour lire un bouton ?", "answer": "Le programme dort au lieu de consommer du CPU, et le noyau ne rate pas les appuis brefs ; il fournit en plus un horodatage précis."},
+          {"type": "exercise", "question": "Pratique : compte les appuis sur le bouton de la ligne 27 et affiche le total à chaque appui ; arrête-toi au 10e.", "answer": "total = 0\nwith gpiod.request_lines(\"/dev/gpiochip0\", consumer=\"compteur\",\n        config={27: gpiod.LineSettings(edge_detection=Edge.FALLING,\n            bias=Bias.PULL_UP, debounce_period=timedelta(milliseconds=20))}) as req:\n    while total < 10:\n        for ev in req.read_edge_events():\n            total += 1\n            print(\"appuis :\", total)\n            if total == 10:\n                break"},
           {"type": "tip", "body": "Utilisez un multimètre pour vérifier le niveau réel d'une broche avant de la relier à un composant sensible."}
         ]
       }
@@ -128,56 +172,77 @@
     "category": "materiel",
     "accent": "blue",
     "icon": "usb",
-    "duration": 40,
+    "duration": 41,
     "summary": "Comprenez et utilisez la liaison série UART pour échanger des données avec votre système embarqué.",
     "objectives": ["Comprendre le protocole UART", "Configurer un port série", "Échanger des données", "Utiliser une console série"],
     "chapters": [
       {
         "id": "ch1",
         "title": "Le protocole UART",
-        "duration": 10,
+        "duration": 7,
         "sections": [
           {"type": "text", "body": "UART (Universal Asynchronous Receiver-Transmitter) est une liaison série asynchrone entre deux équipements. Les données transitent sur deux fils : TX pour émettre et RX pour recevoir."},
           {"type": "definition", "term": "Baud rate", "body": "La vitesse de transmission en bits par seconde, par exemple 115200 bauds, qui doit être identique des deux côtés de la liaison."},
           {"type": "text", "body": "La communication est asynchrone : il n'y a pas de signal d'horloge partagé. Les deux appareils doivent donc se caler sur la même vitesse et la même configuration de bits."},
           {"type": "list", "title": "Paramètres de la liaison série", "items": ["Baud rate (vitesse)", "Bits de données (souvent 8)", "Parité (aucune, paire, impaire)", "Bits de stop (souvent 1)"]},
-          {"type": "exercise", "question": "Sur quels fils transitent respectivement l'émission et la réception ?", "answer": "TX pour émettre et RX pour recevoir."}
+          {"type": "text", "body": "Chaque octet est encadré : un bit de start à 0, les 8 bits de données (bit de poids faible en premier), un éventuel bit de parité, puis un ou deux bits de stop à 1. La configuration la plus courante s'écrit 8N1 : 8 bits de données, pas de parité, 1 bit de stop. Il faut donc 10 bits sur le fil pour transmettre un octet."},
+          {"type": "text", "body": "Conséquence : à 115200 bauds en 8N1, le débit utile est de 115200 / 10 = 11 520 octets par seconde. Côté câblage, TX d'un appareil va sur RX de l'autre, et les deux masses (GND) doivent être reliées : sans masse commune, les niveaux n'ont pas de référence."},
+          {"type": "table", "title": "Niveaux électriques à ne pas confondre", "table": [["Standard", "Niveau 1", "Niveau 0"], ["UART TTL 3,3 V (SoC)", "3,3 V", "0 V"], ["UART TTL 5 V (vieux microcontrôleurs)", "5 V", "0 V"], ["RS-232 (port DB9 de PC)", "−3 à −15 V", "+3 à +15 V"]]},
+          {"type": "warning", "body": "Ne reliez jamais un port RS-232 directement aux broches UART d'un SoC : ses tensions de ±12 V détruiraient la carte. Utilisez un adaptateur USB-série TTL 3,3 V."},
+          {"type": "exercise", "question": "Sur quels fils transitent respectivement l'émission et la réception ?", "answer": "TX pour émettre et RX pour recevoir."},
+          {"type": "exercise", "question": "Combien de temps faut-il pour envoyer 1024 octets à 9600 bauds en 8N1 ?", "answer": "1024 × 10 bits = 10 240 bits ; 10 240 / 9600 ≈ 1,07 s."},
+          {"type": "exercise", "question": "Comment relier une carte et un adaptateur USB-série ?", "answer": "TX de la carte → RX de l'adaptateur, RX de la carte → TX de l'adaptateur, et GND ↔ GND. On ne relie pas le VCC si chacun a sa propre alimentation."}
         ]
       },
       {
         "id": "ch2",
         "title": "Les ports série Linux",
-        "duration": 10,
+        "duration": 11,
         "sections": [
           {"type": "code", "code": "ls /dev/ttyS0 /dev/ttyUSB0 /dev/ttyAMA0", "lang": "bash", "body": "Lister les ports série disponibles dans /dev."},
           {"type": "text", "body": "Sous Linux, les ports série sont des fichiers dans /dev. ttyS0 désigne un port UART intégré, ttyUSB0 un adaptateur USB-série, ttyAMA0 un UART du SoC ARM."},
-          {"type": "table", "title": "Noms de ports série", "table": [["Port", "Origine"], ["ttyS0", "UART intégré standard"], ["ttyUSB0", "Adaptateur USB vers série"], ["ttyAMA0", "UART ARM (type Amba)"] ]},
+          {"type": "table", "title": "Noms de ports série", "table": [["Port", "Origine"], ["ttyS0", "UART intégré standard"], ["ttyUSB0", "Adaptateur USB vers série"], ["ttyAMA0", "UART ARM (type Amba)"]]},
+          {"type": "text", "body": "Pour savoir quel nom a reçu un adaptateur qu'on vient de brancher, on regarde les messages du noyau. Les noms ttyUSB0, ttyUSB1… dépendent de l'ordre de branchement : pour un nom stable, on utilise les liens de /dev/serial/by-id, construits à partir du numéro de série de l'adaptateur."},
+          {"type": "code", "title": "Identifier l'adaptateur et obtenir un nom stable", "lang": "bash", "code": "dmesg | grep -i tty | tail -n 3\n# usb 1-1.3: FTDI USB Serial Device converter now attached to ttyUSB0\n\nls -l /dev/serial/by-id/\n# usb-FTDI_FT232R_USB_UART_A50285BI-if00-port0 -> ../../ttyUSB0\n\nls -l /dev/ttyUSB0\n# crw-rw---- 1 root dialout 188, 0 ... /dev/ttyUSB0"},
+          {"type": "text", "body": "Les ports série appartiennent au groupe dialout (ou uucp selon les distributions). Un utilisateur qui n'en fait pas partie obtient « Permission denied » à l'ouverture."},
           {"type": "exercise", "question": "Quel fichier représente un adaptateur USB vers série ?", "answer": "Généralement /dev/ttyUSB0 ou un numéro suivant."},
+          {"type": "exercise", "question": "Pourquoi utiliser /dev/serial/by-id plutôt que /dev/ttyUSB0 dans un script ?", "answer": "Le numéro ttyUSBn dépend de l'ordre de branchement ; le lien by-id est basé sur l'identité de l'adaptateur et reste stable."},
+          {"type": "exercise", "question": "Pratique : donne-toi le droit d'ouvrir les ports série sans sudo.", "answer": "sudo usermod -aG dialout $USER\n# puis se déconnecter / reconnecter (ou redémarrer)\ngroups      # doit afficher dialout"},
           {"type": "tip", "body": "Utilisez ls /dev/tty* pour lister tous les ports série de votre carte."}
         ]
       },
       {
         "id": "ch3",
         "title": "Configurer le port",
-        "duration": 10,
+        "duration": 12,
         "sections": [
           {"type": "code", "code": "stty -F /dev/ttyUSB0 115200\nstty -F /dev/ttyUSB0 -a", "lang": "bash", "body": "Régler la vitesse du port, puis afficher sa configuration complète."},
           {"type": "text", "body": "stty configure un terminal série : vitesse, bits, parité, contrôle de flux. La commande -a affiche tous les réglages actuels."},
           {"type": "code", "code": "stty -F /dev/ttyUSB0 raw -echo", "lang": "bash", "body": "Passer le port en mode non traité pour une communication binaire."},
           {"type": "text", "body": "En embarqué, on utilise souvent le mode raw pour ne pas laisser le terminal interpréter les caractères, essentiel pour des échanges binaires."},
+          {"type": "text", "body": "En programme, la bibliothèque Python pyserial ouvre le port avec tous ses réglages. Le paramètre timeout est essentiel : sans lui, une lecture attend indéfiniment si l'autre côté ne répond pas."},
+          {"type": "code", "title": "Dialoguer avec un appareil série en Python (pyserial)", "lang": "python", "code": "import serial\n\nwith serial.Serial(\"/dev/ttyUSB0\", 115200, bytesize=8,\n                   parity=\"N\", stopbits=1, timeout=1) as port:\n    port.reset_input_buffer()          # oublier les vieux octets\n    port.write(b\"AT\\r\\n\")               # envoyer une commande\n    reponse = port.readline()           # lit jusqu'à \\n ou 1 s\n    print(reponse.decode(errors=\"replace\").strip() or \"(pas de réponse)\")"},
+          {"type": "text", "body": "Le contrôle de flux matériel (RTS/CTS) ajoute deux fils pour que le récepteur puisse dire « stop, mon tampon est plein ». Il est utile aux débits élevés ou avec des modems. Sans lui, un récepteur lent perd des octets."},
           {"type": "exercise", "question": "Quelle commande règle la vitesse d'un port série ?", "answer": "stty -F /dev/port 115200."},
+          {"type": "exercise", "question": "Que se passe-t-il si on appelle readline() sans timeout et que l'appareil ne répond pas ?", "answer": "Le programme reste bloqué indéfiniment sur la lecture."},
+          {"type": "exercise", "question": "Pratique : test de bouclage. Relie TX et RX de l'adaptateur entre eux, puis écris un script qui envoie un message et vérifie qu'il revient à l'identique.", "answer": "import serial\nmsg = b\"EmbedForge 123\\n\"\nwith serial.Serial(\"/dev/ttyUSB0\", 115200, timeout=1) as p:\n    p.reset_input_buffer()\n    p.write(msg)\n    recu = p.read(len(msg))\n    print(\"OK\" if recu == msg else f\"ÉCHEC : {recu!r}\")"},
           {"type": "tip", "body": "Assurez-vous que les deux côtés utilisent exactement le même baud rate, sinon les données seront illisibles."}
         ]
       },
       {
         "id": "ch4",
         "title": "La console série",
-        "duration": 10,
+        "duration": 11,
         "sections": [
           {"type": "code", "code": "screen /dev/ttyUSB0 115200\nminicom -D /dev/ttyUSB0", "lang": "bash", "body": "Ouvrir une session de console série sur le port."},
           {"type": "text", "body": "La console série permet non seulement d'échanger des données, mais aussi d'ouvrir un shell sur la carte embarquée pendant le démarrage ou après."},
           {"type": "text", "body": "C'est un outil de débogage indispensable : même si le réseau échoue, la console série permet de voir les messages du noyau et du bootloader."},
+          {"type": "text", "body": "Le noyau sait quel port utiliser pour ses messages grâce au paramètre console= de la ligne de commande, par exemple console=ttyS0,115200. Après le démarrage, systemd lance un serial-getty sur ce port pour afficher l'invite de connexion."},
+          {"type": "code", "title": "Vérifier la console série du système", "lang": "bash", "code": "cat /proc/cmdline\n# ... console=ttyS0,115200 console=tty1 ...\n\nsystemctl status serial-getty@ttyS0.service\n\n# Depuis le PC, ouvrir la console de la carte :\npicocom -b 115200 /dev/ttyUSB0     # quitter : Ctrl+A puis Ctrl+X"},
+          {"type": "text", "body": "Avec plusieurs console=, le noyau écrit sur toutes, mais c'est la dernière qui devient /dev/console, utilisée notamment par le processus init. Sur une carte sans écran, placez le port série en dernier."},
           {"type": "exercise", "question": "Quel outil ouvre une console série interactive ?", "answer": "screen, minicom, picocom ou des outils similaires."},
+          {"type": "exercise", "question": "Quel paramètre du noyau désigne le port série de la console ?", "answer": "console=, par exemple console=ttyS0,115200 (ou ttyAMA0 sur certains SoC ARM)."},
+          {"type": "exercise", "question": "Pratique : la carte n'affiche rien sur la console série. Liste trois vérifications dans l'ordre.", "answer": "1. Câblage : TX↔RX croisés et masse commune.\n2. Vitesse : même baud rate des deux côtés (souvent 115200).\n3. Configuration : console=... présent dans /proc/cmdline\n   (ou dans la config du bootloader) et bon nom de port."},
           {"type": "warning", "body": "Ne connectez jamais une tension sur RX/TX sans vérifier les niveaux, sous peine d'endommager la carte."},
           {"type": "tip", "body": "Quittez screen avec Ctrl+A puis K, pour ne pas laisser la session série ouverte."}
         ]
@@ -191,57 +256,77 @@
     "category": "materiel",
     "accent": "purple",
     "icon": "network",
-    "duration": 40,
+    "duration": 39,
     "summary": "Connectez des capteurs sur le bus I2C et échangez des données avec les outils Linux dédiés.",
     "objectives": ["Comprendre le bus I2C", "Détecter les périphériques", "Lire et écrire des registres", "Interfacer un capteur"],
     "chapters": [
       {
         "id": "ch1",
         "title": "Le bus I2C",
-        "duration": 10,
+        "duration": 7,
         "sections": [
           {"type": "text", "body": "I2C est un bus série à deux fils : SDA pour les données et SCL pour l'horloge. Il permet de connecter plusieurs périphériques sur la même paire de fils."},
           {"type": "definition", "term": "Adresse I2C", "body": "Identifiant unique de 7 bits d'un périphérique sur le bus, souvent codé en dur mais parfois configurable par des broches."},
           {"type": "text", "body": "Le maître (souvent le SoC) initie les transactions, tandis que les esclaves répondent à leur adresse. Chaque périphérique écoute les messages adressés à son adresse."},
           {"type": "list", "title": "Périphériques typiques I2C", "items": ["Capteurs de température", "Accéléromètres", "Horloges temps réel (RTC)", "EEPROM et capteurs de luminosité"]},
-          {"type": "exercise", "question": "Quels sont les deux fils du bus I2C ?", "answer": "SDA pour les données et SCL pour l'horloge."}
+          {"type": "text", "body": "Les lignes SDA et SCL sont en drain ouvert : un périphérique ne peut que tirer la ligne vers 0. Ce sont des résistances de rappel (pull-up, souvent 4,7 kΩ) qui la remontent à 1. Sans elles, le bus ne fonctionne pas ; c'est la première chose à vérifier sur un montage maison."},
+          {"type": "text", "body": "Une transaction suit toujours le même schéma : condition START, adresse sur 7 bits suivie d'un bit lecture/écriture, ACK de l'esclave, octets de données chacun suivi d'un ACK, puis condition STOP. Les vitesses courantes sont 100 kHz (standard), 400 kHz (fast) et 1 MHz (fast plus)."},
+          {"type": "warning", "body": "Les fiches techniques donnent parfois l'adresse sur 8 bits, bit R/W inclus (par exemple 0x90 en écriture). Linux attend l'adresse sur 7 bits : décalez d'un bit vers la droite (0x90 → 0x48)."},
+          {"type": "exercise", "question": "Quels sont les deux fils du bus I2C ?", "answer": "SDA pour les données et SCL pour l'horloge."},
+          {"type": "exercise", "question": "À quoi servent les résistances de pull-up sur un bus I2C ?", "answer": "Les sorties sont en drain ouvert et ne peuvent que tirer vers 0 : les pull-up ramènent les lignes à 1 au repos."},
+          {"type": "exercise", "question": "Une fiche technique indique « adresse d'écriture 0xA0 ». Quelle adresse donner à i2cdetect ou i2cget ?", "answer": "0x50 : on retire le bit R/W en décalant d'un bit vers la droite (0xA0 >> 1)."}
         ]
       },
       {
         "id": "ch2",
         "title": "Détecter les capteurs",
-        "duration": 10,
+        "duration": 11,
         "sections": [
           {"type": "code", "code": "i2cdetect -l\ni2cdetect -y 1", "lang": "bash", "body": "Lister les bus I2C, puis scanner le bus 1 pour détecter les adresses."},
           {"type": "text", "body": "La commande i2cdetect -y suivie du numéro de bus interroge chaque adresse et affiche celles qui répondent. C'est la première étape pour trouver un capteur."},
           {"type": "text", "body": "La sortie montre une grille de cases hexadécimales. Une case remplie indique qu'un périphérique répond à cette adresse."},
+          {"type": "code", "title": "Exemple de résultat de scan", "lang": "bash", "code": "sudo i2cdetect -y 1\n#      0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f\n# 30: -- -- -- -- -- -- -- -- -- -- -- -- 3c -- -- --\n# 40: -- -- -- -- -- -- -- -- 48 -- -- -- -- -- -- --\n# 60: -- -- -- -- -- -- -- -- UU -- -- -- -- -- -- --"},
+          {"type": "text", "body": "« -- » signifie qu'aucun périphérique n'a répondu. Un nombre (3c, 48) est l'adresse d'un périphérique qui a répondu. « UU » indique une adresse déjà prise en charge par un pilote du noyau : i2cdetect ne la sonde pas, et il ne faut pas y écrire en direct."},
+          {"type": "warning", "body": "Le scan envoie des requêtes à toutes les adresses. Sur certains composants (EEPROM, contrôleurs d'alimentation), cela peut provoquer des effets indésirables. Ne scannez pas un bus de production à l'aveugle."},
           {"type": "exercise", "question": "Quelle commande détecte les périphériques sur un bus I2C ?", "answer": "i2cdetect -y NUMERO_DE_BUS."},
+          {"type": "exercise", "question": "Que signifie « UU » dans la grille d'i2cdetect ?", "answer": "L'adresse est déjà utilisée par un pilote du noyau ; i2cdetect ne la sonde pas."},
+          {"type": "exercise", "question": "Pratique : un capteur devrait répondre en 0x48 mais n'apparaît pas au scan. Donne trois causes possibles.", "answer": "- Mauvais bus (vérifier avec i2cdetect -l).\n- Câblage : SDA/SCL inversés, masse ou alimentation absentes.\n- Pas de résistances de pull-up, ou adresse différente\n  (broches d'adresse A0–A2 du capteur câblées autrement)."},
           {"type": "tip", "body": "Vérifiez la numérotation des bus avec i2cdetect -l avant de scanner, selon la carte le bus peut être 0, 1 ou un autre."}
         ]
       },
       {
         "id": "ch3",
         "title": "Lire et écrire des registres",
-        "duration": 10,
+        "duration": 12,
         "sections": [
           {"type": "code", "code": "i2cget -y 1 0x48 0x00\nsudo i2cset -y 1 0x48 0x01 0xAA", "lang": "bash", "body": "Lire un registre, puis écrire une valeur dans un registre."},
           {"type": "text", "body": "i2cget lit la valeur d'un registre d'un périphérique, précisé par son adresse I2C. i2cset écrit une valeur dans un registre."},
           {"type": "table", "title": "Syntaxe i2cget/i2cset", "table": [["Commande", "Rôle"], ["i2cget -y BUS ADDR REG", "Lire un registre"], ["i2cset -y BUS ADDR REG VAL", "Écrire une valeur"]]},
           {"type": "warning", "body": "L'écriture i2cset peut configurer un capteur de façon inattendue. Lisez d'abord la fiche technique avant de modifier des registres."},
+          {"type": "text", "body": "Beaucoup de capteurs renvoient des valeurs sur 16 bits, octet de poids fort en premier (big-endian), alors que la lecture d'un mot SMBus (i2cget … w) les renvoie octets inversés. Il faut donc souvent permuter les deux octets avant d'interpréter la valeur."},
+          {"type": "text", "body": "Exemple concret : le capteur de température LM75 à l'adresse 0x48 stocke la température dans le registre 0x00, sur 9 bits signés, avec une résolution de 0,5 °C, alignés à gauche dans un mot de 16 bits."},
+          {"type": "code", "title": "Lire un LM75 en Python avec smbus2", "lang": "python", "code": "from smbus2 import SMBus\n\nwith SMBus(1) as bus:                     # bus I2C n°1\n    raw = bus.read_word_data(0x48, 0x00)\n    raw = ((raw & 0xFF) << 8) | (raw >> 8)  # remettre l'octet fort devant\n    val = raw >> 7                          # garder les 9 bits utiles\n    if val & 0x100:                         # nombre négatif (complément à 2)\n        val -= 512\n    print(f\"{val * 0.5:.1f} °C\")"},
           {"type": "exercise", "question": "Quelle commande écrit une valeur dans un registre I2C ?", "answer": "i2cset, avec le bus, l'adresse, le registre et la valeur."},
+          {"type": "exercise", "question": "Pourquoi faut-il souvent permuter les octets après un read_word_data ?", "answer": "SMBus renvoie le mot octet de poids faible en premier, alors que beaucoup de capteurs envoient l'octet de poids fort en premier."},
+          {"type": "exercise", "question": "Pratique : après permutation, le LM75 renvoie 0x1900. Calcule la température à la main.", "answer": "0x1900 >> 7 = 0x32 = 50 ; bit de signe (0x100) absent ;\n50 × 0,5 = 25,0 °C."},
           {"type": "tip", "body": "La fiche technique du capteur décrit la signification de chaque registre : indispensable pour interpréter les valeurs lues."}
         ]
       },
       {
         "id": "ch4",
         "title": "Les capteurs et le noyau",
-        "duration": 10,
+        "duration": 9,
         "sections": [
           {"type": "text", "body": "Quand un pilote noyau gère le capteur, ses données apparaissent dans sysfs. On n'a alors plus besoin d'écrire directement sur le bus."},
           {"type": "code", "code": "cat /sys/bus/iio/devices/iio:device0/in_temp_input", "lang": "bash", "body": "Lire une mesure de température fournie par le pilote IIO du noyau."},
           {"type": "text", "body": "Le sous-système IIO (Industrial I/O) expose les capteurs dans /sys/bus/iio. Chaque capteur est un répertoire device0, device1, etc."},
           {"type": "text", "body": "Les valeurs brutes peuvent nécessiter une conversion via les attributs scale ou offset, décrits par la fiche technique."},
+          {"type": "text", "body": "Quand le noyau possède un pilote pour le composant mais que rien ne le déclare, on peut l'instancier depuis l'espace utilisateur. Le pilote prend alors l'adresse (qui apparaît en UU au scan) et publie des attributs propres, déjà convertis dans les bonnes unités."},
+          {"type": "code", "title": "Instancier le pilote lm75 à la main, puis lire la température", "lang": "bash", "code": "echo lm75 0x48 | sudo tee /sys/bus/i2c/devices/i2c-1/new_device\ndmesg | tail -n 1\n# lm75 1-0048: hwmon1: sensor 'lm75'\n\ncat /sys/class/hwmon/hwmon1/temp1_input    # en millidegrés\n# 25000\n\necho 0x48 | sudo tee /sys/bus/i2c/devices/i2c-1/delete_device   # retirer"},
+          {"type": "text", "body": "Cette instanciation est temporaire. En production, on déclare le capteur dans le devicetree : il est alors détecté à chaque démarrage. Les capteurs hwmon (températures, tensions, ventilateurs) et IIO (accéléromètres, ADC) sont les deux grandes familles côté noyau."},
           {"type": "exercise", "question": "Où le sous-système IIO expose-t-il les capteurs ?", "answer": "Dans /sys/bus/iio/devices/iio:deviceX."},
+          {"type": "exercise", "question": "Quelle différence entre instancier un capteur via new_device et le déclarer dans le devicetree ?", "answer": "new_device est temporaire (perdu au redémarrage) ; le devicetree déclare le capteur de façon permanente, détecté à chaque démarrage."},
+          {"type": "exercise", "question": "Pratique : un capteur IIO donne in_voltage0_raw = 2048 et in_voltage_scale = 0.805664. Quelle tension en millivolts ?", "answer": "2048 × 0,805664 ≈ 1650 mV (valeur brute × échelle)."},
           {"type": "tip", "body": "Préférez l'accès via un pilote noyau et sysfs plutôt que l'écriture directe sur le bus pour plus de robustesse."}
         ]
       }
@@ -254,30 +339,40 @@
     "category": "materiel",
     "accent": "orange",
     "icon": "chip",
-    "duration": 40,
+    "duration": 39,
     "summary": "Utilisez le bus SPI, rapide et synchrone, pour connecter des périphériques exigeants sur votre système embarqué.",
     "objectives": ["Comprendre le protocole SPI", "Identifier les fils du bus", "Configurer et tester SPI", "Choisir entre SPI et I2C"],
     "chapters": [
       {
         "id": "ch1",
         "title": "Le protocole SPI",
-        "duration": 10,
+        "duration": 7,
         "sections": [
           {"type": "text", "body": "SPI (Serial Peripheral Interface) est un bus synchrone quatre fils, rapide, idéal pour les périphériques à haut débit comme les écrans ou les mémoires flash."},
           {"type": "list", "title": "Les quatre signaux du bus", "items": ["SCLK : horloge définie par le maître", "MOSI : données maître vers esclave", "MISO : données esclave vers maître", "CS : sélection de l'esclave"]},
           {"type": "text", "body": "SPI est synchrone : l'horloge SCLK rythme les échanges. Une ligne CS (Chip Select) par esclave permet de choisir à qui l'on parle."},
-          {"type": "exercise", "question": "Quel signal sélectionne un esclave sur le bus SPI ?", "answer": "La ligne CS, Chip Select."}
+          {"type": "text", "body": "SPI est full-duplex : à chaque coup d'horloge, le maître envoie un bit sur MOSI et reçoit en même temps un bit sur MISO. Les deux registres à décalage, côté maître et côté esclave, s'échangent ainsi leurs contenus. Pour lire une réponse, le maître doit donc continuer à générer l'horloge, en envoyant des octets factices."},
+          {"type": "table", "title": "Les 4 modes SPI", "table": [["Mode", "CPOL (horloge au repos)", "CPHA (échantillonnage)"], ["0", "0 (basse)", "1er front (montant)"], ["1", "0 (basse)", "2e front (descendant)"], ["2", "1 (haute)", "1er front (descendant)"], ["3", "1 (haute)", "2e front (montant)"]]},
+          {"type": "text", "body": "Le mode 0 est de loin le plus répandu. L'ordre des bits est presque toujours MSB en premier. Il n'existe ni adresse, ni accusé de réception : le maître ne sait pas si l'esclave a bien reçu ; c'est le protocole du composant qui le dira."},
+          {"type": "exercise", "question": "Quel signal sélectionne un esclave sur le bus SPI ?", "answer": "La ligne CS, Chip Select."},
+          {"type": "exercise", "question": "Un composant exige une horloge haute au repos et un échantillonnage sur le 2e front. Quel mode SPI ?", "answer": "Le mode 3 (CPOL = 1, CPHA = 1)."},
+          {"type": "exercise", "question": "Pourquoi envoie-t-on des octets à 0 après une commande pour lire la réponse d'un esclave SPI ?", "answer": "L'esclave ne peut répondre que pendant que le maître génère l'horloge ; envoyer des octets factices fournit les coups d'horloge nécessaires."}
         ]
       },
       {
         "id": "ch2",
         "title": "Le bus SPI Linux",
-        "duration": 10,
+        "duration": 13,
         "sections": [
           {"type": "code", "code": "ls /dev/spidev*\ncat /sys/bus/spi/devices/*/modalias", "lang": "bash", "body": "Lister les périphériques SPI exposés par le noyau."},
           {"type": "text", "body": "Les périphériques SPI sont souvent exposés comme /dev/spidevX.Y. Ils sont aussi visibles dans /sys/bus/spi/devices."},
           {"type": "text", "body": "L'accès se fait par des ioctl sur le fichier de périphérique. Les outils en ligne de commande comme spidev_test permettent de tester une liaison."},
+          {"type": "text", "body": "Le fichier /dev/spidevX.Y n'existe que si un périphérique spidev est déclaré pour le bus X et la ligne CS Y, en général dans le devicetree (sur Raspberry Pi : dtparam=spi=on dans config.txt). X est le contrôleur SPI, Y le numéro de Chip Select."},
+          {"type": "code", "title": "Lire l'identifiant JEDEC d'une mémoire flash SPI (Python spidev)", "lang": "python", "code": "import spidev\n\nspi = spidev.SpiDev()\nspi.open(0, 0)                 # /dev/spidev0.0\nspi.max_speed_hz = 1_000_000\nspi.mode = 0\ntry:\n    rx = spi.xfer2([0x9F, 0x00, 0x00, 0x00])   # commande 0x9F + 3 octets factices\n    fab, typ, cap = rx[1], rx[2], rx[3]\n    print(f\"fabricant 0x{fab:02X}, type 0x{typ:02X}, capacité 2^{cap} octets\")\nfinally:\n    spi.close()"},
+          {"type": "text", "body": "xfer2 garde CS actif pendant toute la liste d'octets, ce que la plupart des composants exigent pour une commande suivie de sa réponse. Le premier octet reçu n'a pas de sens : il arrive pendant que l'esclave décode encore la commande."},
           {"type": "exercise", "question": "Où se trouvent les périphériques SPI exposés par le noyau ?", "answer": "Sous /dev/spidevX.Y et dans /sys/bus/spi/devices."},
+          {"type": "exercise", "question": "Que désignent X et Y dans /dev/spidevX.Y ?", "answer": "X : le numéro du contrôleur (bus) SPI ; Y : la ligne Chip Select utilisée sur ce bus."},
+          {"type": "exercise", "question": "Pratique : dans l'exemple JEDEC, la flash renvoie [0xFF, 0xEF, 0x40, 0x18]. Interprète la réponse.", "answer": "0xFF est ignoré (reçu pendant l'envoi de la commande).\nFabricant 0xEF (Winbond), type 0x40,\ncapacité 2^0x18 = 2^24 octets = 16 Mo (128 Mbit)."},
           {"type": "tip", "body": "Le devicetree définit les périphériques SPI de votre carte, leur numéro de bus et leur fréquence maximale."}
         ]
       },
@@ -289,19 +384,28 @@
           {"type": "code", "code": "spidev_test -D /dev/spidev1.0 -s 1000000", "lang": "bash", "body": "Lancer un test sur un périphérique SPI à un mégahertz."},
           {"type": "text", "body": "L'outil spidev_test effectue un échange de test et affiche les données reçues. L'option -s fixe la fréquence de l'horloge."},
           {"type": "text", "body": "La fréquence, le mode SPI (polarité et phase) et l'ordre des bits doivent correspondre à la fiche technique du périphérique."},
+          {"type": "text", "body": "Le test le plus simple ne demande aucun composant : relier MOSI à MISO. Tout octet envoyé doit revenir identique. Si ce bouclage fonctionne mais pas le vrai composant, le problème vient du câblage du composant, de son mode SPI ou de sa fréquence maximale."},
+          {"type": "code", "title": "Test de bouclage MOSI ↔ MISO", "lang": "bash", "code": "spidev_test -D /dev/spidev0.0 -s 1000000 -p \"\\xDE\\xAD\\xBE\\xEF\" -v\n# TX | DE AD BE EF\n# RX | DE AD BE EF    <- identique : le contrôleur fonctionne"},
+          {"type": "text", "body": "Pour aller plus loin, un analyseur logique (quelques euros pour 8 voies) affiche les signaux SCLK, MOSI, MISO et CS et décode les octets échangés. C'est l'outil indispensable pour comprendre pourquoi un périphérique ne répond pas comme prévu."},
           {"type": "exercise", "question": "Quelle option fixe la fréquence d'horloge dans spidev_test ?", "answer": "L'option -s, par exemple -s 1000000 pour un mégahertz."},
+          {"type": "exercise", "question": "Le bouclage MOSI↔MISO renvoie des 0x00 partout. Que vérifier ?", "answer": "Que le fil relie bien MOSI à MISO (bonnes broches), que le bon spidev (bus et CS) est utilisé et que le SPI est activé dans le devicetree."},
+          {"type": "exercise", "question": "Pratique : la fiche technique indique « 10 MHz max, mode 0 ». Écris la commande spidev_test pour envoyer 0x9F à 8 MHz.", "answer": "spidev_test -D /dev/spidev0.0 -s 8000000 -p \"\\x9F\\x00\\x00\\x00\" -v\n# mode 0 par défaut ; on reste sous les 10 MHz avec une marge."},
           {"type": "warning", "body": "Un mode SPI incorrect produit des données illisibles même si la liaison est bien câblée."}
         ]
       },
       {
         "id": "ch4",
         "title": "SPI ou I2C",
-        "duration": 10,
+        "duration": 9,
         "sections": [
           {"type": "table", "title": "Comparaison SPI et I2C", "table": [["Caractéristique", "SPI", "I2C"], ["Vitesse", "Élevée", "Modérée"], ["Fils", "4 par bus + CS", "2 fils partagés"], ["Esclaves", "Un CS par esclave", "Adressage logiciel"], ["Usage", "Flash, écrans", "Capteurs, RTC"]]},
           {"type": "text", "body": "SPI est plus rapide mais utilise plus de fils, une ligne CS par esclave. I2C ne demande que deux fils et adresse chaque périphérique par numéro."},
           {"type": "text", "body": "Pour beaucoup de capteurs lents, I2C convient et économise les broches. Pour un haut débit, comme une flash, SPI est préférable."},
+          {"type": "text", "body": "Pour choisir, estimez d'abord le débit nécessaire. Un écran de 320 × 240 pixels en 16 bits rafraîchi 30 fois par seconde demande 320 × 240 × 16 × 30 ≈ 37 Mbit/s : hors de portée d'I2C (quelques Mbit/s au mieux), mais accessible en SPI à 40 MHz. Un capteur de température lu une fois par seconde n'a besoin que de quelques octets : I2C suffit largement."},
+          {"type": "table", "title": "UART, I2C ou SPI ?", "table": [["Critère", "UART", "I2C", "SPI"], ["Fils", "2 (+GND)", "2 (+GND)", "4 + 1 CS par esclave"], ["Débit typique", "≤ 1 Mbit/s", "0,1 à 1 Mbit/s", "1 à 50 Mbit/s"], ["Périphériques", "1 à 1", "jusqu'à ~100 adresses", "limité par les CS"], ["Usage type", "console, GPS, modem", "capteurs, EEPROM", "flash, écran, ADC rapide"]]},
           {"type": "exercise", "question": "Pourquoi choisir SPI plutôt qu'I2C ?", "answer": "Pour son débit plus élevé, adapté aux périphériques rapides comme les mémoires flash."},
+          {"type": "exercise", "question": "Quel bus choisir pour un module GPS qui envoie des phrases texte NMEA ?", "answer": "L'UART : les modules GPS envoient en général un flux de texte série à 9600 ou 115200 bauds."},
+          {"type": "exercise", "question": "Pratique : une carte doit relier 6 capteurs lents, une flash et un écran, avec peu de broches libres. Propose une répartition des bus.", "answer": "- Les 6 capteurs lents sur un seul bus I2C (2 fils, adresses distinctes).\n- La flash et l'écran sur le bus SPI, avec une ligne CS chacun\n  (4 fils partagés + 2 CS).\n- La console sur l'UART."},
           {"type": "tip", "body": "Choisissez le bus selon le débit requis par le périphérique et le nombre de broches disponibles sur votre carte."}
         ]
       }
@@ -314,19 +418,24 @@
     "category": "materiel",
     "accent": "teal",
     "icon": "cpu",
-    "duration": 40,
+    "duration": 42,
     "summary": "Comprenez les architectures de processeurs, en particulier ARM, et leur impact sur le développement embarqué.",
     "objectives": ["Comprendre le jeu d'instructions", "Distinguer les familles ARM", "Connaître les registres et modes", "Choisir une architecture"],
     "chapters": [
       {
         "id": "ch1",
         "title": "Architecture et ISA",
-        "duration": 10,
+        "duration": 11,
         "sections": [
           {"type": "text", "body": "L'architecture d'un processeur définit son jeu d'instructions (ISA), c'est-à-dire les opérations de base qu'il sait exécuter. Le code machine est propre à chaque ISA."},
           {"type": "definition", "term": "ISA", "body": "Instruction Set Architecture : la spécification des instructions, registres et modes d'adressage qu'un processeur exécute."},
           {"type": "text", "body": "Les architectures RISC (Reduced Instruction Set Computer) comme ARM proposent des instructions simples et uniformes. CISC, comme x86, propose des instructions plus complexes."},
-          {"type": "exercise", "question": "Que signifie ISA ?", "answer": "Instruction Set Architecture : le jeu d'instructions du processeur."}
+          {"type": "text", "body": "ARM est une architecture load/store : les calculs ne se font qu'entre registres. Pour additionner deux valeurs en mémoire, il faut les charger (LDR), les additionner (ADD), puis stocker le résultat (STR). x86 peut, lui, opérer directement sur la mémoire. Ce choix rend les instructions ARM simples, de taille fixe et faciles à exécuter en pipeline."},
+          {"type": "code", "title": "Identifier l'architecture d'une machine Linux", "lang": "bash", "code": "uname -m\n# aarch64  (ARM 64 bits)   armv7l (ARM 32 bits)   x86_64 (PC)\n\nlscpu | head -n 8\n# Architecture: aarch64\n# Model name:   Cortex-A72\n# CPU(s):       4"},
+          {"type": "text", "body": "Le pipeline découpe l'exécution d'une instruction en étapes (chargement, décodage, exécution, écriture) traitées en parallèle pour plusieurs instructions. C'est ce qui permet d'exécuter environ une instruction par cycle, voire plusieurs sur les cœurs superscalaires."},
+          {"type": "exercise", "question": "Que signifie ISA ?", "answer": "Instruction Set Architecture : le jeu d'instructions du processeur."},
+          {"type": "exercise", "question": "Que signifie qu'ARM est une architecture load/store ?", "answer": "Les opérations arithmétiques ne travaillent que sur des registres ; la mémoire n'est accédée que par des instructions de chargement (load) et de rangement (store)."},
+          {"type": "exercise", "question": "Pratique : un binaire refuse de s'exécuter sur ta carte. Quelles deux commandes comparent l'architecture de la carte et celle du binaire ?", "answer": "uname -m          # architecture de la carte\nfile ./mon_binaire  # architecture du binaire (ARM aarch64, x86-64...)"}
         ]
       },
       {
@@ -337,19 +446,29 @@
           {"type": "text", "body": "ARM décline ses cœurs en grandes familles : Cortex-A pour les applications puissantes, Cortex-R pour le temps réel, Cortex-M pour les systèmes contraints."},
           {"type": "text", "body": "Les Cortex-A font tourner Linux avec mémoire virtuelle et MMU. Les Cortex-M, dépourvus de MMU, exécutent souvent un RTOS, pas un Linux complet."},
           {"type": "table", "title": "Familles ARM Cortex", "table": [["Famille", "Usage", "Linux"], ["Cortex-A", "Applications, Linux", "Oui"], ["Cortex-R", "Temps réel", "Possible"], ["Cortex-M", "Microcontrôleurs", "Généralement non"]]},
+          {"type": "table", "title": "Quelques cœurs Cortex-A et où on les trouve", "table": [["Cœur", "Architecture", "Exemple de carte"], ["Cortex-A7", "ARMv7-A, 32 bits", "cartes industrielles basse consommation"], ["Cortex-A53", "ARMv8-A, 64 bits", "Raspberry Pi 3"], ["Cortex-A72", "ARMv8-A, 64 bits", "Raspberry Pi 4"], ["Cortex-A76", "ARMv8.2-A, 64 bits", "Raspberry Pi 5"]]},
+          {"type": "text", "body": "Beaucoup de SoC associent des cœurs puissants et des cœurs économes (big.LITTLE, ou DynamIQ) : le système d'exploitation place les tâches lourdes sur les gros cœurs et le reste sur les petits pour économiser l'énergie. Dans un produit, on trouve aussi souvent un Linux sur Cortex-A et un Cortex-M temps réel sur la même puce."},
+          {"type": "text", "body": "ARM ne fabrique pas de puces : la société vend des licences de ses cœurs à des fondeurs (Broadcom, NXP, STMicroelectronics, Rockchip…) qui les intègrent dans leurs SoC avec leurs propres périphériques. C'est pourquoi deux SoC Cortex-A72 peuvent avoir des GPIO, des bus et des pilotes très différents."},
           {"type": "exercise", "question": "Quelle famille ARM exécute généralement Linux ?", "answer": "Les Cortex-A, qui disposent d'une MMU."},
+          {"type": "exercise", "question": "Que désigne big.LITTLE ?", "answer": "L'association, dans un même SoC, de cœurs performants et de cœurs économes ; le système répartit les tâches pour concilier performance et consommation."},
+          {"type": "exercise", "question": "Pratique : sur ta carte, affiche le modèle de cœur et le nombre de cœurs.", "answer": "lscpu | grep -E \"Model name|^CPU\\(s\\)\"\n# ou :\ngrep -m1 \"model name\\|CPU part\" /proc/cpuinfo\nnproc"},
           {"type": "tip", "body": "Sur un Cortex-M sans MMU, Linux n'est pas adapté : un RTOS ou du bare metal est plus pertinent."}
         ]
       },
       {
         "id": "ch3",
         "title": "Registres et mémoire",
-        "duration": 10,
+        "duration": 11,
         "sections": [
           {"type": "text", "body": "Un processeur ARM possède un petit nombre de registres généraux (R0 à R15) et le registre d'état CPSR. Les données transitent par ces registres avant les opérations."},
           {"type": "text", "body": "Les architectures A32 (ARM) utilisent des instructions 32 bits, tandis que T32 (Thumb) les compresse en 16 bits pour réduire la taille du code. L'iWMMX et d'autres extensions existent selon le cœur."},
           {"type": "text", "body": "AArch64 est le mode 64 bits des cœurs ARMv8 : registres X0 à X30 et adressage 64 bits, plus adapté aux applications gourmandes."},
+          {"type": "text", "body": "Les cœurs ARM sous Linux fonctionnent en little-endian : l'octet de poids faible est rangé à l'adresse la plus basse. La valeur 0x12345678 est donc stockée en mémoire 78 56 34 12. C'est essentiel quand on échange des données binaires avec un réseau ou un capteur big-endian."},
+          {"type": "text", "body": "La convention d'appel (AAPCS) fixe le passage des paramètres : en AArch64, les huit premiers arguments entiers vont dans X0 à X7 et le résultat revient dans X0 (W0 pour un entier 32 bits). C'est ce qu'on observe en lisant l'assembleur produit par le compilateur."},
+          {"type": "code", "title": "Voir l'assembleur généré pour une fonction C", "lang": "bash", "code": "cat > add.c << 'EOF'\nint add(int a, int b) { return a + b; }\nEOF\naarch64-linux-gnu-gcc -O2 -S add.c -o -\n# add:\n#     add w0, w0, w1    // a dans w0, b dans w1, résultat dans w0\n#     ret"},
           {"type": "exercise", "question": "Quel mode utilisent les cœurs ARM 64 bits ?", "answer": "AArch64, avec des registres X0 à X30."},
+          {"type": "exercise", "question": "Comment la valeur 32 bits 0xAABBCCDD est-elle rangée en mémoire sur un ARM little-endian ?", "answer": "DD CC BB AA (l'octet de poids faible à l'adresse la plus basse)."},
+          {"type": "exercise", "question": "Pratique : écris une fonction C qui renvoie a * b + c, compile-la en assembleur AArch64 avec -O2 et repère l'instruction utilisée.", "answer": "int mac(int a, int b, int c) { return a * b + c; }\n\naarch64-linux-gnu-gcc -O2 -S mac.c -o -\n# mac:\n#     madd w0, w0, w1, w2   // multiplication-addition en une instruction\n#     ret"},
           {"type": "tip", "body": "Réduire la taille du code avec Thumb peut économiser la mémoire flash d'une image embarquée."}
         ]
       },
@@ -358,10 +477,15 @@
         "title": "RISC-V et choix d'architecture",
         "duration": 10,
         "sections": [
-          {"type": "text", "body": "RISC-V est une architecture ouverte et libre, en plein essor dans l'embarqué. Sa spécification est ouverte, chacun peut créer son propre cœur compatédé."},
+          {"type": "text", "body": "RISC-V est une architecture ouverte et libre, en plein essor dans l'embarqué. Sa spécification est ouverte, chacun peut créer son propre cœur compatible."},
           {"type": "text", "body": "Le choix d'architecture dépend des besoins : consommation, performances, écosystème logiciel, coût et disponibilité. ARM domine l'embarqué, RISC-V gagne des parts."},
           {"type": "list", "title": "Critères de choix d'un processeur", "items": ["Consommation électrique", "Performance par watt", "Support du logiciel", "Coût et disponibilité", "Outils de développement"]},
+          {"type": "text", "body": "RISC-V est modulaire : une base entière obligatoire (RV32I ou RV64I) complétée par des extensions désignées par des lettres. M ajoute la multiplication, A les opérations atomiques, F et D les flottants simple et double précision, C les instructions compressées 16 bits, V le calcul vectoriel. G regroupe IMAFD (plus Zicsr et Zifencei)."},
+          {"type": "code", "title": "Compiler pour RISC-V 64 bits et tester sans carte", "lang": "bash", "code": "sudo apt install gcc-riscv64-linux-gnu qemu-user\nriscv64-linux-gnu-gcc -O2 -static hello.c -o hello-rv\nfile hello-rv\n# ELF 64-bit LSB executable, UCB RISC-V, ...\nqemu-riscv64 ./hello-rv"},
+          {"type": "text", "body": "Pour Linux, on cible en général RV64GC. L'écosystème progresse vite (cartes VisionFive 2, Milk-V, puces de microcontrôleurs RISC-V comme l'ESP32-C3), mais l'offre de SoC, de pilotes et de support long terme reste plus mince qu'avec ARM : un point à vérifier pour un produit."},
           {"type": "exercise", "question": "Quel avantage distinctif offre RISC-V ?", "answer": "Une architecture libre et ouverte, sans redevances propriétaires."},
+          {"type": "exercise", "question": "Que signifie RV64GC ?", "answer": "Base entière 64 bits (RV64I) + G (extensions M, A, F, D et les instructions système) + C (instructions compressées 16 bits)."},
+          {"type": "exercise", "question": "Pratique : compile ton hello.c pour RISC-V et pour ARM64, puis compare la taille des deux binaires statiques.", "answer": "riscv64-linux-gnu-gcc -O2 -static hello.c -o hello-rv\naarch64-linux-gnu-gcc -O2 -static hello.c -o hello-arm\nls -l hello-rv hello-arm\nsize hello-rv hello-arm   # taille des sections text/data/bss"},
           {"type": "tip", "body": "Vérifiez la disponibilité d'une toolchain et d'un support Linux avant de choisir une architecture pour votre produit."}
         ]
       }
@@ -369,60 +493,80 @@
   },
   {
     "id": "cross_compilation",
-    "title": "Le cross-compilation",
+    "title": "La cross-compilation",
     "level": 3,
     "category": "materiel",
     "accent": "red",
     "icon": "wrench",
-    "duration": 40,
+    "duration": 42,
     "summary": "Compilez du code sur votre PC pour une cible embarquée d'architecture différente grâce au cross-compilateur.",
     "objectives": ["Comprendre pourquoi cross-compiler", "Utiliser une toolchain croisée", "Compiler un programme C", "Transférer et exécuter sur la cible"],
     "chapters": [
       {
         "id": "ch1",
         "title": "Pourquoi cross-compiler",
-        "duration": 10,
+        "duration": 9,
         "sections": [
           {"type": "text", "body": "Une carte embarquée a peu de ressources : compiler en natif y est lent ou impossible. On compile donc sur un PC puissant pour une architecture cible différente, d'où le terme cross-compilation."},
           {"type": "definition", "term": "Toolchain", "body": "Ensemble des outils de compilation : compilateur, assembleur, lieur et bibliothèques, adaptés à une architecture cible donnée."},
           {"type": "text", "body": "Le compilateur natif gcc produit du code pour la machine hôte. Un cross-compilateur comme arm-linux-gnueabihf-gcc produit du code pour une architecture ARM."},
-          {"type": "exercise", "question": "Pourquoi cross-compiler pour une carte embarquée ?", "answer": "Parce que la carte a peu de ressources, on compile sur un PC pour une architecture différente."}
+          {"type": "text", "body": "Le nom d'une toolchain suit un triplet architecture-fournisseur-système-ABI, parfois raccourci : aarch64-linux-gnu, arm-linux-gnueabihf, riscv64-unknown-linux-gnu. On distingue aussi la machine de build (où l'on compile), l'hôte (où tourne le compilateur) et la cible (où tourne le programme produit)."},
+          {"type": "definition", "term": "Sysroot", "body": "Répertoire qui contient les en-têtes et bibliothèques du système cible (libc, libm…). Le cross-compilateur s'y réfère à la place de ceux du PC, pour produire un binaire compatible avec la cible."},
+          {"type": "text", "body": "Une erreur fréquente est d'utiliser par mégarde les en-têtes ou bibliothèques du PC : le binaire compile, mais plante ou refuse de démarrer sur la cible. Une toolchain bien configurée pointe automatiquement vers son sysroot."},
+          {"type": "exercise", "question": "Pourquoi cross-compiler pour une carte embarquée ?", "answer": "Parce que la carte a peu de ressources, on compile sur un PC pour une architecture différente."},
+          {"type": "exercise", "question": "Que désignent les trois parties du triplet aarch64-linux-gnu ?", "answer": "L'architecture (aarch64 = ARM 64 bits), le système (Linux) et l'ABI / bibliothèque C (GNU, c'est-à-dire glibc)."},
+          {"type": "exercise", "question": "Pratique : affiche le sysroot et la cible de ta toolchain.", "answer": "aarch64-linux-gnu-gcc -print-sysroot\naarch64-linux-gnu-gcc -dumpmachine     # aarch64-linux-gnu"}
         ]
       },
       {
         "id": "ch2",
         "title": "Choisir une toolchain",
-        "duration": 10,
+        "duration": 9,
         "sections": [
           {"type": "code", "code": "apt install gcc-arm-linux-gnueabihf\narm-linux-gnueabihf-gcc --version", "lang": "bash", "body": "Installer et vérifier une toolchain cross ARM."},
           {"type": "text", "body": "Le préfixe de la toolchain indique la cible : arm-linux-gnueabihf vise un ARM avec VFP (hard float) et glibc. D'autres préfixes existent pour d'autres cibles."},
           {"type": "list", "title": "Préfixes de toolchain courants", "items": ["arm-linux-gnueabihf : ARM 32 bits hard float", "aarch64-linux-gnu : ARM 64 bits", "riscv64-linux-gnu : RISC-V"]},
+          {"type": "table", "title": "D'où vient la toolchain ?", "table": [["Source", "Avantage", "Limite"], ["Paquet de la distribution (apt)", "installation en une commande", "glibc du PC, pas celle de la cible"], ["Toolchain précompilée (Bootlin, Arm)", "versions et libc au choix", "à maintenir soi-même"], ["SDK Buildroot / Yocto", "exactement le système de la cible", "à générer avec l'image"]]},
+          {"type": "warning", "body": "Un binaire lié à une glibc plus récente que celle de la cible échoue au lancement avec « version `GLIBC_2.34' not found ». Compilez avec une toolchain dont la glibc n'est pas plus récente que celle de la cible, ou liez en statique."},
           {"type": "exercise", "question": "À quoi sert le préfixe arm-linux-gnueabihf ?", "answer": "Il indique la cible ARM 32 bits avec dur float et bibliothèque glibc."},
+          {"type": "exercise", "question": "Que signifie l'erreur « GLIBC_2.34 not found » au lancement d'un binaire sur la cible ?", "answer": "Le binaire a été lié à une glibc plus récente que celle installée sur la cible."},
+          {"type": "exercise", "question": "Pratique : vérifie quelle version de glibc utilise la cible.", "answer": "# sur la cible :\nldd --version | head -n 1\n# ou :\n/lib/aarch64-linux-gnu/libc.so.6   # (chemin Debian) exécuter la libc affiche sa version"},
           {"type": "tip", "body": "Utilisez la toolchain fournie par votre environnement de build (Buildroot, Yocto) pour respecter exactement le système d'exploitation cible."}
         ]
       },
       {
         "id": "ch3",
         "title": "Compiler un programme",
-        "duration": 10,
+        "duration": 13,
         "sections": [
           {"type": "code", "code": "arm-linux-gnueabihf-gcc -o app app.c\nfile app", "lang": "bash", "body": "Compiler pour ARM et vérifier l'architecture du binaire produit."},
           {"type": "text", "body": "La commande file confirme l'architecture du binaire. Vous devriez voir ARM ou aarch64, et non x86, prouvant que la compilation cible la bonne plateforme."},
           {"type": "warning", "body": "Vérifiez que le binaire n'est pas pour l'hôte x86 : lancer un binaire x86 sur une carte ARM échouera avec une erreur comme Exec format error."},
           {"type": "code", "code": "arm-linux-gnueabihf-gcc -static -o app_static app.c", "lang": "bash", "body": "Compiler avec les bibliothèques statiques pour une portabilité maximale."},
+          {"type": "text", "body": "Dans un vrai projet, on ne tape pas le nom du compilateur à la main : un Makefile utilise la variable CROSS_COMPILE, convention reprise par le noyau Linux et U-Boot. Le même Makefile compile alors pour le PC ou pour la cible selon la variable."},
+          {"type": "code", "title": "Makefile prêt pour la cross-compilation", "lang": "makefile", "code": "CROSS_COMPILE ?=\nCC      := $(CROSS_COMPILE)gcc\nCFLAGS  := -O2 -Wall -Wextra\n\napp: main.c\n\t$(CC) $(CFLAGS) -o $@ $<\n\nclean:\n\trm -f app\n\n# make                                    -> binaire pour le PC\n# make CROSS_COMPILE=aarch64-linux-gnu-   -> binaire ARM 64 bits"},
+          {"type": "text", "body": "Avec CMake, on décrit la cible dans un fichier de toolchain (CMAKE_SYSTEM_NAME, CMAKE_SYSTEM_PROCESSOR, CMAKE_C_COMPILER) passé par -DCMAKE_TOOLCHAIN_FILE. Les SDK Buildroot et Yocto en fournissent un tout prêt."},
+          {"type": "warning", "body": "Dans un Makefile, les lignes de commande doivent commencer par une tabulation, pas par des espaces, sinon make affiche « missing separator »."},
           {"type": "exercise", "question": "Quelle commande confirme l'architecture d'un binaire ?", "answer": "file nom_du_binaire."},
+          {"type": "exercise", "question": "Que contient en général la variable CROSS_COMPILE ?", "answer": "Le préfixe de la toolchain, tiret final compris, par exemple aarch64-linux-gnu- ; il est collé devant gcc, ld, objcopy..."},
+          {"type": "exercise", "question": "Pratique : avec ce Makefile, compile pour un ARM 32 bits hard-float puis vérifie le résultat.", "answer": "make clean\nmake CROSS_COMPILE=arm-linux-gnueabihf-\nfile app\n# ELF 32-bit LSB executable, ARM, EABI5 ... hard-float"},
           {"type": "tip", "body": "La compilation statique (-static) évite les problèmes de bibliothèques manquantes sur la cible, au prix d'un binaire plus gros."}
         ]
       },
       {
         "id": "ch4",
         "title": "Transférer et exécuter",
-        "duration": 10,
+        "duration": 11,
         "sections": [
           {"type": "code", "code": "scp app root@10.0.0.5:/root/\nssh root@10.0.0.5\n./app", "lang": "bash", "body": "Transférer le binaire vers la cible et l'exécuter."},
           {"type": "text", "body": "Une fois compilé, on copie le binaire sur la carte via scp ou un partage réseau, puis on l'exécute en s'y connectant par SSH ou console série."},
           {"type": "text", "body": "Pensez à rendre le fichier exécutable avec chmod +x et à vérifier les dépendances dynamiques si vous n'avez pas compilé en statique."},
+          {"type": "text", "body": "Avant même de copier le binaire, on peut lister les bibliothèques dynamiques dont il a besoin, et vérifier qu'elles existent sur la cible. ldd ne fonctionne pas sur un binaire d'une autre architecture : on utilise readelf de la toolchain."},
+          {"type": "code", "title": "Lister les dépendances et tester sur le PC avec QEMU", "lang": "bash", "code": "aarch64-linux-gnu-readelf -d app | grep NEEDED\n#  (NEEDED) Shared library: [libm.so.6]\n#  (NEEDED) Shared library: [libc.so.6]\n\n# Exécuter le binaire ARM sur le PC (émulation utilisateur) :\nqemu-aarch64 -L /usr/aarch64-linux-gnu ./app"},
+          {"type": "text", "body": "QEMU en mode utilisateur permet de tester rapidement un programme sans carte : il traduit les instructions ARM et transmet les appels système au noyau du PC. Il ne simule pas le matériel de la carte (GPIO, I2C), mais suffit pour toute la logique applicative."},
           {"type": "exercise", "question": "Quelle commande copie le binaire sur la cible ?", "answer": "scp app utilisateur@IP:/chemin/destination."},
+          {"type": "exercise", "question": "Pourquoi utiliser readelf plutôt que ldd pour un binaire ARM sur un PC x86 ?", "answer": "ldd exécute le chargeur dynamique de la machine, incapable de traiter un binaire d'une autre architecture ; readelf se contente de lire le fichier."},
+          {"type": "exercise", "question": "Pratique : enchaîne compilation, test QEMU, copie et exécution sur la carte 192.168.1.50 (utilisateur pi).", "answer": "make CROSS_COMPILE=aarch64-linux-gnu-\nqemu-aarch64 -L /usr/aarch64-linux-gnu ./app     # test local\nscp app pi@192.168.1.50:/tmp/\nssh pi@192.168.1.50 /tmp/app"},
           {"type": "warning", "body": "Si le binaire échoue au chargement avec library not found, il manque une bibliothèque dynamique sur la cible : compilez en statique ou installez-la."}
         ]
       }
