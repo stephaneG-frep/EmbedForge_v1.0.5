@@ -1,0 +1,369 @@
+[
+  {
+    "id": "c_advanced",
+    "title": "C avancé : pointeurs et mémoire",
+    "level": 2,
+    "category": "systeme",
+    "accent": "purple",
+    "icon": "memory",
+    "duration": 40,
+    "summary": "Maîtrisez les pointeurs, l'allocation dynamique et la gestion mémoire, essentiels en C embarqué.",
+    "objectives": ["Comprendre les pointeurs", "Manipuler les tableaux et chaînes", "Allouer la mémoire dynamiquement", "Éviter les fuites mémoire"],
+    "chapters": [
+      {
+        "id": "ch1",
+        "title": "Les pointeurs",
+        "duration": 10,
+        "sections": [
+          {"type": "text", "body": "Un pointeur est une variable qui contient l'adresse mémoire d'une autre valeur. On déclare un pointeur avec un astérisque et on obtient l'adresse d'une variable avec l'opérateur &."},
+          {"type": "code", "code": "int valeur = 42;\nint *pointeur = &valeur;\nprintf(\"%d\\n\", *pointeur);", "lang": "c", "body": "Le pointeur stocke l'adresse de valeur, *pointeur lit la valeur pointée."},
+          {"type": "text", "body": "Le symbole * a deux usages : à la déclaration il crée un pointeur, et dans une expression il déréférence (lit la valeur pointée). C'est une source courante de confusion."},
+          {"type": "exercise", "question": "Comment obtenir l'adresse d'une variable ?", "answer": "Avec l'opérateur &, par exemple int *p = &x."},
+          {"type": "warning", "body": "Utiliser un pointeur non initialisé conduit à un comportement indéfini. Initialisez toujours vos pointeurs."}
+        ]
+      },
+      {
+        "id": "ch2",
+        "title": "Tableaux et chaînes",
+        "duration": 10,
+        "sections": [
+          {"type": "code", "code": "int t[5] = {1, 2, 3, 4, 5};\nfor (int i = 0; i < 5; i++) {\n  printf(\"%d \", t[i]);\n}", "lang": "c", "body": "Parcours des éléments d'un tableau avec un indice."},
+          {"type": "text", "body": "Un tableau est un ensemble contigu d'éléments du même type. Le nom du tableau se comporte comme un pointeur vers son premier élément."},
+          {"type": "code", "code": "char message[] = \"bonjour\";\nprintf(\"%s\\n\", message);", "lang": "c", "body": "Un tableau de caractères forme une chaîne, terminée par le caractère nul."},
+          {"type": "text", "body": "Les chaînes C sont des tableaux de char terminés par un octet nul. La taille du tableau doit inclure ce caractère terminal."},
+          {"type": "exercise", "question": "Par quel caractère se termine une chaîne C ?", "answer": "Par le caractère nul '\\0'."},
+          {"type": "tip", "body": "Utilisez sizeof pour la taille en octets d'un tableau, mais pas sur un pointeur qui ne connaît pas la taille allouée."}
+        ]
+      },
+      {
+        "id": "ch3",
+        "title": "L'allocation dynamique",
+        "duration": 10,
+        "sections": [
+          {"type": "code", "code": "#include <stdlib.h>\nint *tab = malloc(10 * sizeof(int));\nif (tab == NULL) { return 1; }\nfree(tab);", "lang": "c", "body": "Allouer un tableau de dix entiers puis libérer la mémoire."},
+          {"type": "text", "body": "malloc réserve la mémoire dans le tas (heap) et retourne un pointeur, ou NULL en cas d'échec. free libère la mémoire lorsque le bloc n'est plus utile."},
+          {"type": "warning", "body": "Toujours vérifier que malloc ne retourne pas NULL avant d'utiliser le pointeur, sinon vous accédez à de la mémoire invalide."},
+          {"type": "exercise", "question": "Que retourne malloc en cas d'échec ?", "answer": "NULL."},
+          {"type": "tip", "body": "Sur un système embarqué, évitez l'allocation dynamique fréquente : la fragmentation et les limites de mémoire la rendent risquée."}
+        ]
+      },
+      {
+        "id": "ch4",
+        "title": "Fuites et bonnes pratiques",
+        "duration": 10,
+        "sections": [
+          {"type": "code", "code": "char *b = malloc(100);\n/* usage */\nfree(b);\nb = NULL;", "lang": "c", "body": "Libérer puis mettre le pointeur à NULL pour éviter un double free."},
+          {"type": "text", "body": "Une fuite mémoire survient quand on alloue sans jamais libérer. Sur une cible à mémoire limitée, des fuites répétées finissent par épuiser le tas et faire planter le programme."},
+          {"type": "list", "title": "Règles de gestion mémoire", "items": ["Chaque malloc a son free", "Ne libérer qu'une fois", "Mettre le pointeur à NULL après free", "Vérifier le retour de malloc"]},
+          {"type": "exercise", "question": "Qu'est-ce qu'une fuite mémoire ?", "answer": "Une mémoire allouée qui n'est jamais libérée et reste inutilisable de façon permanente."},
+          {"type": "tip", "body": "Des outils comme Valgrind ou des traceurs embarqués permettent de détecter les fuites mémoire lors des tests."}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "systemd_services",
+    "title": "Systemd et les services",
+    "level": 2,
+    "category": "systeme",
+    "accent": "blue",
+    "icon": "bolt",
+    "duration": 40,
+    "summary": "Apprenez à gérer les services système avec systemd, le gestionnaire d'init moderne des systèmes Linux embarqués.",
+    "objectives": ["Comprendre le rôle de systemd", "Gérer les services avec systemctl", "Créer un fichier de service", "Configurer le démarrage et les dépendances"],
+    "chapters": [
+      {
+        "id": "ch1",
+        "title": "Qu'est-ce que systemd",
+        "duration": 10,
+        "sections": [
+          {"type": "text", "body": "systemd est le gestionnaire de services et d'initialisation le plus répandu sur Linux, y compris dans l'embarqué. Le processus PID 1 est systemd, il démarre le reste du système."},
+          {"type": "definition", "term": "Init", "body": "Le premier processus lancé par le noyau, responsable du démarrage et de la gestion des autres services du système."},
+          {"type": "list", "title": "Rôles de systemd", "items": ["Démarrer les services au boot", "Surveiller et redémarrer les services", "Gérer la journalisation", "Gérer les dépendances entre services"]},
+          {"type": "text", "body": "Il existe des alternatives plus légères comme BusyBox init, adaptées aux systèmes très contraints. La majorité des distributions modernes utilise systemd."}
+        ]
+      },
+      {
+        "id": "ch2",
+        "title": "Gérer les services",
+        "duration": 10,
+        "sections": [
+          {"type": "code", "code": "systemctl status mon_service\nsystemctl start mon_service\nsystemctl stop mon_service\nsystemctl restart mon_service", "lang": "bash", "body": "Commandes de gestion de base d'un service."},
+          {"type": "text", "body": "systemctl status affiche l'état, le PID et les derniers journaux. start, stop et restart changent l'état d'un service sans redémarrer la machine."},
+          {"type": "code", "code": "systemctl enable mon_service\nsystemctl disable mon_service", "lang": "bash", "body": "Activer ou désactiver le démarrage automatique au boot."},
+          {"type": "exercise", "question": "Quelle commande active le démarrage automatique d'un service ?", "answer": "systemctl enable mon_service."},
+          {"type": "tip", "body": "enable ne démarre pas forcément le service ; utilisez enable --now pour activer et lancer en une seule commande."}
+        ]
+      },
+      {
+        "id": "ch3",
+        "title": "Créer un fichier de service",
+        "duration": 10,
+        "sections": [
+          {"type": "code", "code": "[Unit]\nDescription=Mon application\nAfter=network.target\n\n[Service]\nExecStart=/usr/bin/mon_app\nRestart=on-failure\nUser=appuser\n\n[Install]\nWantedBy=multi-user.target", "lang": "bash", "body": "Un fichier de service systemd typique placé dans /etc/systemd/system/."},
+          {"type": "text", "body": "La section Unit décrit le service et ses dépendances. La section Service définit la commande à lancer et les options de redémarrage. La section Install précise quand l'activer."},
+          {"type": "text", "body": "After=network.target attend que le réseau soit prêt. Restart=on-failure relance le service s'il échoue, ce qui améliore la robustesse."},
+          {"type": "exercise", "question": "Dans quelle directive définit-on la commande à exécuter ?", "answer": "Dans ExecStart, dans la section Service."},
+          {"type": "warning", "body": "Après avoir modifié un fichier de service, exécutez daemon-reload pour que systemd tienne compte des changements."}
+        ]
+      },
+      {
+        "id": "ch4",
+        "title": "Dépendances et cibles",
+        "duration": 10,
+        "sections": [
+          {"type": "code", "code": "systemctl daemon-reload\nsystemctl list-dependencies multi-user.target", "lang": "bash", "body": "Recharger la configuration et lister les dépendances d'une cible."},
+          {"type": "text", "body": "Les cibles (targets) regroupent des services qui démarrent ensemble. multi-user.target représente l'état normal du système, sans interface graphique."},
+          {"type": "text", "body": "Les directives Requires et Wants expriment des dépendances. Wants déclenche le démarrage d'un autre service sans le rendre obligatoire."},
+          {"type": "exercise", "question": "Quel fichier recharger après modification d'un service ?", "answer": "systemctl daemon-reload relance l'analyse des fichiers de service."},
+          {"type": "tip", "body": "Pour un démarrage plus rapide en embarqué, limitez le nombre de services activés au strict nécessaire."}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "syslog_journaux",
+    "title": "Journaux et journalctl",
+    "level": 2,
+    "category": "systeme",
+    "accent": "blue",
+    "icon": "book",
+    "duration": 35,
+    "summary": "Lisez, filtrez et analysez les journaux système avec journalctl pour diagnostiquer votre Linux embarqué.",
+    "objectives": ["Comprendre la journalisation systemd", "Lire les journaux avec journalctl", "Filtrer les journaux par critère", "Analyser les erreurs"],
+    "chapters": [
+      {
+        "id": "ch1",
+        "title": "La journalisation systemd",
+        "duration": 9,
+        "sections": [
+          {"type": "text", "body": "systemd journalise tous les messages dans un journal structuré et binaire. journalctl affiche ce journal sous forme lisible."},
+          {"type": "text", "body": "Chaque entrée de journal contient un horodatage, un identifiant de service, un niveau de priorité et le message lui-même. Ces métadonnées permettent des filtrages précis."},
+          {"type": "definition", "term": "Journal", "body": "Base de données de journaux gérée par systemd-journald, stockée le plus souvent dans /var/log/journal."},
+          {"type": "exercise", "question": "Quel outil affiche le journal systemd ?", "answer": "journalctl."}
+        ]
+      },
+      {
+        "id": "ch2",
+        "title": "Lire les journaux",
+        "duration": 9,
+        "sections": [
+          {"type": "code", "code": "journalctl\njournalctl -e\njournalctl -f", "lang": "bash", "body": "Afficher tout le journal, la fin, ou suivre en continu."},
+          {"type": "text", "body": "journalctl sans argument affiche tout le journal. -e saute à la fin, -f suit les nouvelles entrées comme tail -f, très utile en débogage temps réel."},
+          {"type": "code", "code": "journalctl -u mon_service\njournalctl -u mon_service -n 50", "lang": "bash", "body": "Filtrer par unité et limiter aux cinquante dernières lignes."},
+          {"type": "exercise", "question": "Quelle option suit les journaux en continu ?", "answer": "-f, comme journalctl -f."},
+          {"type": "tip", "body": "Combinez -u (unité) et -n (nombre de lignes) pour obtenir rapidement les dernières erreurs d'un service."}
+        ]
+      },
+      {
+        "id": "ch3",
+        "title": "Filtrer les journaux",
+        "duration": 9,
+        "sections": [
+          {"type": "code", "code": "journalctl --since \"2024-01-01 10:00\"\njournalctl --until \"today\"", "lang": "bash", "body": "Filtrer les journaux par période."},
+          {"type": "code", "code": "journalctl -p err\njournalctl -p 3", "lang": "bash", "body": "Afficher seulement les entrées de niveau erreur (et inférieur)."},
+          {"type": "text", "body": "Les niveaux de priorité vont de 0 (emerg) à 7 (debug). -p err affiche les niveaux 0 à 3, soit les erreurs et plus graves."},
+          {"type": "table", "title": "Niveaux de priorité courants", "table": [["Niveau", "Code", "Signification"], ["emerg", "0", "Système inutilisable"], ["err", "3", "Erreur"], ["warning", "4", "Avertissement"], ["info", "6", "Information"], ["debug", "7", "Débogage"]]},
+          {"type": "exercise", "question": "Que fait journalctl -p err ?", "answer": "Il affiche uniquement les erreurs et les niveaux plus graves."},
+          {"type": "tip", "body": "Utilisez --since \"5 min ago\" pour ne voir que les messages récents lors d'un incident."}
+        ]
+      },
+      {
+        "id": "ch4",
+        "title": "Analyser les erreurs",
+        "duration": 8,
+        "sections": [
+          {"type": "code", "code": "journalctl -b\njournalctl -b -1", "lang": "bash", "body": "Afficher les journaux du boot courant ou du précédent."},
+          {"type": "text", "body": "Quand un service échoue au démarrage, retirez le message d'erreur pour comprendre la cause : fichier manquant, permission, port déjà utilisé."},
+          {"type": "code", "code": "journalctl -f -u mon_service", "lang": "bash", "body": "Suivre les journaux d'un service précis pendant un test."},
+          {"type": "exercise", "question": "Comment voir les journaux du boot précédent ?", "answer": "Avec journalctl -b -1."},
+          {"type": "warning", "body": "Les journaux ne sont pas persistants par défaut si le journal est en mémoire (volatile). Activez la persistance pour l'analyse post-incident."},
+          {"type": "tip", "body": "Ajoutez des messages structurés dans vos applications pour retrouver facilement les événements importants dans journalctl."}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "ssh_administration",
+    "title": "Administration à distance SSH",
+    "level": 2,
+    "category": "systeme",
+    "accent": "teal",
+    "icon": "network",
+    "duration": 40,
+    "summary": "Administrez votre système embarqué à distance en toute sécurité grâce au protocole SSH.",
+    "objectives": ["Se connecter en SSH", "Copier des fichiers avec scp", "Utiliser les clés SSH", "Renforcer la sécurité SSH"],
+    "chapters": [
+      {
+        "id": "ch1",
+        "title": "Se connecter en SSH",
+        "duration": 10,
+        "sections": [
+          {"type": "text", "body": "SSH, Secure Shell, est un protocole réseau qui permet d'ouvrir un shell sécurisé et chiffré sur une machine distante, idéale pour administrer une carte embarquée."},
+          {"type": "code", "code": "ssh utilisateur@192.168.1.50\nssh -p 2222 root@10.0.0.5", "lang": "bash", "body": "Connexion avec adresse IP, éventuellement un port différent via -p."},
+          {"type": "text", "body": "Par défaut SSH utilise le port 22. Sur une carte embarquée, on peut changer ce port pour éviter les scans automatiques, mais c'est une maigre protection."},
+          {"type": "exercise", "question": "Sur quel port écoute SSH par défaut ?", "answer": "Le port 22."},
+          {"type": "tip", "body": "Connaissez l'adresse IP de votre carte : affichez-la localement avec ip addr ou configurer une IP statique."}
+        ]
+      },
+      {
+        "id": "ch2",
+        "title": "Copier des fichiers",
+        "duration": 10,
+        "sections": [
+          {"type": "code", "code": "scp app.bin root@10.0.0.5:/root/\nscp root@10.0.0.5:/var/log/app.log .", "lang": "bash", "body": "Envoyer un fichier vers la cible ou le récupérer."},
+          {"type": "text", "body": "scp se base sur SSH pour copier des fichiers de façon sécurisée. Les chemins distants utilisent la syntaxe utilisateur@machine:chemin."},
+          {"type": "text", "body": "Pour copier un répertoire complet, utilisez l'option -r. Le transfert est chiffré comme la session SSH."},
+          {"type": "exercise", "question": "Quelle commande copie un fichier local vers une machine distante ?", "answer": "scp fichier_local utilisateur@IP:/chemin/distant."},
+          {"type": "tip", "body": "Préférez scp pour des transferts ponctuels ; pour une synchronisation régulière, envisagez rsync qui ne transfère que les différences."}
+        ]
+      },
+      {
+        "id": "ch3",
+        "title": "Les clés SSH",
+        "duration": 10,
+        "sections": [
+          {"type": "code", "code": "ssh-keygen -t ed25519\nssh-copy-id utilisateur@10.0.0.5", "lang": "bash", "body": "Générer une paire de clés et copier la clé publique sur la cible."},
+          {"type": "text", "body": "Une paire de clés comprend une clé publique, copiée sur les machines, et une clé privée conservée secrète. Les clés évitent de taper le mot de passe à chaque fois."},
+          {"type": "text", "body": "ssh-copy-id installe votre clé publique dans le fichier authorized_keys de la cible. Ensuite, la connexion s'authentifie par clé sans mot de passe."},
+          {"type": "warning", "body": "Ne communiquez jamais votre clé privée. Elle se trouve par défaut dans ~/.ssh/id_ed25519 et doit rester strictement privée."},
+          {"type": "exercise", "question": "Où la cible stocke-t-elle les clés publiques autorisées ?", "answer": "Dans ~/.ssh/authorized_keys de l'utilisateur."},
+          {"type": "tip", "body": "L'algorithme ed25519 est moderne, rapide et recommandé pour générer de nouvelles clés."}
+        ]
+      },
+      {
+        "id": "ch4",
+        "title": "Sécuriser SSH",
+        "duration": 10,
+        "sections": [
+          {"type": "code", "code": "PermitRootLogin no\nPasswordAuthentication no\nPort 2222", "lang": "bash", "body": "Directives du fichier /etc/ssh/sshd_config pour durcir l'accès."},
+          {"type": "text", "body": "En production, désactivez la connexion root directe et l'authentification par mot de passe une fois les clés en place. Ces réglages réduisent la surface d'attaque."},
+          {"type": "code", "code": "systemctl restart ssh", "lang": "bash", "body": "Redémarrer le service pour appliquer la configuration."},
+          {"type": "warning", "body": "Avant de désactiver l'authentification par mot de passe, vérifiez que votre clé fonctionne : sinon vous vous enfermez dehors."},
+          {"type": "exercise", "question": "Quelle directive empêche la connexion root ?", "answer": "PermitRootLogin no."},
+          {"type": "tip", "body": "Testez toujours une nouvelle configuration sshd avant de vous déconnecter de la session courante."}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "packages_apt",
+    "title": "Gérer les paquets apt",
+    "level": 2,
+    "category": "systeme",
+    "accent": "orange",
+    "icon": "inventory",
+    "duration": 35,
+    "summary": "Installez, mettez à jour et gérez les logiciels de votre système avec le gestionnaire de paquets apt.",
+    "objectives": ["Comprendre le système de paquets", "Installer et supprimer des paquets", "Mettre à jour le système", "Rechercher et inspecter les paquets"],
+    "chapters": [
+      {
+        "id": "ch1",
+        "title": "Le système de paquets",
+        "duration": 9,
+        "sections": [
+          {"type": "text", "body": "Un paquet regroupe un logiciel, ses fichiers, ses dépendances et ses métadonnées. apt (Advanced Package Tool) gère ces paquets pour les distributions Debian et dérivées."},
+          {"type": "definition", "term": "Paquet", "body": "Archive contenant un logiciel, ses fichiers binaires, ses scripts et la liste de ses dépendances à installer."},
+          {"type": "text", "body": "Les dépôts (repositories) sont des serveurs de paquets. apt télécharge les paquets depuis ces dépôts listés dans /etc/apt/sources.list."},
+          {"type": "exercise", "question": "Que contient un paquet logiciel ?", "answer": "Les fichiers binaires, les métadonnées et la liste des dépendances."}
+        ]
+      },
+      {
+        "id": "ch2",
+        "title": "Installer et supprimer",
+        "duration": 9,
+        "sections": [
+          {"type": "code", "code": "apt update\napt install git\napt remove git\napt purge git", "lang": "bash", "body": "Mettre à jour l'index, installer, supprimer ou purger un paquet."},
+          {"type": "text", "body": "apt update actualise la liste des paquets disponibles. apt install installe un paquet et ses dépendances. apt remove désinstalle en gardant les fichiers de configuration, apt purge les supprime aussi."},
+          {"type": "warning", "body": "apt update est nécessaire avant d'installer : sans index à jour, apt ne connaît pas les dernières versions disponibles."},
+          {"type": "exercise", "question": "Quelle commande met à jour l'index des paquets ?", "answer": "apt update."},
+          {"type": "tip", "body": "Utilisez apt purge pour retirer complètement un paquet, y compris sa configuration."}
+        ]
+      },
+      {
+        "id": "ch3",
+        "title": "Mettre à jour le système",
+        "duration": 9,
+        "sections": [
+          {"type": "code", "code": "apt upgrade\napt dist-upgrade", "lang": "bash", "body": "Mettre à niveau les paquets installés, ou gérer les changements de dépendances."},
+          {"type": "text", "body": "apt upgrade met à jour les paquets existants sans installer ni supprimer de paquets supplémentaires. apt dist-upgrade gère aussi les changements de dépendances."},
+          {"type": "text", "body": "Dans un système embarqué, les mises à jour se font souvent par une image complète plutôt que paquet par paquet, selon la stratégie de production."},
+          {"type": "exercise", "question": "Quelle différence importante existe entre upgrade et dist-upgrade ?", "answer": "dist-upgrade peut installer ou supprimer des paquets en plus d'en mettre à jour."}
+        ]
+      },
+      {
+        "id": "ch4",
+        "title": "Rechercher et inspecter",
+        "duration": 8,
+        "sections": [
+          {"type": "code", "code": "apt search outil\napt show gcc\napt list --installed", "lang": "bash", "body": "Rechercher, afficher les détails, ou lister les paquets installés."},
+          {"type": "text", "body": "apt search cherche dans les noms et descriptions des paquets. apt show affiche les informations détaillées comme la version et les dépendances."},
+          {"type": "exercise", "question": "Comment lister les paquets déjà installés ?", "answer": "Avec apt list --installed."},
+          {"type": "tip", "body": "apt-file search permet de retrouver quel paquet fournit un fichier précis, même s'il n'est pas installé."}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "git_versioning",
+    "title": "Git pour le versioning",
+    "level": 2,
+    "category": "systeme",
+    "accent": "orange",
+    "icon": "git",
+    "duration": 40,
+    "summary": "Versionnez vos projets embarqués avec Git : suivi, branches, et collaboration efficace.",
+    "objectives": ["Initialiser un dépôt Git", "Suivre et valider les modifications", "Utiliser les branches", "Se synchroniser avec un dépôt distant"],
+    "chapters": [
+      {
+        "id": "ch1",
+        "title": "Les bases de Git",
+        "duration": 10,
+        "sections": [
+          {"type": "text", "body": "Git est un système de contrôle de version distribué qui suit l'historique de vos fichiers. Chaque changement est enregistré dans un dépôt avec un message."},
+          {"type": "code", "code": "git init\ngit status\ngit add fichier.c\ngit commit -m \"Ajout du pilote\"", "lang": "bash", "body": "Initialiser un dépôt, voir l'état, indexer et valider un changement."},
+          {"type": "text", "body": "Le flux de base est : modifier les fichiers, les ajouter à l'index avec git add, puis les valider avec git commit. git status résume l'état courant."},
+          {"type": "exercise", "question": "Quelle commande enregistre une modification dans l'historique ?", "answer": "git commit, après avoir indexé les fichiers avec git add."},
+          {"type": "tip", "body": "Écrivez des messages de commit clairs décrivant le changement, pas une simple phrase générique."}
+        ]
+      },
+      {
+        "id": "ch2",
+        "title": "Suivre les modifications",
+        "duration": 10,
+        "sections": [
+          {"type": "code", "code": "git diff\ngit log --oneline\ngit checkout -- fichier.c", "lang": "bash", "body": "Voir les changements non validés, l'historique, ou abandonner des modifications."},
+          {"type": "text", "body": "git diff montre les modifications non indexées. git log affiche l'historique des commits. Une mauvaise modification peut être annulée avec git checkout sur un fichier."},
+          {"type": "text", "body": "Le fichier .gitignore permet d'exclure du suivi les fichiers générés, comme les binaires compilés ou les fichiers temporaires de build."},
+          {"type": "exercise", "question": "Quelle commande affiche l'historique des commits ?", "answer": "git log, souvent avec --oneline pour un affichage compact."},
+          {"type": "tip", "body": "Utilisez un fichier .gitignore pour ne pas versionner les artefacts de compilation et garder le dépôt propre."}
+        ]
+      },
+      {
+        "id": "ch3",
+        "title": "Les branches",
+        "duration": 10,
+        "sections": [
+          {"type": "code", "code": "git branch feature/x\ngit checkout feature/x\ngit merge feature/x", "lang": "bash", "body": "Créer une branche, y basculer, puis la fusionner."},
+          {"type": "text", "body": "Les branches permettent de développer des fonctionnalités en parallèle sans perturber la branche principale. On les fusionne via git merge."},
+          {"type": "code", "code": "git checkout -b nouvelle_branche", "lang": "bash", "body": "Créer une branche et y basculer en une seule commande."},
+          {"type": "text", "body": "Si deux branches modifient le même endroit, un conflit de fusion peut survenir. Il faut alors le résoudre manuellement en éditant les fichiers."},
+          {"type": "exercise", "question": "Deux commandes combinées pour créer une branche et y aller ?", "answer": "git checkout -b nom_de_branche."},
+          {"type": "warning", "body": "Résolvez les conflits de fusion avec soin, en vérifiant le code fusionné, avant de valider."}
+        ]
+      },
+      {
+        "id": "ch4",
+        "title": "Dépôt distant",
+        "duration": 10,
+        "sections": [
+          {"type": "code", "code": "git remote add origin https://exemple.com/repo.git\ngit push -u origin main\ngit pull", "lang": "bash", "body": "Lier un dépôt distant, pousser sa branche, et récupérer les changements."},
+          {"type": "text", "body": "Le dépôt distant, souvent hébergé sur une plateforme, permet de sauvegarder et de collaborer. git push envoie vos commits, git pull récupère ceux des autres."},
+          {"type": "text", "body": "git clone copie un dépôt distant en local avec son historique complet, ce qui est la première étape pour rejoindre un projet existant."},
+          {"type": "exercise", "question": "Quelle commande télécharge un dépôt distant en local ?", "answer": "git clone URL_du_depot."},
+          {"type": "tip", "body": "En embarqué, versionnez aussi vos scripts de build, la configuration de la toolchain et les fichiers de devicetree : tout ce qui reproduit votre système."}
+        ]
+      }
+    ]
+  }
+]

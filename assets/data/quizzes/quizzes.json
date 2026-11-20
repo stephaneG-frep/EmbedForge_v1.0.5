@@ -1,0 +1,222 @@
+[
+  {
+    "id": "quiz_debutant",
+    "title": "Linux embarqué — Débutant",
+    "level": "beginner",
+    "questions": [
+      {
+        "q": "Quelle commande affiche le dossier courant ?",
+        "options": ["pwd", "ls", "cd", "cat"],
+        "answer": 0,
+        "explanation": "pwd affiche le dossier de travail courant."
+      },
+      {
+        "q": "Quelle option de ls montre les fichiers cachés ?",
+        "options": ["-l", "-a", "-h", "-R"],
+        "answer": 1,
+        "explanation": "L'option -a (all) affiche aussi les fichiers cachés."
+      },
+      {
+        "q": "Quelle commande change le dossier de travail ?",
+        "options": ["pwd", "touch", "cd", "mv"],
+        "answer": 2,
+        "explanation": "cd (change directory) déplace le shell vers un autre dossier."
+      },
+      {
+        "q": "Quelle commande affiche le contenu d'un fichier page par page ?",
+        "options": ["cat", "less", "echo", "wc"],
+        "answer": 1,
+        "explanation": "less affiche le fichier page par page avec navigation."
+      },
+      {
+        "q": "Quelle commande liste les processus en cours ?",
+        "options": ["ls", "ps", "cp", "touch"],
+        "answer": 1,
+        "explanation": "ps affiche l'état des processus en cours d'exécution."
+      },
+      {
+        "q": "Quelle commande crée un fichier vide ?",
+        "options": ["mkdir", "touch", "rm", "chmod"],
+        "answer": 1,
+        "explanation": "touch crée un fichier vide ou met à jour son horodatage."
+      },
+      {
+        "q": "Quelle commande affiche le nom de l'utilisateur courant ?",
+        "options": ["id", "passwd", "whoami", "useradd"],
+        "answer": 2,
+        "explanation": "whoami affiche simplement le nom de l'utilisateur courant."
+      },
+      {
+        "q": "Quelle commande donne des droits d'exécution à un script ?",
+        "options": ["chmod u+x script", "cat script", "ls script", "cd script"],
+        "answer": 0,
+        "explanation": "chmod u+x ajoute le droit d'exécution pour le propriétaire."
+      }
+    ]
+  },
+  {
+    "id": "quiz_intermediaire",
+    "title": "Linux embarqué — Intermédiaire",
+    "level": "intermediate",
+    "questions": [
+      {
+        "q": "Quelle commande affiche les journaux du démarrage courant avec systemd ?",
+        "options": ["dmesg", "journalctl -b", "cat /var/log", "top"],
+        "answer": 1,
+        "explanation": "journalctl -b affiche les journaux depuis le dernier démarrage."
+      },
+      {
+        "q": "Quelle commande systemd démarre un service au boot ?",
+        "options": ["systemctl enable nom", "systemctl kill nom", "systemctl mount nom", "systemctl boot nom"],
+        "answer": 0,
+        "explanation": "systemctl enable crée un lien pour démarrer l'unité au démarrage."
+      },
+      {
+        "q": "Sur quel port écoute le serveur SSH par défaut ?",
+        "options": ["21", "22", "80", "443"],
+        "answer": 1,
+        "explanation": "SSH utilise le port 22 par défaut."
+      },
+      {
+        "q": "Quelle commande installe un paquet Debian en résolvant les dépendances ?",
+        "options": ["dpkg -i", "apt install", "make install", "fdisk"],
+        "answer": 1,
+        "explanation": "apt install résout et installe les dépendances automatiquement."
+      },
+      {
+        "q": "Quelle commande teste la connectivité réseau par paquets ICMP ?",
+        "options": ["ip addr", "ping", "scp", "route"],
+        "answer": 1,
+        "explanation": "ping envoie des paquets ICMP et mesure la réponse."
+      },
+      {
+        "q": "Quelle commande initialise un dépôt git ?",
+        "options": ["git clone", "git init", "git log", "git status"],
+        "answer": 1,
+        "explanation": "git init crée un nouveau dépôt git local."
+      },
+      {
+        "q": "Quelle commande copie un fichier entre machines via SSH ?",
+        "options": ["tgz", "scp", "lsmod", "fg"],
+        "answer": 1,
+        "explanation": "scp copie des fichiers sur SSH entre deux machines."
+      },
+      {
+        "q": "Quelle commande affiche l'espace disque ?",
+        "options": ["du", "df", "free", "stat"],
+        "answer": 1,
+        "explanation": "df affiche l'espace disque utilisé et disponible des systèmes de fichiers."
+      }
+    ]
+  },
+  {
+    "id": "quiz_avance",
+    "title": "Linux embarqué — Avancé",
+    "level": "advanced",
+    "questions": [
+      {
+        "q": "Quelle commande libgpiod affiche les lignes d'un contrôleur GPIO ?",
+        "options": ["gpioinfo", "gpioset", "gpioget", "devmem"],
+        "answer": 0,
+        "explanation": "gpioinfo affiche les lignes et leur état via libgpiod."
+      },
+      {
+        "q": "Quelle commande écrit une valeur dans une adresse mémoire physique ?",
+        "options": ["cat", "devmem", "echo", "mount"],
+        "answer": 1,
+        "explanation": "devmem accède directement à la mémoire physique à une adresse donnée."
+      },
+      {
+        "q": "Quelle commande scanne les périphériques d'un bus I2C ?",
+        "options": ["i2cset", "i2cdetect", "gpioinfo", "spidev_test"],
+        "answer": 1,
+        "explanation": "i2cdetect recherche les périphériques présents sur un bus I2C."
+      },
+      {
+        "q": "Quel outil teste un bus SPI via spidev ?",
+        "options": ["spidev_test", "gpioinfo", "i2cset", "dmesg"],
+        "answer": 0,
+        "explanation": "spidev_test échange des données sur /dev/spidevX.Y."
+      },
+      {
+        "q": "Quel compilateur croisé cible l'ARM 64 bits ?",
+        "options": ["gcc", "aarch64-linux-gnu-gcc", "make", "ld"],
+        "answer": 1,
+        "explanation": "aarch64-linux-gnu-gcc génère du code pour l'architecture AArch64."
+      },
+      {
+        "q": "Quelle option de gcc ajoute les symboles de débogage ?",
+        "options": ["-O2", "-Wall", "-g", "-o"],
+        "answer": 2,
+        "explanation": "-g génère les informations de débogage utilisées par gdb."
+      },
+      {
+        "q": "Quelle option make compile en parallèle sur plusieurs cœurs ?",
+        "options": ["-c", "-j4", "-o", "-l"],
+        "answer": 1,
+        "explanation": "-jN lance la compilation avec N processus en parallèle."
+      },
+      {
+        "q": "Quelle commande affiche les messages du tampon du noyau ?",
+        "options": ["lsmod", "dmesg", "modprobe", "gpioget"],
+        "answer": 1,
+        "explanation": "dmesg affiche le ring buffer du noyau avec les messages de boot et de drivers."
+      }
+    ]
+  },
+  {
+    "id": "quiz_expert",
+    "title": "Linux embarqué — Expert",
+    "level": "expert",
+    "questions": [
+      {
+        "q": "Quel fichier décrit le matériel d'un système dans le device tree ?",
+        "options": ["Makefile", "fichier .dts (Device Tree Source)", "lilo.conf", "modules.dep"],
+        "answer": 1,
+        "explanation": "Les fichiers .dts décrivent le matériel, compilés en .dtb avec dtc."
+      },
+      {
+        "q": "Quel format de fichier binaire décrit le device tree ?",
+        "options": [".elf", ".dtb (Flattened Device Tree)", ".ko", ".img"],
+        "answer": 1,
+        "explanation": "dtc compile le .dts en un binaire .dtb chargé par le bootloader."
+      },
+      {
+        "q": "Quelle commande charge un module du noyau avec ses dépendances ?",
+        "options": ["insmod", "modprobe", "rmmod", "lsmod"],
+        "answer": 1,
+        "explanation": "modprobe charge un module et ses dépendances listées par depmod."
+      },
+      {
+        "q": "Quel système de construction embarqué utilise des recettes .bb ?",
+        "options": ["Make", "Yocto/BitBake", "CMake", "fdisk"],
+        "answer": 1,
+        "explanation": "Yocto (OpenEmbedded/BitBake) construit des images via des recettes .bb."
+      },
+      {
+        "q": "Quel bootloader est souvent utilisé sur ARM embarqué ?",
+        "options": ["GRUB", "U-Boot", "LILO", "systemd-boot"],
+        "answer": 1,
+        "explanation": "U-Boot (Das U-Boot) est le bootloader le plus répandu sur l'embarqué ARM."
+      },
+      {
+        "q": "Quelle fonction fait d'un système Linux un système temps réel dur ?",
+        "options": ["PREEMPT standard", "PREEMPT_RT (noyau temps réel)", "SMP", "NUMA"],
+        "answer": 1,
+        "explanation": "Le patch PREEMPT_RT rend le noyau capable de garantir des latences temps réel."
+      },
+      {
+        "q": "Quel outil place un processeur dans une politique de sécurité du noyau ?",
+        "options": ["SEAndroid", "selinux (SELinux)", "iptables", "ufw"],
+        "answer": 1,
+        "explanation": "SELinux applique des politiques de contrôle d'accès obligatoire au noyau."
+      },
+      {
+        "q": "Quel outil est utilisé pour déboguer un programme en pas-à-pas ?",
+        "options": ["make", "gdb", "objdump", "ar"],
+        "answer": 1,
+        "explanation": "gdb permet de déboguer en inspectant les variables et en pas-à-pas."
+      }
+    ]
+  }
+]

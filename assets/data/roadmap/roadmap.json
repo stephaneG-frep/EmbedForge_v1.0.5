@@ -1,0 +1,241 @@
+[
+  {
+    "id": "r1",
+    "title": "Comprendre Linux",
+    "level": 1,
+    "description": "Découvrez ce qu'est un système Linux : le noyau, l'espace utilisateur et le rôle des distributions. Posez les concepts qui serviront pendant tout le parcours embarqué.",
+    "course": "intro_linux",
+    "skills": ["Linux", "Terminal"]
+  },
+  {
+    "id": "r2",
+    "title": "Naviguer dans le terminal",
+    "level": 1,
+    "description": "Apprenez à vous déplacer, lister et consulter le système en ligne de commande. Ces réflexes seront votre quotidien d'administrateur de cartes embarquées.",
+    "course": "linux_commands",
+    "skills": ["Terminal", "Commandes"]
+  },
+  {
+    "id": "r3",
+    "title": "Premiers pas avec Bash",
+    "level": 1,
+    "description": "Comprenez le shell Bash, les commandes composées et les raccourcis d'édition. Un socle indispensable avant d'écrire vos premières automatisations.",
+    "course": "bash_intro",
+    "skills": ["Bash", "Commandes"]
+  },
+  {
+    "id": "r4",
+    "title": "Fichiers et permissions",
+    "level": 1,
+    "description": "Maîtrisez la hiérarchie des fichiers, les droits Unix et les liens. La sécurité d'une carte embarquée commence par de bonnes permissions.",
+    "course": "fichiers_permissions",
+    "skills": ["Fichiers", "Permissions"]
+  },
+  {
+    "id": "r5",
+    "title": "Comprendre les processus",
+    "level": 1,
+    "description": "Observez les processus, la mémoire et la charge avec ps, top et free. Ces mesures servent de premier diagnostic sur n'importe quelle cible.",
+    "course": "systeme_processus",
+    "skills": ["Processus", "Mémoire"]
+  },
+  {
+    "id": "r6",
+    "title": "Gérer les paquets",
+    "level": 1,
+    "description": "Installez, mettez à jour et réparez les logiciels avec apt et dpkg. Gérez proprement les dépendances de vos outils de développement.",
+    "course": "packages_apt",
+    "skills": ["Paquets", "apt"]
+  },
+  {
+    "id": "r7",
+    "title": "La philosophie Unix",
+    "level": 1,
+    "description": "Assimilez l'esprit des petits outils composés à l'aide de pipes et de redirections. C'est la culture qui donne sa puissance au shell embarqué.",
+    "skills": ["Unix", "Pipes"]
+  },
+  {
+    "id": "r8",
+    "title": "Scripts Bash avancés",
+    "level": 2,
+    "description": "Écrivez des scripts robustes avec les variables, conditions, boucles et pièges à erreurs. Vous automatiserez bientôt vos déploiements.",
+    "course": "bash_advanced",
+    "skills": ["Bash", "Scripts"]
+  },
+  {
+    "id": "r9",
+    "title": "Versionner avec Git",
+    "level": 2,
+    "description": "Suivez vos sources, créez des branches et collaborez proprement. Git est le langage commun de tout projet embarqué.",
+    "course": "git_versioning",
+    "skills": ["Git", "Versions"]
+  },
+  {
+    "id": "r10",
+    "title": "Programmer en C : les bases",
+    "level": 2,
+    "description": "Découvrez le langage des systèmes : types, fonctions, pointeurs et compilation. Le C reste omniprésent dans les drivers et les firmwares.",
+    "course": "c_basics",
+    "skills": ["C", "Compilation"]
+  },
+  {
+    "id": "r11",
+    "title": "C : pointeurs et mémoire",
+    "level": 2,
+    "description": "Approfondissez la gestion mémoire, les tableaux et les structures. La maîtrise des pointeurs distingue le programmeur système confirmé.",
+    "course": "c_advanced",
+    "skills": ["C", "Mémoire"]
+  },
+  {
+    "id": "r12",
+    "title": "Archi CPU : registres et modes",
+    "level": 2,
+    "description": "Comparez x86, ARM et RISC-V : registres, modes privilégiés et programmation. Le choix de l'architecture guide tout un projet embarqué.",
+    "course": "cpu_architectures",
+    "skills": ["CPU", "ARM"]
+  },
+  {
+    "id": "r13",
+    "title": "Lire et écrire dans sysfs",
+    "level": 2,
+    "description": "Interfacez le noyau depuis des scripts Python : exporter des GPIO, lire des capteurs et piloter le matériel. Votre premier contact avec le matériel.",
+    "course": "python_sysfs",
+    "skills": ["sysfs", "Python"]
+  },
+  {
+    "id": "r14",
+    "title": "Piloter des broches GPIO",
+    "level": 3,
+    "description": "Configurez des broches en entrée et en sortie, lisez des boutons et commandez des LED. Le point d'entrée classique vers le matériel embarqué.",
+    "course": "gpio",
+    "skills": ["GPIO", "Matériel"]
+  },
+  {
+    "id": "r15",
+    "title": "Communiquer en UART",
+    "level": 3,
+    "description": "Établissez une liaison série à 115200 bauds et échangez des données entre équipements. Vous débloquerez vos cartes via la console série.",
+    "course": "uart",
+    "skills": ["UART", "Série"]
+  },
+  {
+    "id": "r16",
+    "title": "Interroger des capteurs en I2C",
+    "level": 3,
+    "description": "Adressez des périphériques sur le bus I2C à deux fils et lisez leurs registres. Le bus de prédilection pour les capteurs environnementaux.",
+    "course": "i2c",
+    "skills": ["I2C", "Capteurs"]
+  },
+  {
+    "id": "r17",
+    "title": "Transférer rapide en SPI",
+    "level": 3,
+    "description": "Configurez des transferts SPI à quatre fils pour écrans, flash et convertisseurs. Idéal dès que le débit I2C devient limitant.",
+    "course": "spi",
+    "skills": ["SPI", "Vitesse"]
+  },
+  {
+    "id": "r18",
+    "title": "Comprendre le noyau Linux",
+    "level": 3,
+    "description": "Explorez les sous-systèmes du noyau, les modules et la compilation. Vous saurez intégrer le noyau dans vos images embarquées.",
+    "course": "kernel_linux",
+    "skills": ["Noyau", "Modules"]
+  },
+  {
+    "id": "r19",
+    "title": "Écrire un driver Linux",
+    "level": 3,
+    "description": "Développez un driver pas à pas : câblage de la plateforme, opérations de fichier et interaction avec le matériel.",
+    "course": "linux_drivers",
+    "skills": ["Drivers", "Noyau"]
+  },
+  {
+    "id": "r20",
+    "title": "Décrire le matériel : le Devicetree",
+    "level": 3,
+    "description": "Apprenez à décrire la platine avec un devicetree : nœuds, propriétés et bindings. C'est le langage qui relie le noyau à votre carte.",
+    "course": "devicetree_bindings",
+    "skills": ["Devicetree", "Matériel"]
+  },
+  {
+    "id": "r21",
+    "title": "Composer des services systemd",
+    "level": 4,
+    "description": "Créez des unités, des timers et orchestrez le démarrage de vos applications. systemd gouverne la vie des services sur votre cible.",
+    "course": "systemd_services",
+    "skills": ["systemd", "Services"]
+  },
+  {
+    "id": "r22",
+    "title": "Centraliser les journaux",
+    "level": 4,
+    "description": "Configurez journald, la rotation et les filtres journalctl. Une journalisation saine est votre meilleure alliée pour le dépannage.",
+    "course": "syslog_journaux",
+    "skills": ["Journalisation", "journald"]
+  },
+  {
+    "id": "r23",
+    "title": "Administrer à distance en SSH",
+    "level": 4,
+    "description": "Sécurisez vos sessions SSH, transférez des fichiers et automatisez l'administration de flotte. L'accès à distance devient une routine sûre.",
+    "course": "ssh_administration",
+    "skills": ["SSH", "Administration"]
+  },
+  {
+    "id": "r24",
+    "title": "Cross-compiler pour ARM",
+    "level": 4,
+    "description": "Compilez sur votre PC des binaires destinés à votre carte et validez-les avec file et readelf. Le cœur du flux de build embarqué.",
+    "course": "cross_compilation",
+    "skills": ["Cross-compilation", "ARM"]
+  },
+  {
+    "id": "r25",
+    "title": "Temps réel et latences",
+    "level": 4,
+    "description": "Comprenez les limites temps réel de Linux et l'usage de PREEMPT_RT et des priorités. Déterminisme et faible latence au programme.",
+    "course": "rtos_linux",
+    "skills": ["Temps réel", "Latence"]
+  },
+  {
+    "id": "r26",
+    "title": "Sécuriser l'embarqué",
+    "level": 4,
+    "description": "Démarrage vérifié, durcissement systemd et mises à jour sécurisées. La sécurité se conçoit dès la construction de l'image.",
+    "course": "securite_embarque",
+    "skills": ["Sécurité", "Chiffrement"]
+  },
+  {
+    "id": "r27",
+    "title": "Charger le noyau avec U-Boot",
+    "level": 5,
+    "description": "Configurez et utilisez U-Boot : variables d'environnement, boot depuis la flash et le réseau. Le bootloader reste la clé du démarrage.",
+    "course": "bootloader_uboot",
+    "skills": ["U-Boot", "Boot"]
+  },
+  {
+    "id": "r28",
+    "title": "Construire une image avec Buildroot",
+    "level": 5,
+    "description": "Assemblez noyau, busybox et applications dans un rootfs complet. Reproducible, rapide et minimaliste pour vos cartes de production.",
+    "course": "buildroot",
+    "skills": ["Buildroot", "Build"]
+  },
+  {
+    "id": "r29",
+    "title": "Créer une distribution avec Yocto",
+    "level": 5,
+    "description": "Écrivez vos recettes, vos layers et gérez les dépendances avec BitBake. La flexibilité de Yocto s'impose dans les projets industriels.",
+    "course": "yocto",
+    "skills": ["Yocto", "BitBake"]
+  },
+  {
+    "id": "r30",
+    "title": "Passer en production",
+    "level": 5,
+    "description": "Gérez une flotte de cartes : mises à jour OTA, surveillance et cycle de vie des images. Votre carte sort du laboratoire pour le terrain.",
+    "course": "production_fleet",
+    "skills": ["Production", "Mises à jour"]
+  }
+]

@@ -1,0 +1,57 @@
+name: embedforge
+description: "EmbedForge — Apprendre le développement Linux embarqué de zéro jusqu'au niveau professionnel."
+publish_to: 'none'
+version: 1.0.5+6
+
+environment:
+  sdk: ^3.12.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  provider: ^6.1.5+1
+  shared_preferences: ^2.5.5
+  collection: ^1.19.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
+
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "assets/images/icon/icon_1024.png"
+  adaptive_icon_background: "#10151C"
+  adaptive_icon_foreground: "assets/images/icon/icon_foreground.png"
+  min_sdk_android: 21
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/data/courses/manifest.json
+    - assets/data/courses/level1_fondamentaux.json
+    - assets/data/courses/level2_systeme.json
+    - assets/data/courses/level3_materiel.json
+    - assets/data/courses/level4_plateforme.json
+    - assets/data/courses/level5_pro.json
+    - assets/data/commands/commands.json
+    - assets/data/quizzes/quizzes.json
+    - assets/data/projects/projects.json
+    - assets/data/glossary/glossary.json
+    - assets/data/cheat_sheets/cheat_sheets.json
+    - assets/data/roadmap/roadmap.json
+    - assets/data/badges/badges.json
+    - assets/images/icon/icon_1024.png
+    - assets/images/icon/icon_foreground.png
+
+  fonts:
+    - family: Static
+      fonts:
+        - asset: assets/fonts/static.ttf
+    # Police technique (JetBrains Mono) embarquée = fonctionnement hors-ligne garanti.
+    - family: MonoTech
+      fonts:
+        - asset: assets/fonts/monotech.ttf

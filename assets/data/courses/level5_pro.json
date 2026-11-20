@@ -1,0 +1,303 @@
+[
+  {
+    "id": "rtos_linux",
+    "title": "RTOS vs Linux temps réel",
+    "level": 5,
+    "category": "pro",
+    "accent": "red",
+    "icon": "timer",
+    "duration": 45,
+    "summary": "Comparez les systèmes temps réel (RTOS) et Linux, et découvrez comment obtenir un comportement temps réel sous Linux.",
+    "objectives": ["Comprendre la notion de temps réel", "Comparer RTOS et Linux", "Découvrir les correctifs temps réel", "Mesurer la latence"],
+    "chapters": [
+      {
+        "id": "ch1",
+        "title": "La notion de temps réel",
+        "duration": 12,
+        "sections": [
+          {"type": "text", "body": "Un système temps réel garantit qu'une tâche s'exécute dans un délai prévisible après un événement. Ce qui compte, c'est le déterminisme, pas la vitesse brute."},
+          {"type": "definition", "term": "Latence", "body": "Le délai entre la survenue d'un événement et la réaction du système ; sa variation s'appelle la gigue (jitter)."},
+          {"type": "text", "body": "On distingue le temps réel strict (hard), où une échéance manquée est catastrophique, du temps réel souple (soft), où c'est simplement un défaut."},
+          {"type": "exercise", "question": "Quelle est la différence entre vitesse et temps réel ?", "answer": "Le temps réel garantit la prédictibilité du délai, pas simplement une grande vitesse de traitement."}
+        ]
+      },
+      {
+        "id": "ch2",
+        "title": "RTOS et Linux",
+        "duration": 11,
+        "sections": [
+          {"type": "text", "body": "Un RTOS, comme FreeRTOS, offre un ordonnancement déterministe avec une faible latence, mais un écosystème limité. Linux offre une richesse de fonctionnalités mais une latence moins prédictible."},
+          {"type": "table", "title": "Comparaison RTOS et Linux", "table": [["Critère", "RTOS", "Linux"], ["Latence", "Très faible", "Variable"], ["Écosystème", "Restreint", "Riche"], ["Mémoire", "Minimale", "Plus consommatrice"], ["Complexité", "Simple", "Élevée"]]},
+          {"type": "text", "body": "Le choix dépend du besoin : un contrôle motorisé strict privilégie un RTOS, un produit avec réseau et interface graphique peut tolérer Linux."},
+          {"type": "exercise", "question": "Pour quel type de contrôle privilégie-t-on un RTOS ?", "answer": "Pour des besoins de latence strictes et déterministes, comme le contrôle de moteurs."}
+        ]
+      },
+      {
+        "id": "ch3",
+        "title": "Linux temps réel",
+        "duration": 11,
+        "sections": [
+          {"type": "code", "code": "uname -r\ngrep PREEMPT /boot/config-$(uname -r)", "lang": "bash", "body": "Vérifier la version du noyau et la configuration de préemption (PREEMPT)."},
+          {"type": "text", "body": "Le correctif PREEMPT_RT rend le noyau entièrement préemptible, réduisant la latence. Plusieurs niveaux de préemption existent selon la configuration."},
+          {"type": "text", "body": "La priorité des processus se règle avec chrt ou les appels système sched_setscheduler. De bonnes priorités et l'isolation des cœurs améliorent le déterminisme."},
+          {"type": "exercise", "question": "Quel correctif rend le noyau Linux entièrement préemptible ?", "answer": "PREEMPT_RT."},
+          {"type": "warning", "body": "Les garanties temps réel de Linux restent souples : il ne convient pas aux contraintes hard indispensables à la sécurité."}
+        ]
+      },
+      {
+        "id": "ch4",
+        "title": "Mesurer la latence",
+        "duration": 11,
+        "sections": [
+          {"type": "code", "code": "cyclictest -m -t1 -p99 -n -l 100000", "lang": "bash", "body": "Exécuter un test de latence avec cyclictest."},
+          {"type": "text", "body": "cyclictest mesure la latence de planification d'une tâche périodique et en affiche les valeurs minimale, moyenne et maximale."},
+          {"type": "text", "body": "La latence maximale indique le pire cas observé. Une baisse du déterminisme peut venir de la charge du système ou de la configuration."},
+          {"type": "exercise", "question": "Quel outil mesure la latence de planification ?", "answer": "cyclictest, souvent inclus dans les outils de test temps réel."},
+          {"type": "tip", "body": "Supprimez les processus perturbateurs et isolez un cœur pour réduire la gigue lors des tests."}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "securite_embarque",
+    "title": "Sécuriser un système embarqué",
+    "level": 5,
+    "category": "pro",
+    "accent": "green",
+    "icon": "shield",
+    "duration": 45,
+    "summary": "Renforcez la sécurité de votre système embarqué : durcissement, chiffrement et boot sécurisé.",
+    "objectives": ["Évaluer la surface d'attaque", "Durcir le système", "Utiliser le chiffrement", "Comprendre le boot sécurisé"],
+    "chapters": [
+      {
+        "id": "ch1",
+        "title": "La surface d'attaque",
+        "duration": 12,
+        "sections": [
+          {"type": "text", "body": "Un système embarqué est vulnérable à travers ses interfaces : réseau, USB, console série, stockage. Réduire la surface d'attaque est la première défense."},
+          {"type": "list", "title": "Interfaces exposées typiques", "items": ["Réseau (Wi-Fi, Ethernet)", "Ports USB", "Console série de debug", "Stockage amovible"]},
+          {"type": "text", "body": "Désactivez tout service inutile et toute interface de debug non requise en production. Un service de plus est un point d'entrée potentiel de plus."},
+          {"type": "exercise", "question": "Quelle est la première défense contre les attaques ?", "answer": "Réduire la surface d'attaque en désactivant interfaces et services inutiles."}
+        ]
+      },
+      {
+        "id": "ch2",
+        "title": "Durcir le système",
+        "duration": 11,
+        "sections": [
+          {"type": "code", "code": "chmod 600 /etc/shadow\nPassRoot {\n  deny\n}\nsshd PermitRootLogin no", "lang": "bash", "body": "Exemple de restrictions sur un fichier sensible et sur SSH."},
+          {"type": "text", "body": "Restreignez les permissions des fichiers de configuration, évitez les mots de passe par défaut et désactivez les comptes inutiles. Le principe du moindre privilège s'applique partout."},
+          {"type": "list", "title": "Mesures de durcissement", "items": ["Retirer les outils de debug en production", "Désactiver les services inutilisés", "Planifier des mises à jour de sécurité", "Limiter les utilisateurs et privilèges"]},
+          {"type": "exercise", "question": "Quel principe guide le durcissement ?", "answer": "Le moindre privilège : ne donner que les droits strictement nécessaires."},
+          {"type": "warning", "body": "Les mots de passe d'usine non modifiés sont une faille triviale. Changez toujours les identifiants par défaut."}
+        ]
+      },
+      {
+        "id": "ch3",
+        "title": "Le chiffrement",
+        "duration": 11,
+        "sections": [
+          {"type": "code", "code": "update-ca-certificates\nopenssl version", "lang": "bash", "body": "Gérer les certificats et vérifier la version d'OpenSSL."},
+          {"type": "text", "body": "Chiffrez les communications (TLS/SSL) et les données sensibles au repos. Les certificats racines installés permettent de vérifier l'authenticité des serveurs."},
+          {"type": "text", "body": "Pour les données au repos, des mécanismes comme LUKS ou dm-crypt chiffrent le système de fichiers. La performance doit être évaluée sur le matériel cible."},
+          {"type": "exercise", "question": "Quel protocole chiffre les communications réseau ?", "answer": "TLS/SSL, exposé par OpenSSL et d'autres bibliothèques."},
+          {"type": "tip", "body": "Évaluez la surcharge du chiffrement sur votre processeur : certains cœurs disposent d'accélération matérielle dédiée."}
+        ]
+      },
+      {
+        "id": "ch4",
+        "title": "Le boot sécurisé",
+        "duration": 11,
+        "sections": [
+          {"type": "text", "body": "Le boot sécurisé (secure boot) vérifie la signature de chaque étape de démarrage, de la ROM au noyau, empêchant l'exécution de code falsifié."},
+          {"type": "text", "body": "U-Boot peut vérifier la signature du devicetree et du noyau avant de les charger. Si la signature est invalide, le démarrage est refusé."},
+          {"type": "text", "body": "Les clés de vérification sont ancrées dans du matériel sécurisé (eFuse, TPM). Une chaîne de confiance se construit de la racine jusqu'aux applications."},
+          {"type": "exercise", "question": "Que vérifie le boot sécurisé ?", "answer": "La signature de chaque étape de démarrage, du bootloader jusqu'au noyau."},
+          {"type": "warning", "body": "Perdre les clés de signature empêche toute mise à jour future. Gardez des sauvegardes sécurisées des clés."},
+          {"type": "tip", "body": "Concevez une politique de gestion des clés dès le début du projet pour éviter des verrouillages incompatibles."}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "debug_low_level",
+    "title": "Debug : GDB, logs, traceurs",
+    "level": 5,
+    "category": "pro",
+    "accent": "red",
+    "icon": "bug",
+    "duration": 45,
+    "summary": "Déboguez efficacement votre système embarqué avec GDB, les journaux et les outils de traçage.",
+    "objectives": ["Interagir avec GDB en ligne de commande", "Déboguer à distance", "Utiliser les journaux", "Explorer le tracing FTrace"],
+    "chapters": [
+      {
+        "id": "ch1",
+        "title": "GDB en ligne de commande",
+        "duration": 12,
+        "sections": [
+          {"type": "code", "code": "gdb mon_programme\nbreak main\nrun\nprint variable\ncontinue", "lang": "bash", "body": "Lancer GDB, poser un point d'arrêt, afficher une variable et continuer."},
+          {"type": "text", "body": "GDB permet d'exécuter un programme pas à pas, d'inspecter les variables et d'analyser un crash. Les points d'arrêt suspendent l'exécution à un endroit précis."},
+          {"type": "code", "code": "bt\ninfo locals\nlist", "lang": "bash", "body": "Afficher la pile d'appels, les variables locales et le code source."},
+          {"type": "exercise", "question": "Quelle commande GDB pose un point d'arrêt ?", "answer": "break, par exemple break main."},
+          {"type": "tip", "body": "La commande bt (backtrace) est indispensable après un crash pour connaître la pile d'appels."}
+        ]
+      },
+      {
+        "id": "ch2",
+        "title": "Déboguer à distance",
+        "duration": 11,
+        "sections": [
+          {"type": "code", "code": "gdbserver :2345 mon_programme\ngdb mon_programme", "lang": "bash", "body": "Lancer un serveur de debug sur la cible puis s'y connecter avec GDB."},
+          {"type": "text", "body": "gdbserver s'exécute sur la cible embarquée et expose un port. GDB sur l'hôte s'y connecte pour contrôler le programme distant."},
+          {"type": "code", "code": "target remote <ip_cible>:2345\ncontinue", "lang": "bash", "body": "Depuis GDB, se connecter à la cible et reprendre l'exécution."},
+          {"type": "warning", "body": "Le programme distant doit être compilé avec les symboles de débogage (-g) et sans optimisation agressive pour un débogage fiable."},
+          {"type": "exercise", "question": "Quel outil sert de serveur de debug sur la cible ?", "answer": "gdbserver."},
+          {"type": "tip", "body": "Compilez avec -g pour conserver les symboles et -O0 ou une optimisation modérée pour faciliter le pas-à-pas."}
+        ]
+      },
+      {
+        "id": "ch3",
+        "title": "Les journaux applicatifs",
+        "duration": 11,
+        "sections": [
+          {"type": "code", "code": "dmesg | grep -i erreur\njournalctl -k", "lang": "bash", "body": "Afficher les messages du noyau et les journaux du noyau systemd."},
+          {"type": "text", "body": "dmesg montre les messages du noyau, utiles lors des erreurs de pilotes ou de montage. journalctl -k filtre le journal pour ne garder que ceux du noyau."},
+          {"type": "text", "body": "Dans votre application, loguez avec des niveaux et du contexte. Un bon journal indique quand et où l'erreur est survenue."},
+          {"type": "exercise", "question": "Quelle commande affiche les messages du noyau ?", "answer": "dmesg."}
+        ]
+      },
+      {
+        "id": "ch4",
+        "title": "Le tracing avec FTrace",
+        "duration": 11,
+        "sections": [
+          {"type": "code", "code": "echo function > /sys/kernel/tracing/current_tracer\necho mon_fonction > /sys/kernel/tracing/set_ftrace_filter\ncat /sys/kernel/tracing/trace", "lang": "bash", "body": "Activer le traçage de fonctions et lire la trace produite."},
+          {"type": "text", "body": "FTrace est un traceur intégré au noyau. Il peut enregistrer l'appel des fonctions, les événements et les fautes de page sans trop ralentir le système."},
+          {"type": "text", "body": "Le traçage révèle quelles fonctions sont appelées et combien de temps elles prennent, précieux pour comprendre une latence ou une consommation de ressources."},
+          {"type": "exercise", "question": "Où lire la trace produite par FTrace ?", "answer": "Dans le fichier /sys/kernel/tracing/trace."},
+          {"type": "tip", "body": "Désactivez le tracing en fin de session (echo nop > current_tracer) pour limiter l'impact sur les performances."}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "optimisation_perf",
+    "title": "Performance et optimisation",
+    "level": 5,
+    "category": "pro",
+    "accent": "yellow",
+    "icon": "speed",
+    "duration": 45,
+    "summary": "Mesurez et optimisez les performances de votre système embarqué, de la CPU à la mémoire et au temps de démarrage.",
+    "objectives": ["Mesurer les performances", "Optimiser la CPU", "Réduire la consommation mémoire", "Accélérer le démarrage"],
+    "chapters": [
+      {
+        "id": "ch1",
+        "title": "Mesurer avant d'optimiser",
+        "duration": 12,
+        "sections": [
+          {"type": "code", "code": "perf stat ./mon_programme\nls /sys/kernel/debug/tracing", "lang": "bash", "body": "Mesurer les compteurs de performance d'un programme avec perf."},
+          {"type": "text", "body": "On ne doit pas optimiser à l'aveugle : il faut d'abord mesurer. L'outil perf fournit des compteurs précis de CPU, de fautes de page et de temps d'exécution."},
+          {"type": "text", "body": "Identifier le goulot d'étranglement permet de concentrer les efforts là où le gain est le plus important, au lieu d'optimiser sans cible."},
+          {"type": "exercise", "question": "Pourquoi mesurer avant d'optimiser ?", "answer": "Pour identifier le vrai goulot d'étranglement et concentrer les efforts sur les gains significatifs."}
+        ]
+      },
+      {
+        "id": "ch2",
+        "title": "Optimiser la CPU",
+        "duration": 11,
+        "sections": [
+          {"type": "code", "code": "gcc -O2 -march=native -O3 -o app app.c", "lang": "bash", "body": "Compiler avec les optimisations du processeur hôte."},
+          {"type": "text", "body": "Les niveaux d'optimisation du compilateur (-O2, -O3) et l'utilisation des instructions spécifiques au processeur améliorent les performances."},
+          {"type": "text", "body": "Pour une cible embarquée, compilons plutôt avec -mcpu=cortex-a7 ou l'option adaptée, car -march=native ne correspond pas à la cible."},
+          {"type": "exercise", "question": "Quel niveau d'optimisation du compilateur est courant ?", "answer": "-O2 pour un bon compromis, -O3 pour maximiser la performance."},
+          {"type": "warning", "body": "Ne confondez pas -march=native (pour la machine hôte) avec l'optimisation cible : utilisez -mcpu adapté sur la cible embarquée."}
+        ]
+      },
+      {
+        "id": "ch3",
+        "title": "Réduire la mémoire",
+        "duration": 11,
+        "sections": [
+          {"type": "code", "code": "free -m\ncat /proc/meminfo", "lang": "bash", "body": "Afficher l'utilisation de la mémoire du système."},
+          {"type": "text", "body": "La mémoire est souvent la ressource critique en embarqué. free montre la mémoire utilisée et disponible, /proc/meminfo détaille l'usage du noyau."},
+          {"type": "code", "code": "size mon_binaire\nstrip mon_binaire", "lang": "bash", "body": "Afficher la taille des sections puis retirer les symboles inutiles."},
+          {"type": "exercise", "question": "Quelle commande affiche la quantité de mémoire libre ?", "answer": "free, et /proc/meminfo pour le détail."},
+          {"type": "tip", "body": "Les options de compilation -Os réduisent la taille du code pour les systèmes dont la mémoire est très limitée."}
+        ]
+      },
+      {
+        "id": "ch4",
+        "title": "Accélérer le démarrage",
+        "duration": 11,
+        "sections": [
+          {"type": "code", "code": "systemd-analyze\nsystemd-analyze blame", "lang": "bash", "body": "Analyser le temps de démarrage et l'apparition des services."},
+          {"type": "text", "body": "systemd-analyze indique le temps total de démarrage et le temps passé dans chaque unité. systemd-analyze blame liste les services par ordre de durée."},
+          {"type": "list", "title": "Techniques d'accélération", "items": ["Désactiver les services inutiles", "Paralléliser les initialisations", "Réduire la taille du noyau", "Utiliser l'initialisation lazy-loaded"]},
+          {"type": "exercise", "question": "Quelle commande liste les services selon leur temps de démarrage ?", "answer": "systemd-analyze blame."},
+          {"type": "tip", "body": "Décomposez le démarrage en le mesurant régulièrement pour suivre l'impact de chaque optimisation."}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "production_fleet",
+    "title": "Mises à jour et flottes d'appareils",
+    "level": 5,
+    "category": "pro",
+    "accent": "blue",
+    "icon": "layers",
+    "duration": 45,
+    "summary": "Gérez la mise à jour et la maintenance de flottes d'appareils embarqués déployés sur le terrain.",
+    "objectives": ["Comprendre les défis des mises à jour", "Mettre en place un système A/B", "Gérer le déploiement en flotte", "Assurer le retour arrière"],
+    "chapters": [
+      {
+        "id": "ch1",
+        "title": "Les défis de la mise à jour",
+        "duration": 12,
+        "sections": [
+          {"type": "text", "body": "Mettre à jour un appareil déployé est délicat : réseau instable, interruption possible et impossibilité de réparer physiquement. Chaque étape doit être robuste."},
+          {"type": "list", "title": "Défis de la mise à jour distante", "items": ["Batterie ou alimentation limitées", "Coupures réseau pendant le transfert", "Stockage limité pour deux images", "Retour arrière en cas d'image corrompue"]},
+          {"type": "text", "body": "Une mise à jour doit être atomique : soit elle réussit complètement, soit le système revient à l'état précédent sans être endommagé."},
+          {"type": "exercise", "question": "Pourquoi une mise à jour doit-elle être atomique ?", "answer": "Pour éviter qu'une interruption laisse le système dans un état inutilisable."}
+        ]
+      },
+      {
+        "id": "ch2",
+        "title": "Le système A/B",
+        "duration": 11,
+        "sections": [
+          {"type": "text", "body": "Le système A/B utilise deux partitions système : on écrit la mise à jour sur la partition inactive pendant que la partition active fonctionne, puis on bascule."},
+          {"type": "definition", "term": "Partition A/B", "body": "Deux zones système identiques : l'une active, l'autre inactive, permettant une mise à jour sûre et un retour arrière immédiat."},
+          {"type": "text", "body": "Si la nouvelle image ne démarre pas correctement, le bootloader bascule automatiquement sur l'autre partition. Ce mécanisme est un filet de sécurité essentiel."},
+          {"type": "exercise", "question": "Comment le système A/B permet-il le retour arrière ?", "answer": "En gardant la partition précédente intacte et en basculant dessus en cas d'échec."},
+          {"type": "tip", "body": "Le stockage double double le coût, mais la robustesse mérite ce compromis pour les appareils critiques."}
+        ]
+      },
+      {
+        "id": "ch3",
+        "title": "Déployer en flotte",
+        "duration": 11,
+        "sections": [
+          {"type": "text", "body": "Pour un grand nombre d'appareils, on utilise un serveur de gestion de flotte (OTA). Le déploiement se fait en plusieurs vagues pour limiter l'impact d'un défaut."},
+          {"type": "code", "code": "curl -s -X POST https://serveur-ota.example/api/update -d '{\"image\":\"img-v2\"}' ", "lang": "bash", "body": "Exemple d'appel d'une API de mise à jour depuis un appareil."},
+          {"type": "text", "body": "Le déploiement par vagues permet de tester sur un petit nombre avant d'étendre. Chaque appareil peut aussi vérifier la signature de l'image avant de l'installer."},
+          {"type": "exercise", "question": "Pourquoi déployer une mise à jour en plusieurs vagues ?", "answer": "Pour limiter l'impact d'un défaut en testant d'abord sur un petit ensemble d'appareils."},
+          {"type": "warning", "body": "Vérifiez toujours la signature de l'image téléchargée pour empêcher l'installation de code malveillant."}
+        ]
+      },
+      {
+        "id": "ch4",
+        "title": "Surveillance et sécurité",
+        "duration": 11,
+        "sections": [
+          {"type": "text", "body": "Après déploiement, on surveille l'état des appareils : version installée, erreurs, indicateurs de santé. Cette télémétrie guide les prochaines mises à jour."},
+          {"type": "text", "body": "La rotation des clés et l'expiration des certificats exigent une planification. Les appareils avec des clés compromises doivent pouvoir être revoqués."},
+          {"type": "list", "title": "Éléments à surveiller en flotte", "items": ["Version du logiciel installée", "Taux de réussite des mises à jour", "Erreurs et crashs signalés", "Durée de vie des certificats"]},
+          {"type": "exercise", "question": "Pourquoi surveiller l'état des appareils après un déploiement ?", "answer": "Pour détecter les échecs, mesurer l'adoption et guider les mises à jour suivantes."},
+          {"type": "tip", "body": "Planifiez la rotation des certificats dès la conception pour éviter de bloquer des flottes entières à leur expiration."}
+        ]
+      }
+    ]
+  }
+]

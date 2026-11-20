@@ -1,0 +1,114 @@
+[
+  {
+    "id": "hello_linux",
+    "name": "Hello Linux",
+    "icon": "star",
+    "description": "Premier contact avec l'univers Linux et l'embarqué.",
+    "how": "Terminer le module intro_linux."
+  },
+  {
+    "id": "terminal_rookie",
+    "name": "Recrue du terminal",
+    "icon": "terminal",
+    "description": "Vous naviguez dans le terminal avec assurance.",
+    "how": "Terminer le module linux_commands."
+  },
+  {
+    "id": "bash_apprentice",
+    "name": "Apprenti Bash",
+    "icon": "code",
+    "description": "Vous savez enchaîner et composer des commandes dans le shell.",
+    "how": "Terminer le module bash_intro."
+  },
+  {
+    "id": "c_apprentice",
+    "name": "Apprenti langage C",
+    "icon": "code",
+    "description": "Vous avez écrit vos premiers programmes en C.",
+    "how": "Terminer le module c_basics."
+  },
+  {
+    "id": "pointer_master",
+    "name": "Maître des pointeurs",
+    "icon": "memory",
+    "description": "Les pointeurs et la mémoire n'ont plus de secret pour vous.",
+    "how": "Terminer le module c_advanced."
+  },
+  {
+    "id": "gpio_explorer",
+    "name": "Explorateur GPIO",
+    "icon": "bolt",
+    "description": "Vous pilotez des broches en entrée comme en sortie.",
+    "how": "Terminer le module gpio."
+  },
+  {
+    "id": "serial_hacker",
+    "name": "Pirate série",
+    "icon": "link",
+    "description": "Vous communiquez sur une liaison UART avec la console série.",
+    "how": "Terminer le module uart."
+  },
+  {
+    "id": "i2c_explorer",
+    "name": "Explorateur I2C",
+    "icon": "microchip",
+    "description": "Vous interrogez des capteurs sur le bus I2C.",
+    "how": "Terminer le module i2c."
+  },
+  {
+    "id": "arm_explorer",
+    "name": "Explorateur ARM",
+    "icon": "cpu",
+    "description": "Vous connaissez les bases de l'architecture ARM.",
+    "how": "Terminer le module cpu_architectures."
+  },
+  {
+    "id": "kernel_explorer",
+    "name": "Explorateur du noyau",
+    "icon": "kernel",
+    "description": "Vous avez plongé dans les sous-systèmes du noyau Linux.",
+    "how": "Terminer le module kernel_linux."
+  },
+  {
+    "id": "driver_apprentice",
+    "name": "Apprenti driver",
+    "icon": "wrench",
+    "description": "Vous avez écrit votre premier driver Linux.",
+    "how": "Terminer le module linux_drivers."
+  },
+  {
+    "id": "buildroot_builder",
+    "name": "Constructeur Buildroot",
+    "icon": "board",
+    "description": "Vous avez assemblé un rootfs complet avec Buildroot.",
+    "how": "Terminer le module buildroot."
+  },
+  {
+    "id": "yocto_apprentice",
+    "name": "Apprenti Yocto",
+    "icon": "layers",
+    "description": "Vous composez vos propres recettes et layers Yocto.",
+    "how": "Terminer le module yocto."
+  },
+  {
+    "id": "quiz_master",
+    "name": "Maître du quiz",
+    "icon": "check",
+    "description": "Un sans-faute sur un quiz du parcours.",
+    "how": "Obtenir un score parfait à un quiz."
+  },
+  {
+    "id": "project_builder",
+    "name": "Constructeur de projets",
+    "icon": "rocket",
+    "description": "Vous avez mené votre premier mini-projet à bien.",
+    "how": "Terminer le mini-projet Blink en GPIO (projet_blink)."
+  },
+  {
+    "id": "embedded_developer",
+    "name": "Développeur embarqué",
+    "icon": "shield",
+    "description": "Vous avez réalisé le projet final complet, du capteur au service.",
+    "how": "Terminer le projet final Smart Environment Monitor."
+  }
+]

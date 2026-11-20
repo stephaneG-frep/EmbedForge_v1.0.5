@@ -1,0 +1,499 @@
+[
+  {
+    "id": "cheat_terminal",
+    "title": "Commandes terminal",
+    "icon": "terminal",
+    "accent": "green",
+    "intro": "Les réflexes pour naviguer et interroger le système depuis un shell.",
+    "sections": [
+      {
+        "title": "Navigation",
+        "entries": [
+          ["cd ..", "remonte d'un répertoire"],
+          ["cd ~", "va dans le dossier personnel"],
+          ["pwd", "affiche le dossier courant"],
+          ["ls -la", "liste les fichiers, y compris cachés, en détail"],
+          ["ls -lh", "liste avec des tailles lisibles"]
+        ]
+      },
+      {
+        "title": "Consultation",
+        "entries": [
+          ["cat fichier", "affiche tout le contenu d'un fichier"],
+          ["less fichier", "parcourt un fichier page par page"],
+          ["head -n 20 fichier", "montre les 20 premières lignes"],
+          ["tail -f journal.log", "suit en continu la fin d'un fichier"],
+          ["grep motif fichier", "cherche motif dans un fichier"]
+        ]
+      },
+      {
+        "title": "Raccourcis utiles",
+        "entries": [
+          ["Ctrl+C", "interrompt la commande en cours"],
+          ["Ctrl+Z", "suspend la commande"],
+          ["Ctrl+R", "recherche dans l'historique"],
+          ["Ctrl+D", "ferme le terminal"],
+          ["!!", "répète la dernière commande"],
+          ["history", "affiche l'historique des commandes"]
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cheat_fichiers",
+    "title": "Fichiers & permissions",
+    "icon": "inventory",
+    "accent": "blue",
+    "intro": "Manipulez les fichiers et maîtrisez les droits, essentiel sur un système embarqué multi-utilisateurs.",
+    "sections": [
+      {
+        "title": "Manipulation",
+        "entries": [
+          ["cp -r src dest", "copie un dossier récursivement"],
+          ["mv fichier dest", "déplace ou renomme"],
+          ["rm -rf dossier", "supprime un dossier sans confirmation"],
+          ["mkdir -p a/b/c", "crée l'arborescence complète"],
+          ["touch fichier", "crée un fichier vide ou met à jour sa date"],
+          ["ln -s cible lien", "crée un lien symbolique"],
+          ["du -sh dossier", "taille totale d'un dossier"]
+        ]
+      },
+      {
+        "title": "Permissions",
+        "entries": [
+          ["chmod 755 script", "propriétaire rwx, groupe et autres rx"],
+          ["chmod u+x fichier", "ajoute le droit d'exécution au propriétaire"],
+          ["chmod -R 640 dossier", "applique récursivement 640"],
+          ["chown user:group fichier", "change propriétaire et groupe"],
+          ["umask 022", "masque les droits par défaut des créations"],
+          ["stat fichier", "détaille les droits et l'horodatage"],
+          ["lsattr fichier", "affiche les attributs étendus du fichiersysteme"]
+        ]
+      },
+      {
+        "title": "Connaître ses fichiers",
+        "entries": [
+          ["file binaire", "détecte le type d'un fichier"],
+          ["find / -name *.conf", "cherche des fichiers par nom"],
+          ["locate motif", "cherche via une base indexée"],
+          ["which gcc", "localise un exécutable du PATH"],
+          ["df -h", "espace libre par système de fichiers"]
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cheat_processus",
+    "title": "Processus & ressources",
+    "icon": "speed",
+    "accent": "orange",
+    "intro": "Observez, pesez et pilotez les processus courts et longs de votre système.",
+    "sections": [
+      {
+        "title": "Supervision",
+        "entries": [
+          ["ps aux", "liste tous les processus avec CPU et mémoire"],
+          ["pgrep -f python", "trouve les PID d'un processus par motif"],
+          ["pstree -p", "affiche l'arborescence des processus"],
+          ["top", "moniteur de processus en temps réel"],
+          ["htop", "version colorée et interactive de top"],
+          ["uptime", "charge moyenne et temps de disponibilité"]
+        ]
+      },
+      {
+        "title": "Signaux",
+        "entries": [
+          ["kill 1234", "envoie SIGTERM, arrêt propre"],
+          ["kill -9 1234", "envoie SIGKILL, arrêt forcé"],
+          ["killall -TERM python3", "termine tous les python3"],
+          ["pkill -f moniteur", "termine selon le nom de commande"],
+          ["nohup cmd &", "lance cmd à l'abri du déconnecter ssh"]
+        ]
+      },
+      {
+        "title": "Ressources",
+        "entries": [
+          ["free -h", "mémoire utilisée et disponible"],
+          ["df -h", "occupation des disques"],
+          ["vmstat 2", "statistiques mémoire et CPU toutes les 2 s"],
+          ["ulimit -a", "limites de ressources du shell"],
+          ["ionice -c 3 cmd", "lance cmd en priorité d'E/S la plus basse"],
+          ["nice -n 10 cmd", "lance cmd avec priorité CPU abaissée"]
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cheat_bash",
+    "title": "Bash & scripts",
+    "icon": "code",
+    "accent": "teal",
+    "intro": "Les briques de script bash qui rendent vos automatisations fiables et lisibles.",
+    "sections": [
+      {
+        "title": "Variables",
+        "entries": [
+          ["nom=value", "affecte une variable (sans espace)"],
+          ["echo \"$nom\"", "utilise la valeur de la variable"],
+          ["export VAR=valeur", "exporte une variable vers les fils"],
+          ["$(commande)", "substitue le résultat d'une commande"],
+          ["${var:-defaut}", "valeur par défaut si var est vide"],
+          ["printf \"%s\\n\" \"$x\"", "forme texte sans ambiguïté"]
+        ]
+      },
+      {
+        "title": "Conditions et boucles",
+        "entries": [
+          ["if [ -f fichier ]; then", "si le fichier existe"],
+          ["for f in *.conf; do", "boucle sur des fichiers"],
+          ["while read ligne; do", "lit un fichier ligne à ligne"],
+          ["case \"$x\" in a) ;; esac", "sélection multi-branches"],
+          ["cmd1 && cmd2", "exécute cmd2 si cmd1 réussit"],
+          ["cmd1 || echo echec", "exécute si cmd1 échoue"]
+        ]
+      },
+      {
+        "title": "Fiabilité",
+        "entries": [
+          ["set -euo pipefail", "arrêt sur erreur, variables vérifiées"],
+          ["trap 'cleanup' EXIT", "exécute cleanup à la sortie"],
+          ["ls *.conf | xargs grep toto", "applique grep sur une liste"],
+          ["command -v gcc", "vérifie la présence d'un exécutable"],
+          ["#! /usr/bin/env bash", "shebang portable du script"]
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cheat_systemd",
+    "title": "Systemd & services",
+    "icon": "linux",
+    "accent": "purple",
+    "intro": "Pilotez le PID 1 et vos propres unités de service sur la cible embarquée.",
+    "sections": [
+      {
+        "title": "État des unités",
+        "entries": [
+          ["systemctl status moniteur", "état détaillé d'une unité"],
+          ["systemctl list-units", "liste les unités chargées"],
+          ["systemctl list-unit-files", "liste les unités avec état enabled"],
+          ["systemctl list-timers", "affiche les timers planifiés"],
+          ["systemctl get-default", "cible de démarrage par défaut"]
+        ]
+      },
+      {
+        "title": "Contrôle des services",
+        "entries": [
+          ["systemctl start unit", "démarre une unité"],
+          ["systemctl stop unit", "arrête une unité"],
+          ["systemctl restart unit", "redémarre une unité"],
+          ["systemctl reload unit", "recharge la configuration sans couper"],
+          ["systemctl enable --now unit", "active au boot et démarre"],
+          ["systemctl disable unit", "désactive au boot"],
+          ["systemctl mask unit", "empêche toute activation"]
+        ]
+      },
+      {
+        "title": "Analyse",
+        "entries": [
+          ["systemctl daemon-reload", "recharge les unités modifiées"],
+          ["systemctl cat unit", "affiche le contenu de l'unité"],
+          ["systemd-analyze blame", "durée de démarrage par unité"],
+          ["systemd-analyze critical-chain", "chaîne critique du boot"],
+          ["journalctl -u unit -e", "fin du journal d'une unité"]
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cheat_journaux",
+    "title": "Journaux",
+    "icon": "book",
+    "accent": "yellow",
+    "intro": "Interrogez les journaux journald avec des filtres précis et gérez la rotation.",
+    "sections": [
+      {
+        "title": "journalctl",
+        "entries": [
+          ["journalctl", "affiche tout le journal"],
+          ["journalctl -u moniteur", "filtre par unité"],
+          ["journalctl -p err", "filtre par priorité et au-dessus"],
+          ["journalctl -k", "messages du noyau seulement"],
+          ["journalctl -b", "depuis le dernier démarrage"],
+          ["journalctl -f", "suit en continu"],
+          ["journalctl -n 50", "dernières 50 lignes"]
+        ]
+      },
+      {
+        "title": "Filtres temporels",
+        "entries": [
+          ["--since \"2 hours ago\"", "depuis deux heures"],
+          ["--since today", "depuis minuit"],
+          ["--since \"2026-08-27 08:00\"", "depuis une date précise"],
+          ["--until \"2026-08-27 12:00\"", "jusqu'à une date précise"],
+          ["-S -30min", "forme courte depuis 30 minutes"]
+        ]
+      },
+      {
+        "title": "Rotation et volume",
+        "entries": [
+          ["journalctl --disk-usage", "espace occupé"],
+          ["journalctl --vacuum-size=50M", "réduit à 50 Mo en supprimant"],
+          ["journalctl --vacuum-time=7d", "garde les 7 derniers jours"],
+          ["SystemMaxUse=100M", "borne la taille dans journald.conf"],
+          ["systemctl restart systemd-journald", "recharge la config"]
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cheat_reseau",
+    "title": "SSH & réseau",
+    "icon": "network",
+    "accent": "blue",
+    "intro": "Administrez vos cartes à distance et transférez vos fichiers avec les outils réseau de référence.",
+    "sections": [
+      {
+        "title": "SSH",
+        "entries": [
+          ["ssh user@carte", "ouvre une session sécurisée"],
+          ["ssh -p 2222 user@carte", "ouvre une session sur un autre port"],
+          ["ssh-copy-id user@carte", "copie la clé publique pour s'authentifier"],
+          ["ssh-keygen -t ed25519", "génère une paire de clés moderne"],
+          ["ssh user@carte 'commande'", "exécute une commande à distance"]
+        ]
+      },
+      {
+        "title": "Configuration réseau",
+        "entries": [
+          ["ip addr", "adresses des interfaces"],
+          ["ip route", "table de routage"],
+          ["ping -c 4 hote", "teste la connectivité"],
+          ["traceroute hote", "trace le chemin réseau"],
+          ["ss -tlnp", "ports en écoute et processus concernés"],
+          ["hostnamectl", "nom et version du système"]
+        ]
+      },
+      {
+        "title": "Transfert de fichiers",
+        "entries": [
+          ["scp fichier user@carte:/root/", "copie un fichier vers la carte"],
+          ["rsync -avz src/ carte:/opt/", "synchronise un dossier"],
+          ["rsync -avz --delete", "synchronise en supprimant l'obsolète"],
+          ["nc -l 9000", "écoute un port (netcat)"],
+          ["nc carte 9000 < flash.img", "envoie un fichier via netcat"]
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cheat_paquets",
+    "title": "Paquets & apt",
+    "icon": "tools",
+    "accent": "orange",
+    "intro": "Installez et maintenez les logiciels de votre distribution Debian ou Ubuntu embarquée.",
+    "sections": [
+      {
+        "title": "Installation",
+        "entries": [
+          ["apt update", "rafraîchit la liste des paquets"],
+          ["apt upgrade", "met à jour les paquets installés"],
+          ["apt install paquet", "installe un paquet et ses dépendances"],
+          ["apt search motif", "cherche un paquet"],
+          ["apt show paquet", "détaille un paquet"],
+          ["apt-get install --no-install-recommends", "installe au plus léger"]
+        ]
+      },
+      {
+        "title": "Gestion",
+        "entries": [
+          ["apt remove paquet", "désinstalle en gardant la configuration"],
+          ["apt purge paquet", "désinstalle en supprimant la configuration"],
+          ["apt autoremove", "supprime les dépendances orphelines"],
+          ["apt-mark hold paquet", "gèle la version d'un paquet"],
+          ["dpkg -i paquet.deb", "installe un paquet local"],
+          ["dpkg -l", "liste les paquets installés"]
+        ]
+      },
+      {
+        "title": "Dépannage",
+        "entries": [
+          ["apt --fix-broken install", "répare les dépendances cassées"],
+          ["dpkg --configure -a", "termine les configurations interrompues"],
+          ["apt list --upgradable", "liste les mises à jour disponibles"],
+          ["apt-get clean", "vide le cache des paquets téléchargés"]
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cheat_git",
+    "title": "Git",
+    "icon": "git",
+    "accent": "red",
+    "intro": "Les commandes essentielles pour suivre et versionner vos sources embarquées.",
+    "sections": [
+      {
+        "title": "Démarrage",
+        "entries": [
+          ["git init", "initialise un dépôt"],
+          ["git clone url", "duplique un dépôt distant"],
+          ["git status", "état du répertoire de travail"],
+          ["git config --global user.name", "configure l'identité de l'auteur"],
+          ["git config user.email \"a@b.c\"", "configure l'adresse de l'auteur"]
+        ]
+      },
+      {
+        "title": "Commits",
+        "entries": [
+          ["git add fichier", "sélectionne des modifications"],
+          ["git add .", "sélectionne toutes les modifications"],
+          ["git commit -m \"message\"", "crée un commit"],
+          ["git log --oneline", "historique condensé"],
+          ["git diff", "différences non indexées"],
+          ["git restore fichier", "annule les modifications locales"],
+          ["git reset HEAD~1", "annule le dernier commit local"]
+        ]
+      },
+      {
+        "title": "Branches",
+        "entries": [
+          ["git branch", "liste les branches"],
+          ["git branch feature", "crée une branche"],
+          ["git switch -c feature", "crée et bascule sur une branche"],
+          ["git merge feature", "fusionne une branche dans la courante"],
+          ["git rebase -i HEAD~3", "réécrit les trois derniers commits"]
+        ]
+      },
+      {
+        "title": "Distants",
+        "entries": [
+          ["git remote add origin url", "associe le dépôt distant"],
+          ["git fetch origin", "récupère sans fusionner"],
+          ["git pull --rebase", "récupère et rebase localement"],
+          ["git push origin main", "public les commits locaux"],
+          ["git tag v1.0", "crée une étiquette de version"]
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cheat_gpio",
+    "title": "GPIO & sysfs",
+    "icon": "bolt",
+    "accent": "green",
+    "intro": "Pilotez les broches d'entrée-sortie en ligne de commande, avec l'API moderne libgpiod et l'héritage sysfs.",
+    "sections": [
+      {
+        "title": "libgpiod (moderne)",
+        "entries": [
+          ["gpiodetect", "liste les contrôleurs GPIO"],
+          ["gpioinfo gpiochip0", "détaille les lignes du contrôleur"],
+          ["gpioget gpiochip0 17", "lit la valeur d'une broche"],
+          ["gpioset gpiochip0 17=1", "met la broche au niveau haut"],
+          ["gpiomon -r gpiochip0 17", "surveille les fronts montants"],
+          ["gpiofind \"LED rouge\"", "trouve la ligne par étiquette"]
+        ]
+      },
+      {
+        "title": "sysfs (historique)",
+        "entries": [
+          ["echo 17 > /sys/class/gpio/export", "exporte la GPIO 17"],
+          ["echo out > .../direction", "configure en sortie"],
+          ["echo in > .../direction", "configure en entrée"],
+          ["echo 1 > .../value", "écrit le niveau haut"],
+          ["cat .../value", "lit le niveau"],
+          ["echo 17 > unexport", "libère la GPIO"]
+        ]
+      },
+      {
+        "title": "Montage type",
+        "entries": [
+          ["LED + résistance 330 ohm", "chaîne de mesure sur la broche"],
+          ["bouton + pull-up", "lecture inversée fiable"],
+          ["gpioset -l 1A", "jeu de lignes en une commande"],
+          ["watch -n0.2 gpioset...", "suit une broche en continu"]
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cheat_bus",
+    "title": "Bus I2C/SPI/UART",
+    "icon": "link",
+    "accent": "teal",
+    "intro": "Les outils de diagnostic et de configuration des trois bus série les plus courants en embarqué.",
+    "sections": [
+      {
+        "title": "I2C",
+        "entries": [
+          ["i2cdetect -y 1", "liste les adresses répondant sur le bus"],
+          ["i2cget -y 1 0x76 0xd0", "lit un registre (chip id)"],
+          ["i2cset -y 1 0x76 0xf4 0x27", "écrit un registre"],
+          ["i2cdump -y 1 0x76", "déverse tous les registres"],
+          ["ls /dev/i2c-*", "liste les bus I2C actifs"]
+        ]
+      },
+      {
+        "title": "SPI",
+        "entries": [
+          ["ls /dev/spidev*", "liste les bus SPI actifs"],
+          ["spidev_test -D /dev/spidev0.0", "teste un bus avec un motif"],
+          ["dtoverlay spi0-1cs", "active un périphérique SPI"],
+          ["cat /sys/class/spi_master", "aperçu des contrôleurs SPI"],
+          ["spidev_test -p \"\\x01\\x02\"", "envoie des octets précis"]
+        ]
+      },
+      {
+        "title": "UART",
+        "entries": [
+          ["stty -F /dev/ttyS0 115200", "configure le débit du port"],
+          ["minicom -D /dev/ttyS0 -b 115200", "ouvre un terminal série"],
+          ["cu -l /dev/ttyS0 115200", "connexion série simple"],
+          ["socat pty,raw,echo=0 pty,raw,echo=0", "paire série virtuelle de test"],
+          ["picocom -b 115200 /dev/ttyUSB0", "terminal série léger"]
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cheat_build",
+    "title": "Cross-compilation & build",
+    "icon": "wrench",
+    "accent": "purple",
+    "intro": "Compilez et déployez pour une cible ARM depuis votre poste de travail.",
+    "sections": [
+      {
+        "title": "Toolchain",
+        "entries": [
+          ["aarch64-linux-gnu-gcc -O2 main.c -o app", "compilation croisée ARM64"],
+          ["arm-linux-gnueabihf-gcc -O2 main.c -o app", "compilation croisée armhf"],
+          ["file app", "vérifie l'architecture du binaire"],
+          ["readelf -h app", "en-tête ELF du binaire"],
+          ["aarch64-linux-gnu-strip app", "réduit la taille du binaire"],
+          ["aarch64-linux-gnu-ldd app", "dépendances dynamiques (croisées)"]
+        ]
+      },
+      {
+        "title": "Buildroot",
+        "entries": [
+          ["make menuconfig", "configure la cible et les paquets"],
+          ["make", "construit toolchain, noyau et rootfs"],
+          ["make savedefconfig", "garde une config minimale diffée"],
+          ["make clean", "nettote les artefacts"],
+          ["ls output/images/", "images prêtes à flasher"]
+        ]
+      },
+      {
+        "title": "Déploiement",
+        "entries": [
+          ["scp app root@carte:/root/", "copie le binaire"],
+          ["rsync -avz image/ carte:/opt/", "synchronise l'application"],
+          ["dd if=image.img of=/dev/sdb", "écrit une carte SD"],
+          ["tftp -g -r uImage", "récupère une image en TFTP"],
+          ["ssh carte './app --version'", "exécute et vérifie sur la cible"]
+        ]
+      }
+    ]
+  }
+]

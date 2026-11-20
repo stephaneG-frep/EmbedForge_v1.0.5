@@ -1,0 +1,569 @@
+[
+  {
+    "id": "projet_blink",
+    "title": "Blink : première LED en GPIO",
+    "difficulty": "Débutant",
+    "category": "GPIO",
+    "icon": "bolt",
+    "summary": "Pilotez une broche GPIO d'une carte Linux embarquée pour faire clignoter une LED, sans écrire de driver.",
+    "objectives": [
+      "Identifier la numérotation des broches GPIO sur votre carte",
+      "Exporter une GPIO et configurer sa direction via sysfs",
+      "Écrire un script Python qui fait clignoter la LED"
+    ],
+    "steps": [
+      {
+        "title": "Repérer la broche GPIO",
+        "body": "Consultez la documentation de votre carte (Raspberry Pi, BeagleBone, Orange Pi...) pour identifier la broche reliée à la LED et son numéro de GPIO. Sur un Raspberry Pi, par exemple, la broche physique 11 correspond à la GPIO17.",
+        "code": "cat /sys/kernel/debug/gpio",
+        "output": "gpiochip0: GPIOs 0-53, parent: platform/soc, can sleep"
+      },
+      {
+        "title": "Exporter la GPIO",
+        "body": "L'export dans /sys/class/gpio fait apparaître le répertoire de la broche avec les attributs direction et value. Cette interface sysfs est historique mais reste le meilleur point de départ pédagogique.",
+        "code": "echo 17 > /sys/class/gpio/export\nls /sys/class/gpio/gpio17"
+      },
+      {
+        "title": "Configurer la direction",
+        "body": "Une GPIO pilotée par le processeur doit être déclarée en sortie (out). La commande cat permet de vérifier la configuration.",
+        "code": "echo out > /sys/class/gpio/gpio17/direction\ncat /sys/class/gpio/gpio17/direction",
+        "output": "out"
+      },
+      {
+        "title": "Allumer et éteindre la LED",
+        "body": "Écrire 1 dans value met la broche au niveau haut (LED allumée), écrire 0 la passe au niveau bas.",
+        "code": "echo 1 > /sys/class/gpio/gpio17/value\necho 0 > /sys/class/gpio/gpio17/value"
+      },
+      {
+        "title": "Clignotement en boucle avec Python",
+        "body": "On enchaîne des états haut et bas séparés par des pauses. L'ouverture du fichier value à chaque cycle évite toute valeur obsolète en mémoire.",
+        "code": "import time\n\ndef set_led(on):\n    with open(\"/sys/class/gpio/gpio17/value\", \"w\") as f:\n        f.write(\"1\" if on else \"0\")\n\nfor _ in range(10):\n    set_led(True)\n    time.sleep(0.5)\n    set_led(False)\n    time.sleep(0.5)"
+      },
+      {
+        "title": "Passer à libgpiod",
+        "body": "Depuis le noyau 6.6, sysfs est obsolète pour les GPIO. L'API moderne libgpiod fournit les outils gpioset et gpioget.",
+        "code": "gpioset gpiochip0 17=1\ngpioset gpiochip0 17=0\ngpioget gpiochip0 17",
+        "output": "0"
+      }
+    ],
+    "skills": ["GPIO", "Python", "sysfs"],
+    "final": false
+  },
+  {
+    "id": "projet_temp_cpu",
+    "title": "Moniteur de température CPU",
+    "difficulty": "Débutant",
+    "category": "Système",
+    "icon": "cpu",
+    "summary": "Lisez les capteurs thermiques du noyau via /sys/class/thermal et affichez la température du processeur en temps réel.",
+    "objectives": [
+      "Découvrir l'interface thermal du noyau",
+      "Convertir et afficher les mesures en degrés",
+      "Construire un mini tableau de bord en terminal"
+    ],
+    "steps": [
+      {
+        "title": "Explorer les zones thermiques",
+        "body": "Le noyau expose chaque capteur sous un dossier thermal_zoneN. L'attribut type donne le nom de la zone.",
+        "code": "ls /sys/class/thermal/\ncat /sys/class/thermal/thermal_zone0/type",
+        "output": "thermal_zone0  ...\ncpu-thermal"
+      },
+      {
+        "title": "Lire la température brute",
+        "body": "La valeur est lue en milli-degrés Celsius : 52000 signifie 52,0 °C.",
+        "code": "cat /sys/class/thermal/thermal_zone0/temp",
+        "output": "52000"
+      },
+      {
+        "title": "Convertir en degrés",
+        "body": "awk permet une conversion immédiate sans écriture de programme.",
+        "code": "awk '{print $1/1000}' /sys/class/thermal/thermal_zone0/temp",
+        "output": "52.0"
+      },
+      {
+        "title": "Boucle de surveillance en bash",
+        "body": "Une boucle while avec sleep rafraîchit l'affichage toutes les deux secondes, à la façon d'un moniteur.",
+        "code": "while true; do\n  temp=$(cat /sys/class/thermal/thermal_zone0/temp)\n  echo \"$(date +%H:%M:%S)  $((temp / 1000))°C\"\n  sleep 2\ndone"
+      },
+      {
+        "title": "Version Python complète",
+        "body": "Le script liste toutes les zones et formate proprement les valeurs.",
+        "code": "import glob\nimport time\n\nzones = sorted(glob.glob(\"/sys/class/thermal/thermal_zone*\"))\nfor z in zones:\n    with open(z + \"/type\") as f:\n        name = f.read().strip()\n    with open(z + \"/temp\") as f:\n        temp = int(f.read().strip()) / 1000.0\n    print(f\"{name:12s} {temp:6.1f} °C\")"
+      },
+      {
+        "title": "L'alternative moderne : hwmon",
+        "body": "Pour les CPU et cartes récentes, les capteurs sont aussi publiés dans /sys/class/hwmon, plus générique. C'est la voie recommandée pour du code de production.",
+        "code": "ls /sys/class/hwmon/\ncat /sys/class/hwmon/hwmon0/temp1_input"
+      }
+    ],
+    "skills": ["sysfs", "Shell", "Python"],
+    "final": false
+  },
+  {
+    "id": "projet_morse",
+    "title": "Morse LED : communiquer en clignotant",
+    "difficulty": "Intermédiaire",
+    "category": "GPIO",
+    "icon": "electric",
+    "summary": "Construisez une bibliothèque de temporisation Python et transmettez un texte en code Morse grâce à votre LED.",
+    "objectives": [
+      "Écrire le dictionnaire du code Morse",
+      "Gérer des temporisations relatives à une unité de temps",
+      "Émettre un message complet, lettres et mots espacés"
+    ],
+    "steps": [
+      {
+        "title": "Dictionnaire Morse",
+        "body": "Chaque caractère est une suite de points (.) et de traits (-). On le représente simplement par des chaînes.",
+        "code": "MORSE = {\n    'A': '.-',     'B': '-...',   'C': '-.-.',\n    'D': '-..',    'E': '.',      'F': '..-.',\n    'G': '--.',    'H': '....',   'I': '..',\n    'J': '.---',   'K': '-.-',    'L': '.-..',\n    'M': '--',     'N': '-.',     'O': '---',\n    'P': '.--.',   'Q': '--.-',   'R': '.-.',\n    'S': '...',    'T': '-',      'U': '..-',\n    'V': '...-',   'W': '.--',    'X': '-..-',\n    'Y': '-.--',   'Z': '--..',\n    '1': '.----',  '2': '..---',  '3': '...--',\n    '4': '....-',  '5': '.....',  '6': '-....',\n    '7': '--...',  '8': '---..',  '9': '----.',\n    '0': '-----',  ' ': ' ',\n}"
+      },
+      {
+        "title": "Unités de temps",
+        "body": "Le rythme officiel : un point vaut une unité, un trait trois unités, l'espace entre signes une unité, entre lettres trois unités et entre mots sept unités.",
+        "code": "UNIT = 0.15  # durée d'une unité en secondes"
+      },
+      {
+        "title": "Primitives d'émission",
+        "body": "On allume la LED pendant la durée voulue puis on marque une pause d'une unité entre chaque signe.",
+        "code": "import time\n\ndef led(on):\n    with open(\"/sys/class/gpio/gpio17/value\", \"w\") as f:\n        f.write(\"1\" if on else \"0\")\n\ndef dot():\n    led(True); time.sleep(UNIT);\n    led(False); time.sleep(UNIT)\n\ndef dash():\n    led(True); time.sleep(3 * UNIT)\n    led(False); time.sleep(UNIT)"
+      },
+      {
+        "title": "Émettre un caractère",
+        "body": "Le caractère est traduit en séquence puis lu signe par signe. Entre deux lettres, on laisse trois unités de silence.",
+        "code": "def send_symbol(char):\n    seq = MORSE[char.upper()]\n    for s in seq:\n        dot() if s == '.' else dash()\n    time.sleep(2 * UNIT)  # complète l'écart entre lettres (3 - 1 unité)"
+      },
+      {
+        "title": "Émettre un message complet",
+        "body": "L'espace entre les mots est de sept unités au total. On nettoie la GPIO en fin de script.",
+        "code": "def send_message(text):\n    for char in text:\n        if char == ' ':\n            time.sleep(4 * UNIT)  # complète l'écart entre mots (7 - 3 unités)\n        else:\n            send_symbol(char)\n\nsend_message(\"SOS\")\ntime.sleep(1)\nsend_message(\"HELLO EMBEDDED\")\n# libérer la GPIO\nwith open(\"/sys/class/gpio/unexport\", \"w\") as f:\n    f.write(\"17\")"
+      },
+      {
+        "title": "Vérifier avec un récepteur",
+        "body": "Dirigez la LED vers la webcam d'un smartphone et décodez le flux, ou branchez un phototransistor sur une entrée analogique pour valider la temporisation mesurée."
+      }
+    ],
+    "skills": ["GPIO", "Python", "Algorithme"],
+    "final": false
+  },
+  {
+    "id": "projet_serveur_stats",
+    "title": "Mini serveur HTTP : stats du système",
+    "difficulty": "Intermédiaire",
+    "category": "Réseau",
+    "icon": "network",
+    "summary": "Un serveur HTTP minimal en Python qui répond en JSON avec charge CPU, mémoire et temps de disponibilité.",
+    "objectives": [
+      "Comprendre le protocole HTTP et le format JSON",
+      "Collecter des métriques depuis /proc",
+      "Servir une page HTML simple d'état"
+    ],
+    "steps": [
+      {
+        "title": "Lire la charge moyenne",
+        "body": "/proc/loadavg expose la charge moyenne sur 1, 5 et 15 minutes, puis le nombre de processus actifs sur le total.",
+        "code": "cat /proc/loadavg",
+        "output": "0.42 0.35 0.28 1/245 981"
+      },
+      {
+        "title": "Lire la mémoire disponible",
+        "body": "/proc/meminfo fournit MemTotal et MemAvailable, exprimés en kilo-octets.",
+        "code": "grep -E 'Mem(Total|Available)' /proc/meminfo",
+        "output": "MemTotal:        8287680 kB\nMemAvailable:    5123408 kB"
+      },
+      {
+        "title": "Collecteur de métriques",
+        "body": "On regroupe les lectures dans un dictionnaire Python, unité convertie en méga-octets.",
+        "code": "def metrics():\n    load = open(\"/proc/loadavg\").read().split()\n    mem = {}\n    for line in open(\"/proc/meminfo\"):\n        k, v = line.split(':')\n        mem[k] = int(v.strip().split()[0])\n    return {\n        \"load1\": float(load[0]),\n        \"load5\": float(load[1]),\n        \"load15\": float(load[2]),\n        \"uptime\": float(open(\"/proc/uptime\").read().split()[0]),\n        \"mem_total_mb\": mem[\"MemTotal\"] // 1024,\n        \"mem_available_mb\": mem[\"MemAvailable\"] // 1024,\n    }"
+      },
+      {
+        "title": "Serveur HTTP minimal",
+        "body": "BaseHTTPRequestHandler suffit pour intercepter une route et renvoyer du JSON avec le bon en-tête.",
+        "code": "import json\nfrom http.server import BaseHTTPRequestHandler, HTTPServer\n\nclass StatsHandler(BaseHTTPRequestHandler):\n    def do_GET(self):\n        if self.path == \"/stats\":\n            body = json.dumps(metrics()).encode()\n            self.send_response(200)\n            self.send_header(\"Content-Type\", \"application/json\")\n            self.send_header(\"Content-Length\", str(len(body)))\n            self.end_headers()\n            self.wfile.write(body)\n        else:\n            self.send_error(404)\n\nHTTPServer((\"0.0.0.0\", 8000), StatsHandler).serve_forever()"
+      },
+      {
+        "title": "Tester avec curl",
+        "body": "En écoutant sur 0.0.0.0, le serveur est joignable depuis le réseau local.",
+        "code": "curl http://127.0.0.1:8000/stats",
+        "output": "{\"load1\": 0.42, \"load5\": 0.35, \"load15\": 0.28, \"uptime\": 3721.5, \"mem_total_mb\": 8093, \"mem_available_mb\": 5003}"
+      },
+      {
+        "title": "Ajouter une page HTML",
+        "body": "Une route / génère une page simple qui recharge automatiquement, pratique pour afficher la carte sur un écran.",
+        "code": "PAGE = \"\"\"<html><meta http-equiv=refresh content=2>\n<h1>EmbedForge Monitor</h1><pre id=d>{JSON}</pre></html>\"\"\""
+      }
+    ],
+    "skills": ["Python", "HTTP", "Réseau"],
+    "final": false
+  },
+  {
+    "id": "projet_uart_echo",
+    "title": "UART : écho entre deux applications",
+    "difficulty": "Intermédiaire",
+    "category": "UART",
+    "icon": "link",
+    "summary": "Connectez deux processus au même port série : l'un émet, l'autre répond, pour maîtriser débit et format.",
+    "objectives": [
+      "Configurer un lien série à 115200 bauds",
+      "Lire et écrire depuis le terminal",
+      "Rédiger un écho automatique en Python avec pyserial"
+    ],
+    "steps": [
+      {
+        "title": "Activer l'UART sur la carte",
+        "body": "Selon la carte, la liaison est accessible via /dev/ttyAMA0, /dev/ttyS0 ou /dev/ttyUSB0 pour un adaptateur USB. Sur Raspberry Pi, il faut activer la couche série dans le firmware ou via les overlays.",
+        "code": "ls /dev/tty*"
+      },
+      {
+        "title": "Configurer le port",
+        "body": "stty règle le débit et le format de trame : 8 bits de données, sans parité, un bit d'arrêt.",
+        "code": "stty -F /dev/ttyS0 115200 cs8 -cstopb -parenb\ncat /dev/ttyS0 &",
+        "output": "connexion en écoute sur /dev/ttyS0"
+      },
+      {
+        "title": "Créer une paire série virtuelle",
+        "body": "socat fabrique deux extrémités reliées entre elles : idéal pour tester l'émission et la réception sans matériel.",
+        "code": "socat -d -d pty,raw,echo=0 pty,raw,echo=0",
+        "output": "PTY is /dev/pts/5\nPTY is /dev/pts/6"
+      },
+      {
+        "title": "Écho en Python",
+        "body": "Le programme lisant une extrémité répond à l'autre avec un préfixe, exactement comme un équipement série réel.",
+        "code": "import serial\n\nser = serial.Serial(\"/dev/pts/5\", 115200, timeout=1)\nwhile True:\n    data = ser.read(16)\n    if data:\n        ser.write(b\"ECHO:\" + data)\n        print(f\"recu {data!r}\")"
+      },
+      {
+        "title": "Tester le flux",
+        "body": "Depuis la seconde console, on envoie du texte que l'écho renvoie préfixé.",
+        "code": "echo -n 'hello' > /dev/pts/6",
+        "output": "ECHO:hello"
+      },
+      {
+        "title": "Aller plus loin : multiplexer par lignes",
+        "body": "Découpez le flux par octet et ajoutez un checksum pour détecter les erreurs de trames. Le protocole se rapproche alors de ce que fait un vrai modem ou un capteur série industriel."
+      }
+    ],
+    "skills": ["UART", "Python", "Série"],
+    "final": false
+  },
+  {
+    "id": "projet_bouton_edge",
+    "title": "Capture de bouton GPIO en mode edge",
+    "difficulty": "Intermédiaire",
+    "category": "GPIO",
+    "icon": "chip",
+    "summary": "Détectez chaque appui sur un bouton au front montant ou descendant, avec debounce logiciel, comme le font les vrais drivers.",
+    "objectives": [
+      "Configurer une GPIO en entrée avec résistance pull-up",
+      "Détecter les fronts avec gpiomon et sysfs",
+      "Appliquer un debounce par temporisation"
+    ],
+    "steps": [
+      {
+        "title": "Câbler le bouton",
+        "body": "Branchez le bouton entre la broche GPIO et la masse. La résistance interne de tirage (pull-up) maintient la broche au niveau haut ; l'appui la descend au niveau bas.",
+        "code": "# bouton entre GPIO17 et GND, pull-up interne activée"
+      },
+      {
+        "title": "Configurer l'entrée",
+        "body": "Avec libgpiod, gpioget peut attendre une transition et afficher la nouvelle valeur. C'est la détection dite edge.",
+        "code": "gpioget --rising-edge gpiochip0 17",
+        "output": "0"
+      },
+      {
+        "title": "Surveiller les événements",
+        "body": "gpiomon affiche chaque front avec un horodatage précis, pratique pour valider le câblage.",
+        "code": "gpiomon --rising-edge gpiochip0 17",
+        "output": "event: RISING EDGE 17 timestamp:[ 3.8421935]"
+      },
+      {
+        "title": "Polling simple en Python",
+        "body": "En Python, on relit la valeur en boucle et on détecte la transition haute vers basse. La GPIO reste exponentée via sysfs.",
+        "code": "import time\n\nwith open(\"/sys/class/gpio/export\", \"w\") as f:\n    f.write(\"17\")\nwith open(\"/sys/class/gpio/gpio17/direction\", \"w\") as f:\n    f.write(\"in\")\n\netat = 1\nwhile True:\n    with open(\"/sys/class/gpio/gpio17/value\") as f:\n        niveau = int(f.read())\n    if niveau == 0 and etat == 1:\n        print(\"appui detecte\")\n    etat = niveau\n    time.sleep(0.01)"
+      },
+      {
+        "title": "Debounce logiciel",
+        "body": "Un bouton mécanique rebondit plusieurs millisecondes. On n'accepte un front que s'il est stable pendant au moins 20 ms.",
+        "code": "def front_stable(gpio, attendu, duree=0.02):\n    debut = time.monotonic()\n    while time.monotonic() - debut < duree:\n        if lit_valeur(gpio) != attendu:\n            return False\n    return True"
+      },
+      {
+        "title": "Version événementielle du noyau",
+        "body": "Pour de la production, on préfère attendre un événement en espace utilisateur plutôt que de poller. Le driver gpio-keys ou l'API character device de libgpiod le permettent.",
+        "code": "gpio-watch gpiochip0 17"
+      }
+    ],
+    "skills": ["GPIO", "Python", "Événements"],
+    "final": false
+  },
+  {
+    "id": "projet_backup_bash",
+    "title": "Script de sauvegarde système en bash",
+    "difficulty": "Intermédiaire",
+    "category": "Shell",
+    "icon": "storage",
+    "summary": "Automatisez la sauvegarde des fichiers critiques avec tar, gérez la rotation et planifiez avec cron.",
+    "objectives": [
+      "Écrire un script robuste avec set -euo pipefail",
+      "Compresser des arborescences avec tar",
+      "Planifier l'exécution quotidienne avec cron"
+    ],
+    "steps": [
+      {
+        "title": "En-tête de script robuste",
+        "body": "set -euo pipefail arrête le script sur toute erreur, interdit les variables non définies et détecte les échecs dans les pipelines.",
+        "code": "#!/usr/bin/env bash\nset -euo pipefail\n\nBACKUP_DIR=\"/var/backups\"\nDEST=/mnt/usb/backups\nDATE=\"$(date +%F)\""
+      },
+      {
+        "title": "Sauvegarde avec tar",
+        "body": "tar archive puis gzip compresse. Les chemins sont listés sans slash de tête pour faciliter la restauration.",
+        "code": "tar czf \"$BACKUP_DIR/sys-$DATE.tar.gz\" \\\n  -C / etc/passwd etc/group etc/systemd \\\n  -C /root .ssh\nls -lh \"$BACKUP_DIR\"",
+        "output": "sys-2026-08-27.tar.gz"
+      },
+      {
+        "title": "Rotation des anciennes sauvegardes",
+        "body": "find supprime les archives de plus de sept jours ; -delete évite un pipe supplémentaire.",
+        "code": "find \"$BACKUP_DIR\" -name 'sys-*.tar.gz' -mtime +7 -delete"
+      },
+      {
+        "title": "Journaliser le résultat",
+        "body": "En cas d'échec, le script sort avec un code non nul ; le message repart vers syslog via logger.",
+        "code": "if tar czf \"$BACKUP_DIR/sys-$DATE.tar.gz\" ...; then\n  logger -t backup \"sauvegarde ok\"\nelse\n  logger -t backup -p err \"echec sauvegarde\"\n  exit 1\nfi"
+      },
+      {
+        "title": "Planifier avec cron",
+        "body": "crontab -e enregistre l'exécution quotidienne à 2h30. On redirige la sortie vers /dev/null, les erreurs étant déjà journalisées.",
+        "code": "crontab -e\n30 2 * * * /usr/local/bin/backup_system.sh >/dev/null 2>&1"
+      },
+      {
+        "title": "Vérifier la restauration",
+        "body": "On teste toujours une restauration partielle : extraire un fichier dans un répertoire temporaire et comparer avec l'original.",
+        "code": "tar tzf \"$BACKUP_DIR/sys-$DATE.tar.gz\"\nmkdir -p /tmp/restore && tar xzf \"$BACKUP_DIR/sys-$DATE.tar.gz\" -C /tmp/restore etc/passwd"
+      }
+    ],
+    "skills": ["Bash", "cron", "Sauvegarde"],
+    "final": false
+  },
+  {
+    "id": "projet_daemon_systemd",
+    "title": "Démon systemd au démarrage",
+    "difficulty": "Avancé",
+    "category": "Systemd",
+    "icon": "linux",
+    "summary": "Transformez un script Python en service systemd qui démarre au boot, se relance en cas de crash et journalise.",
+    "objectives": [
+      "Écrire une unité systemd propre",
+      "Gérer démarrage, rechargement et arrêt du service",
+      "Durcir le service avec les options de protection"
+    ],
+    "steps": [
+      {
+        "title": "Le programme Python",
+        "body": "Le démon mesure la température toutes les cinq secondes. Stocké dans /opt/moniteur, il s'arrête proprement sur SIGTERM.",
+        "code": "#!/usr/bin/env python3\nimport time\nfrom pathlib import Path\n\ndef read_temp():\n    p = Path(\"/sys/class/thermal/thermal_zone0/temp\")\n    return int(p.read_text().strip()) / 1000.0\n\nprint(\"moniteur demarre\", flush=True)\nwhile True:\n    print(f\"temperature={read_temp():.1f}C\", flush=True)\n    time.sleep(5)"
+      },
+      {
+        "title": "Créer l'unité service",
+        "body": "Le fichier /etc/systemd/system/moniteur.service déclare la commande, le redémarrage automatique et l'utilisateur d'exécution.",
+        "code": "[Unit]\nDescription=Moniteur de température embarqué\nAfter=network.target\n\n[Service]\nExecStart=/usr/bin/python3 /opt/moniteur/main.py\nRestart=on-failure\nRestartSec=3\nUser=embed\n\n[Install]\nWantedBy=multi-user.target"
+      },
+      {
+        "title": "Installer et activer",
+        "body": "systemctl enable --now combine l'activation au boot et le lancement immédiat.",
+        "code": "systemctl daemon-reload\nsystemctl enable --now moniteur.service\nsystemctl status moniteur.service"
+      },
+      {
+        "title": "Observer les sorties",
+        "body": "Les print du process sont capturés par systemd et consultables avec journalctl.",
+        "code": "journalctl -u moniteur.service -f",
+        "output": "août 27 14:04:02 carte python3[231]: temperature=45.2C"
+      },
+      {
+        "title": "Durcir l'unité",
+        "body": "ProtectSystem=strict rend le système de fichiers en lecture seule, PrivateTmp isole le répertoire /tmp et NoNewPrivileges bloque les élévations de privilèges.",
+        "code": "[Service]\nProtectSystem=strict\nPrivateTmp=yes\nNoNewPrivileges=yes\nReadOnlyPaths=/sys/class/thermal"
+      },
+      {
+        "title": "Tester le redémarrage",
+        "body": "Un kill violent doit entraîner un redémarrage automatique par systemd, sans intervention humaine.",
+        "code": "systemctl kill -s SIGKILL moniteur.service\nsleep 4\nsystemctl is-active moniteur.service",
+        "output": "active"
+      }
+    ],
+    "skills": ["systemd", "Python", "Daemon"],
+    "final": false
+  },
+  {
+    "id": "projet_journal_rotatif",
+    "title": "Journal rotatif et journalctl sur mesure",
+    "difficulty": "Avancé",
+    "category": "Journalisation",
+    "icon": "database",
+    "summary": "Maîtrisez la taille, la rotation et les filtres du journal systemd, puis automatisez un rapport quotidien.",
+    "objectives": [
+      "Configurer la rotation du journal avec journald.conf",
+      "Interroger efficacement avec journalctl",
+      "Générer un rapport automatique récurrent"
+    ],
+    "steps": [
+      {
+        "title": "Comprendre la rotation",
+        "body": "journald écrit des journaux binaires datés dans /var/log/journal. Ils sont automatiquement nettoyés selon des seuils de taille et de durée.",
+        "code": "journalctl --disk-usage",
+        "output": "Journaux occupent actuellement 84.3 Mo."
+      },
+      {
+        "title": "Limiter la taille",
+        "body": "Dans /etc/systemd/journald.conf, SystemMaxUse borne l'espace total consommé par le journal. Sur une carte à eMMC limité, 100 Mo est raisonnable.",
+        "code": "# /etc/systemd/journald.conf\nSystemMaxUse=100M\nSystemMaxFileSize=10M"
+      },
+      {
+        "title": "Appliquer la configuration",
+        "body": "Le rechargement du service journald reprend immédiatement la nouvelle rotation.",
+        "code": "systemctl restart systemd-journald\njournalctl --disk-usage",
+        "output": "Journaux occupent actuellement 12.1 Mo."
+      },
+      {
+        "title": "Filtres essentiels",
+        "body": "journalctl combine la priorité, l'unité, le noyau et les fenêtres temporelles : des requêtes précises deviennent naturelles.",
+        "code": "journalctl -p err --since \"2 hours ago\"\njournalctl -u moniteur.service --since today\njournalctl -k -b"
+      },
+      {
+        "title": "Rapport quotidien",
+        "body": "Le script exporte les événements de la veille vers un fichier HTML simple qu'un navigateur local peut afficher.",
+        "code": "#!/usr/bin/env bash\nset -euo pipefail\nOUT=/var/rapports/rapport-$(date -d yesterday +%F).html\n{\n  echo \"<h1>Rapport $(date -d yesterday +%F)</h1>\"\n  journalctl --since \"yesterday\" --until \"today\" -p warning --no-pager\n} | tee \"$OUT\" >/dev/null\nlogger -t rapport \"rapport genere: $OUT\""
+      },
+      {
+        "title": "Planifier le rapport",
+        "body": "Un timer systemd remplace avantageusement cron : l'unité .service lance le script et le .timer déclenche à 6h00.",
+        "code": "# rapport.timer\n[Unit]\nDescription=Rapport journalier\n[Timer]\nOnCalendar=*-*-* 06:00:00\nPersistent=true\n[Install]\nWantedBy=timers.target"
+      }
+    ],
+    "skills": ["journald", "Journalisation", "Scripts"],
+    "final": false
+  },
+  {
+    "id": "projet_cross_compile",
+    "title": "Cross-compiler une application C pour ARM",
+    "difficulty": "Avancé",
+    "category": "Build",
+    "icon": "wrench",
+    "summary": "Compilez sur votre PC une application C destinée à une carte ARM, puis déployez et exécutez le binaire.",
+    "objectives": [
+      "Installer une chaîne de cross-compilation",
+      "Compiler un binaire pour l'architecture cible",
+      "Déployer le binaire et valider son exécution"
+    ],
+    "steps": [
+      {
+        "title": "Identifier l'architecture cible",
+        "body": "La plupart des cartes récentes sont en aarch64 (ARM 64 bits). Les anciennes ou certaines SBC utilisent armhf. La commande uname le confirme sur la cible.",
+        "code": "uname -m",
+        "output": "aarch64"
+      },
+      {
+        "title": "Installer la toolchain",
+        "body": "Le paquet gcc-aarch64-linux-gnu fournit compilateur, assembleur et bibliothèques pour ARM64.",
+        "code": "apt install gcc-aarch64-linux-gnu\nwhich aarch64-linux-gnu-gcc",
+        "output": "/usr/bin/aarch64-linux-gnu-gcc"
+      },
+      {
+        "title": "Programme de test",
+        "body": "Un programme C simple qui affiche les informations de compilation de son hôte.",
+        "code": "#include <stdio.h>\n\nint main(void) {\n    printf(\"hello du monde embarqué\\n\");\n#if defined(__aarch64__)\n    printf(\"arch: aarch64\\n\");\n#else\n    printf(\"arch: inconnue\\n\");\n#endif\n    return 0;\n}"
+      },
+      {
+        "title": "Cross-compiler",
+        "body": "Le même source se compile pour la cible sans modification : c'est toute la magie de la croix-compilation.",
+        "code": "aarch64-linux-gnu-gcc -O2 -Wall -o hello hello.c"
+      },
+      {
+        "title": "Vérifier le binaire",
+        "body": "file et readelf confirment le format ELF et l'architecture avant tout déploiement.",
+        "code": "file hello\nreadelf -h hello | grep Machine",
+        "output": "hello: ELF 64-bit LSB executable, ARM aarch64, version 1 (SYSV)\nMachine: AArch64"
+      },
+      {
+        "title": "Déployer et exécuter",
+        "body": "scp copie le binaire puis on l'exécute sur la carte, qui doit exhiber la même architecture.",
+        "code": "scp hello root@192.168.1.50:/root/\nssh root@192.168.1.50 './hello'",
+        "output": "hello du monde embarqué\narch: aarch64"
+      },
+      {
+        "title": "Aller plus loin : librairie dynamique",
+        "body": "Si le programme use de bibliothèques dynamiques, il faut que le sysroot cible les contienne. On teste alors avec ldd sur la carte et on évite des erreurs de chargement coûteuses.",
+        "code": "ssh root@192.168.1.50 'ldd hello'"
+      }
+    ],
+    "skills": ["Cross-compilation", "C", "ARM"],
+    "final": false
+  },
+  {
+    "id": "projet_final",
+    "title": "Smart Environment Monitor",
+    "difficulty": "Avancé",
+    "category": "Intégration",
+    "icon": "hub",
+    "summary": "Un capteur I2C BMP280, une LED, un serveur HTTP local, une journalisation journald et un service systemd, le tout déployé par un script.",
+    "objectives": [
+      "Interroger un capteur BMP280 via le bus I2C",
+      "Publier les mesures sur un serveur HTTP local",
+      "Journaliser dans journald et tourner comme service systemd",
+      "Automatiser le déploiement sur la carte"
+    ],
+    "skills": ["I2C", "Python", "systemd", "Réseau"],
+    "final": true,
+    "steps": [
+      {
+        "title": "Activer le bus I2C",
+        "body": "Le noyau doit exposer le contrôleur I2C. Sur Raspberry Pi, on l'active via raspi-config ou l'overlay correspondant ; la présence de /dev/i2c-1 confirme.",
+        "code": "ls /dev/i2c-*\ni2cdetect -y 1",
+        "output": "/dev/i2c-1"
+      },
+      {
+        "title": "Repérer le BMP280",
+        "body": "Le capteur répond au balayage à l'adresse 0x76 (ou 0x77 selon le câblage SDO). Son registre d'identité 0xD0 vaut 0x58.",
+        "code": "i2cget -y 1 0x76 0xd0",
+        "output": "0x58"
+      },
+      {
+        "title": "Lire les coefficients de calibration",
+        "body": "Le BMP280 stocke en EEPROM des coefficients de compensation, lus par blocs depuis le registre 0x88. Sans eux, la température brute est inexploitable.",
+        "code": "import smbus2\nbus = smbus2.SMBus(1)\nADDR = 0x76\ncoeffs = bus.read_i2c_block_data(ADDR, 0x88, 24)\nT1 = coeffs[0] | coeffs[1] << 8\nT2 = coeffs[2] | coeffs[3] << 8\nT3 = coeffs[4] | coeffs[5] << 8"
+      },
+      {
+        "title": "Mesurer la température",
+        "body": "La formule de compensation de la datasheet Bosch transforme le registre brut en degrés Celsius. On règle le capteur en mode normal pour des lectures continues.",
+        "code": "def read_temperature():\n    data = bus.read_i2c_block_data(ADDR, 0xF7, 3)\n    adc = (data[0] << 12) | (data[1] << 4) | (data[2] >> 4)\n    var1 = (adc / 16384.0 - T1 / 1024.0) * T2\n    var2 = ((adc / 131072.0 - T1 / 8192.0) ** 2) * T3\n    return (var1 + var2) / 5120.0"
+      },
+      {
+        "title": "Journaliser dans journald",
+        "body": "Le module python systemd.journal publie une mesure structurée : la valeur devient un champ filtrable par journalctl.",
+        "code": "from systemd import journal\n\ndef log_measure(temp, pressure):\n    journal.send(\"mesure\", TEMP=round(temp, 2),\n                 PRES=\"%.1f\" % pressure, zone=\"capteur\")"
+      },
+      {
+        "title": "Servir les mesures en HTTP",
+        "body": "Le service expose /stats en JSON et / avec une page automatiquement rafraîchie toutes les deux secondes.",
+        "code": "import json\nfrom http.server import BaseHTTPRequestHandler, HTTPServer\n\nclass Handler(BaseHTTPRequestHandler):\n    def do_GET(self):\n        if self.path == \"/stats\":\n            body = json.dumps({\"temp_c\": read_temperature()}).encode()\n            self.send_response(200)\n            self.send_header(\"Content-Type\", \"application/json\")\n            self.end_headers()\n            self.wfile.write(body)\n        else:\n            self.send_error(404)\n\nHTTPServer((\"0.0.0.0\", 8000), Handler).serve_forever()"
+      },
+      {
+        "title": "Fil d'orchestration",
+        "body": "Un module principal enchaîne mesure, journalisation et attente de la prochaine période, avec gestion propre de SIGTERM.",
+        "code": "#!/usr/bin/env python3\nimport time, sys, signal\n\ndef main():\n    signal.signal(signal.SIGTERM, lambda *_: sys.exit(0))\n    while True:\n        temp = read_temperature()\n        log_measure(temp, 101325.0)\n        time.sleep(5)\n\nif __name__ == \"__main__\":\n    main()"
+      },
+      {
+        "title": "Unité systemd du service",
+        "body": "Le service écoute en réseau et tourne sous un utilisateur dédié, avec redémarrage automatique et protection du système de fichiers.",
+        "code": "[Unit]\nDescription=Smart Environment Monitor\nAfter=network.target\n\n[Service]\nExecStart=/usr/bin/python3 /opt/emonitor/main.py\nRestart=on-failure\nUser=embed\nProtectSystem=strict\nPrivateTmp=yes\n\n[Install]\nWantedBy=multi-user.target"
+      },
+      {
+        "title": "Script de déploiement",
+        "body": "Un script unique pousse le code et l'unité, recharge systemd et active le service. On le relance à chaque itération.",
+        "code": "#!/usr/bin/env bash\nset -euo pipefail\nCARTE=\"${1:-root@192.168.1.50}\"\nrsync -avz --delete app/ \"$CARTE\":/opt/emonitor/\nrsync -avz unit/moniteur.service \"$CARTE\":/etc/systemd/system/\nssh \"$CARTE\" 'systemctl daemon-reload && systemctl enable --now moniteur.service'"
+      },
+      {
+        "title": "Test de bout en bout et durcissement",
+        "body": "Le flux complet : la page JSON répond, le journal contient des mesures horodatées et le service survit aux redémarrages. On borne enfin le journal à 50 Mo et on ajoute un timer systemd qui vérifie la présence du service chaque matin.",
+        "code": "curl http://192.168.1.50:8000/stats\njournalctl -u moniteur.service -f\n# dans /etc/systemd/journald.conf\nSystemMaxUse=50M\n# timer de vérification journalier\n[Timer]\nOnCalendar=daily\nPersistent=true",
+        "output": "{\"temp_c\": 22.45}\naoût 27 14:31:08 carte python3[410]: mesure TEMP=22.45 zone=capteur"
+      }
+    ]
+  }
+]

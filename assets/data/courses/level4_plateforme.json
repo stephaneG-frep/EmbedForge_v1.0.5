@@ -1,0 +1,365 @@
+[
+  {
+    "id": "kernel_linux",
+    "title": "Le noyau Linux en action",
+    "level": 4,
+    "category": "plateforme",
+    "accent": "purple",
+    "icon": "kernel",
+    "duration": 40,
+    "summary": "Explorez le rôle, la structure et la configuration du noyau Linux, cœur de tout système embarqué.",
+    "objectives": ["Comprendre le rôle du noyau", "Explorer sa structure", "Configurer et compiler le noyau", "Installer les modules"],
+    "chapters": [
+      {
+        "id": "ch1",
+        "title": "Le rôle du noyau",
+        "duration": 10,
+        "sections": [
+          {"type": "text", "body": "Le noyau Linux est le programme central qui gère le matériel, les processus, la mémoire et le système de fichiers. Il fournit une interface uniforme aux applications."},
+          {"type": "definition", "term": "Noyau monolithique", "body": "Architecture où tous les services du système (gestion mémoire, pilotes, réseau) vivent dans un même espace noyau, comme sur Linux."},
+          {"type": "list", "title": "Tâches du noyau", "items": ["Gestion des processus et ordonnancement", "Gestion de la mémoire", "Pilotes de périphériques", "Systèmes de fichiers", "Réseau"]},
+          {"type": "text", "body": "Les applications communiquent avec le noyau via des appels système (syscalls) comme open, read, write, qui pilotent le matériel en toute sécurité."},
+          {"type": "exercise", "question": "Comment les applications communiquent-elles avec le noyau ?", "answer": "Par des appels système, comme open, read ou write."}
+        ]
+      },
+      {
+        "id": "ch2",
+        "title": "La structure du noyau",
+        "duration": 10,
+        "sections": [
+          {"type": "text", "body": "Le noyau est organisé en sous-systèmes et en modules. Les modules sont des pilotes compilés séparément, chargeables dynamiquement dans le noyau."},
+          {"type": "code", "code": "uname -r\nls /lib/modules/$(uname -r)/", "lang": "bash", "body": "Afficher la version du noyau et lister ses modules installés."},
+          {"type": "text", "body": "Les modules ont l'extension .ko. Les outils modprobe et insmod les chargent, rmmod les déchargent. Cela permet d'ajouter un pilote sans recompiler le noyau."},
+          {"type": "text", "body": "Le dossier /proc/sys permet de régler de nombreux paramètres du noyau pendant l'exécution, comme l'ordonnancement ou la gestion réseau."},
+          {"type": "exercise", "question": "Quelle est l'extension des modules noyau ?", "answer": ".ko."},
+          {"type": "tip", "body": "Sur une carte embarquée, réduisez le nombre de modules et intégrez l'essentiel dans le noyau pour accélérer le démarrage."}
+        ]
+      },
+      {
+        "id": "ch3",
+        "title": "Configurer et compiler",
+        "duration": 10,
+        "sections": [
+          {"type": "code", "code": "make menuconfig\nmake -j4\nmake modules_install\nmake install", "lang": "bash", "body": "Configurer, compiler et installer le noyau."},
+          {"type": "text", "body": "La configuration se fait avec menuconfig ou defconfig. Ensuite on compile avec make, puis on installe les modules et le noyau lui-même."},
+          {"type": "text", "body": "Pour une carte embarquée, on privilégie souvent certaines options et on élimine les pilotes inutiles pour gagner en taille et en rapidité."},
+          {"type": "warning", "body": "Une configuration erronée peut empêcher le démarrage. Gardez toujours un noyau de secours et testez sur une carte dédiée."},
+          {"type": "exercise", "question": "Quel outil permet de configurer le noyau ?", "answer": "make menuconfig, ou d'autres comme make xconfig."}
+        ]
+      },
+      {
+        "id": "ch4",
+        "title": "Charger les modules",
+        "duration": 10,
+        "sections": [
+          {"type": "code", "code": "modprobe mon_module\nlsmod\nmodinfo mon_module", "lang": "bash", "body": "Charger un module, lister les modules chargés, afficher ses informations."},
+          {"type": "text", "body": "modprobe charge un module et gère ses dépendances. lsmod liste les modules actifs. modinfo affiche la description, la licence et les options d'un module."},
+          {"type": "exercise", "question": "Quelle commande charge un module noyau ?", "answer": "modprobe nom_du_module."},
+          {"type": "tip", "body": "Consultez dmesg après le chargement d'un module pour voir les messages de log du noyau, utiles au débogage."}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "linux_drivers",
+    "title": "Écrire un driver simple",
+    "level": 4,
+    "category": "plateforme",
+    "accent": "orange",
+    "icon": "microchip",
+    "duration": 45,
+    "summary": "Codez votre premier pilote de périphérique noyau Linux et exposez-le aux applications via les fichiers de device.",
+    "objectives": ["Comprendre la structure d'un driver", "Écrire les fonctions init/exit", "Implémenter un device char", "Compiler le module"],
+    "chapters": [
+      {
+        "id": "ch1",
+        "title": "Qu'est-ce qu'un driver",
+        "duration": 12,
+        "sections": [
+          {"type": "text", "body": "Un driver (pilote) est un module noyau qui contrôle un périphérique spécifique et fournit une interface aux applications. Les applications l'utilisent via des fichiers dans /dev."},
+          {"type": "definition", "term": "Device char", "body": "Périphérique accédé en flux d'octets un à un, comme un port série, par opposition à un block device accédé par blocs."},
+          {"type": "text", "body": "Les drivers fonctionnent dans l'espace noyau, avec des privilèges élevés. Une erreur dans un driver peut donc faire planter tout le système."},
+          {"type": "exercise", "question": "Quel répertoire contient les fichiers de périphériques ?", "answer": "/dev."},
+          {"type": "warning", "body": "Un pilote défectueux peut planter le noyau. Testez toujours sur un système dédié, pas en production."}
+        ]
+      },
+      {
+        "id": "ch2",
+        "title": "Structure d'un module",
+        "duration": 12,
+        "sections": [
+          {"type": "code", "code": "#include <linux/module.h>\n#include <linux/kernel.h>\n\nstatic int __init mon_init(void) {\n  printk(KERN_INFO \"Driver charge\\n\");\n  return 0;\n}\nstatic void __exit mon_exit(void) {\n  printk(KERN_INFO \"Driver decharge\\n\");\n}\nmodule_init(mon_init);\nmodule_exit(mon_exit);\nMODULE_LICENSE(\"GPL\");", "lang": "c", "body": "Un module noyau minimal avec son point d'entrée et de sortie."},
+          {"type": "text", "body": "Un module définit une fonction d'initialisation appelée au chargement et une fonction de sortie au déchargement. printk écrit dans les journaux du noyau."},
+          {"type": "text", "body": "La macro module_init enregistre la fonction de démarrage. MODULE_LICENSE précise la licence, requise pour exporter certains symboles."},
+          {"type": "exercise", "question": "Quelle fonction s'exécute au chargement du module ?", "answer": "Celle désignée par module_init, souvent mon_init."},
+          {"type": "tip", "body": "Utilisez KERN_INFO pour les messages d'information et KERN_ERR pour les erreurs, visibles avec dmesg."}
+        ]
+      },
+      {
+        "id": "ch3",
+        "title": "Créer un device char",
+        "duration": 11,
+        "sections": [
+          {"type": "code", "code": "#include <linux/fs.h>\n#include <linux/cdev.h>\nstatic struct cdev mon_cdev;\nstatic dev_t mon_devnum;\n\nstatic int mon_open(struct inode *inode, struct file *file) {\n  return 0;\n}\nstatic struct file_operations mon_fops = {\n  .owner = THIS_MODULE,\n  .open = mon_open,\n};", "lang": "c", "body": "Déclarer un cdev et des opérations de fichier pour le driver."},
+          {"type": "text", "body": "Pour exposer un fichier dans /dev, on enregistre un numéro de device (majeur/mineur) et un cdev. Les opérations de fichier (open, read, write) définissent le comportement."},
+          {"type": "text", "body": "La struct file_operations lie les appels système des applications aux fonctions de notre driver. C'est l'interface principale entre espace utilisateur et noyau."},
+          {"type": "exercise", "question": "Quelle structure relie les appels système aux fonctions du driver ?", "answer": "La struct file_operations."},
+          {"type": "tip", "body": "Le numéro majeur identifie le type de device, le mineur l'instance particulière."}
+        ]
+      },
+      {
+        "id": "ch4",
+        "title": "Compiler le module",
+        "duration": 10,
+        "sections": [
+          {"type": "code", "code": "obj-m += mon_driver.o\nall:\n\tmake -C /lib/modules/$(shell uname -r)/build M=$(PWD) modules", "lang": "bash", "body": "Un fichier Makefile pour compiler le module contre les sources du noyau."},
+          {"type": "text", "body": "Le Makefile utilise le système de compilation du noyau via l'option -C et le répertoire M pointant vers nos sources. obj-m indique qu'on produit un module."},
+          {"type": "code", "code": "make\ninsmod mon_driver.ko\nrmmod mon_driver", "lang": "bash", "body": "Compiler puis charger et décharger le module."},
+          {"type": "warning", "body": "Le module doit être compilé exactement contre la version du noyau de la cible, sinon le chargement échoue avec une erreur de version."},
+          {"type": "exercise", "question": "Quelle commande charge un module ?", "answer": "insmod mon_module.ko."},
+          {"type": "tip", "body": "Pour une cible cross, renseignez ARCH et CROSS_COMPILE dans le Makefile, comme ARCH=arm."}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "bootloader_uboot",
+    "title": "Le boot U-Boot",
+    "level": 4,
+    "category": "plateforme",
+    "accent": "green",
+    "icon": "rocket",
+    "duration": 40,
+    "summary": "Comprenez le rôle du bootloader U-Boot dans l'amorçage de votre système Linux embarqué.",
+    "objectives": ["Comprendre la séquence de démarrage", "Interagir avec U-Boot", "Configurer les variables d'environnement", "Charger un noyau"],
+    "chapters": [
+      {
+        "id": "ch1",
+        "title": "La séquence de démarrage",
+        "duration": 10,
+        "sections": [
+          {"type": "text", "body": "L'amorçage passe par plusieurs étapes : le code de démarrage dans la ROM, le bootloader, puis le noyau Linux. Le bootloader prépare le matériel et lance le noyau."},
+          {"type": "list", "title": "Étapes de démarrage", "items": ["Boot ROM du processeur", "Bootloader (U-Boot)", "Chargement du noyau Linux", "Montage du système de fichiers racine", "Démarrage des services"]},
+          {"type": "text", "body": "U-Boot est le bootloader le plus répandu dans l'embarqué. Il initialise la mémoire et les périphériques, puis charge le noyau depuis la flash, le réseau ou une carte SD."},
+          {"type": "exercise", "question": "Quel est le rôle principal d'un bootloader ?", "answer": "Initialiser le matériel et charger puis lancer le noyau Linux."}
+        ]
+      },
+      {
+        "id": "ch2",
+        "title": "La console U-Boot",
+        "duration": 10,
+        "sections": [
+          {"type": "code", "code": "help\nprintenv\nbdi", "lang": "bash", "body": "Aider, afficher les variables d'environnement et les infos de la carte."},
+          {"type": "text", "body": "Au démarrage, U-Boot propose une console sur la ligne série avec un prompt. help liste les commandes, printenv affiche les variables d'environnement."},
+          {"type": "text", "body": "On peut interrompre le démarrage automatique avec une touche pour entrer dans la console, selon la configuration du délai de pause."},
+          {"type": "exercise", "question": "Quelle commande affiche les variables d'environnement U-Boot ?", "answer": "printenv."},
+          {"type": "tip", "body": "Interrompez le démarrage en appuyant sur une touche (souvent espace ou entrée) pendant le compte à rebours pour accéder à la console."}
+        ]
+      },
+      {
+        "id": "ch3",
+        "title": "Variables d'environnement",
+        "duration": 10,
+        "sections": [
+          {"type": "code", "code": "setenv bootcmd 'run distro_bootcmd'\nenv save", "lang": "bash", "body": "Définir une variable d'environnement et la sauvegarder."},
+          {"type": "text", "body": "Les variables d'environnement stockent la configuration de démarrage, comme la commande de boot, les chemins du noyau et les paramètres. env save les persiste."},
+          {"type": "text", "body": "La variable bootcmd contient la commande exécutée au démarrage automatique. La modifier change le comportement d'amorçage."},
+          {"type": "exercise", "question": "Quelle variable contient la commande de démarrage automatique ?", "answer": "bootcmd."},
+          {"type": "warning", "body": "Une variable d'environnement erronée peut empêcher le démarrage. Conservez une console série pour corriger en cas de problème."}
+        ]
+      },
+      {
+        "id": "ch4",
+        "title": "Charger le noyau",
+        "duration": 10,
+        "sections": [
+          {"type": "code", "code": "env set bootargs console=ttyS0,115200 root=/dev/mmcblk0p2 ro\nbootm 0x80000000", "lang": "bash", "body": "Définir les arguments du noyau et lancer un noyau chargé en mémoire."},
+          {"type": "text", "body": "Les variables bootargs définissent les paramètres passés au noyau : la console et l'emplacement du système de fichiers racine. bootm lance un noyau depuis la mémoire."},
+          {"type": "text", "body": "Les paramètres du noyau contrôlent la console série, le système de fichiers racine et bien d'autres options au démarrage."},
+          {"type": "exercise", "question": "Quelle variable définit les arguments passés au noyau ?", "answer": "bootargs."},
+          {"type": "tip", "body": "Pour charger un noyau par le réseau lors du développement, utilisez tftp pour le transférer en mémoire avant bootm."}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "buildroot",
+    "title": "Buildroot : créer son image",
+    "level": 4,
+    "category": "plateforme",
+    "accent": "teal",
+    "icon": "layers",
+    "duration": 45,
+    "summary": "Générez une image Linux embarquée complète, simple et reproductible, avec l'outil Buildroot.",
+    "objectives": ["Comprendre le principe de Buildroot", "Configurer un projet", "Compiler l'image", "Intégrer des paquets"],
+    "chapters": [
+      {
+        "id": "ch1",
+        "title": "Le principe de Buildroot",
+        "duration": 12,
+        "sections": [
+          {"type": "text", "body": "Buildroot est un système de construction qui génère une image Linux embarquée complète : toolchain, noyau, bibliothèques et applications, à partir d'une configuration."},
+          {"type": "definition", "term": "Image système", "body": "Ensemble des fichiers (noyau, rootfs, bootloader) prêts à être copiés sur une carte SD ou une mémoire flash pour faire démarrer un appareil."},
+          {"type": "text", "body": "Contrairement à un paquet comme apt, Buildroot compile tout depuis les sources pour votre cible, garantissant une image cohérente et minimale."},
+          {"type": "exercise", "question": "Que produit Buildroot à partir de la configuration ?", "answer": "Une image système embarquée complète avec toolchain, noyau et applications."}
+        ]
+      },
+      {
+        "id": "ch2",
+        "title": "Configurer un projet",
+        "duration": 11,
+        "sections": [
+          {"type": "code", "code": "make menuconfig\nmake <nom_carte>_defconfig\nmake savedefconfig", "lang": "bash", "body": "Configurer Buildroot, charger une configuration de carte, ou sauvegarder la sienne."},
+          {"type": "text", "body": "make menuconfig ouvre l'interface de configuration. Buildroot fournit des defconfig pour de nombreuses cartes, qu'on charge puis personnalise."},
+          {"type": "text", "body": "La sélection du binaire de la cible (architecture, type d'ABI) est cruciale dans la page Toolchain et doit correspondre à votre processeur."},
+          {"type": "exercise", "question": "Quelle commande charge une configuration de carte fournie ?", "answer": "make nom_carte_defconfig."},
+          {"type": "tip", "body": "Utilisez savedefconfig pour réduire votre configuration personnalisée à l'essentiel et la versionner."}
+        ]
+      },
+      {
+        "id": "ch3",
+        "title": "Compiler l'image",
+        "duration": 11,
+        "sections": [
+          {"type": "code", "code": "make\nls output/images/", "lang": "bash", "body": "Compiler tout puis lister les images générées."},
+          {"type": "text", "body": "La commande make lance la compilation complète, qui peut prendre du temps la première fois. Les images produites se trouvent dans output/images."},
+          {"type": "list", "title": "Contenu de output/images", "items": ["zImage ou uImage : le noyau", "rootfs.ext2, ext4 : système de fichiers", "sdcard.img : image complète pour carte SD", "u-boot.bin : le bootloader"]},
+          {"type": "exercise", "question": "Dans quel répertoire sont produites les images ?", "answer": "output/images."},
+          {"type": "warning", "body": "La première compilation est longue. Assurez-vous d'avoir les dépendances et de l'espace disque suffisant."}
+        ]
+      },
+      {
+        "id": "ch4",
+        "title": "Ajouter des paquets",
+        "duration": 11,
+        "sections": [
+          {"type": "code", "code": "BR2_PACKAGE_LIBCURL=y\nBR2_PACKAGE_PYTHON3=y", "lang": "bash", "body": "Exemples d'options pour activer des paquets dans la configuration."},
+          {"type": "text", "body": "Buildroot intègre des milliers de paquets, activables dans menuconfig via le menu Target packages. On choisit seulement ceux nécessaires au produit."},
+          {"type": "text", "body": "Chaque paquet ajouté augmente la taille de l'image et le temps de compilation. Minimalisme et pertinence sont de mise en embarqué."},
+          {"type": "exercise", "question": "Où active-t-on les paquets applicatifs dans Buildroot ?", "answer": "Dans le menu Target packages de menuconfig."},
+          {"type": "tip", "body": "Ne gardez que les paquets réellement utiles au produit pour réduire la surface d'attaque et la taille."}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "yocto",
+    "title": "Yocto Project : distribution à façon",
+    "level": 4,
+    "category": "plateforme",
+    "accent": "orange",
+    "icon": "layers",
+    "duration": 45,
+    "summary": "Construisez une distribution Linux embarquée personnalisée et reproductible avec le projet Yocto.",
+    "objectives": ["Comprendre l'architecture Yocto", "Utiliser bitbake", "Créer des recettes", "Générer une image"],
+    "chapters": [
+      {
+        "id": "ch1",
+        "title": "Le projet Yocto",
+        "duration": 12,
+        "sections": [
+          {"type": "text", "body": "Yocto Project offre un ensemble d'outils pour créer des distributions Linux embarquées sur mesure. Il repose sur OpenEmbedded et le moteur de compilation bitbake."},
+          {"type": "definition", "term": "Recette (recipe)", "body": "Fichier décrivant comment télécharger, compiler et installer un logiciel particulier dans l'image, au format avec l'extension .bb."},
+          {"type": "text", "body": "Yocto est puissant mais a une courbe d'apprentissage raide. Il convient aux projets qui exigent un contrôle fin et une reproductibilité exacte sur le long terme."},
+          {"type": "exercise", "question": "Sur quel moteur de compilation repose Yocto ?", "answer": "bitbake."}
+        ]
+      },
+      {
+        "id": "ch2",
+        "title": "Les layers et bitbake",
+        "duration": 11,
+        "sections": [
+          {"type": "code", "code": "source oe-init-build-env\nbitbake core-image-minimal", "lang": "bash", "body": "Initialiser l'environnement et construire une image minimale."},
+          {"type": "text", "body": "L'environnement est initialisé avec oe-init-build-env, puis bitbake construit l'image demandée. core-image-minimal est une image de base minimale."},
+          {"type": "text", "body": "Les layers sont des ensembles de recettes et de configurations qui s'empilent, un peu comme des surcouches. Leur structure permet de réutiliser et d'étendre."},
+          {"type": "exercise", "question": "Quelle commande construit une image Yocto ?", "answer": "bitbake nom_de_l_image."},
+          {"type": "warning", "body": "bitbake construit depuis les sources et peut prendre plusieurs heures. Prévoyez un matériel performant et de l'espace disque."}
+        ]
+      },
+      {
+        "id": "ch3",
+        "title": "Écrire une recette",
+        "duration": 11,
+        "sections": [
+          {"type": "code", "code": "SUMMARY = \"Ma petite application\"\nLICENSE = \"GPL-2.0-only\"\nSRC_URI = \"file://mon_app.c\"\n\ninherit autotools", "lang": "bash", "body": "Une recette Yocto minimale pour une application."},
+          {"type": "text", "body": "Une recette déclare les métadonnées, les sources (SRC_URI) et la méthode de compilation (inherit autotools, cmake, etc.). bitbake l'interprète pour fabriquer le paquet."},
+          {"type": "text", "body": "Les recettes du même logiciel peuvent être héritées et complétées pour plusieurs versions ou variantes d'une image."},
+          {"type": "exercise", "question": "Quelle variable indique les sources d'une recette ?", "answer": "SRC_URI."},
+          {"type": "tip", "body": "Placez vos recettes dans des layers personnalisés pour séparer vos ajouts du code OpenEmbedded de référence."}
+        ]
+      },
+      {
+        "id": "ch4",
+        "title": "Générer l'image résultat",
+        "duration": 11,
+        "sections": [
+          {"type": "code", "code": "bitbake core-image-full-cmdline\nls tmp/deploy/images/<machine>/", "lang": "bash", "body": "Construire une image plus complète et lister les artefacts produits."},
+          {"type": "text", "body": "Les artefacts finaux, noyau, rootfs et images, se trouvent dans tmp/deploy/images. On copie ensuite cette image sur la cible."},
+          {"type": "list", "title": "Artefacts produits par Yocto", "items": ["Le noyau compressé", "Le rootfs en plusieurs formats", "L'image complète, par exemple pour carte SD", "Les binaires du bootloader si configuré"]},
+          {"type": "exercise", "question": "Dans quel répertoire sont déposés les artefacts finaux ?", "answer": "tmp/deploy/images/nom_de_machine."},
+          {"type": "tip", "body": "Yocto offre des SDK pour générer la toolchain et les en-têtes, simplifiant le cross-compilation externe."}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "devicetree_bindings",
+    "title": "Devicetree et bindings",
+    "level": 4,
+    "category": "plateforme",
+    "accent": "purple",
+    "icon": "database",
+    "duration": 45,
+    "summary": "Décrivez votre matériel au noyau avec l'arbre de périphériques (devicetree) et ses bindings.",
+    "objectives": ["Comprendre le devicetree", "Lire la structure des nœuds", "Compiler le DTB", "Déclarer un périphérique"],
+    "chapters": [
+      {
+        "id": "ch1",
+        "title": "Qu'est-ce que le devicetree",
+        "duration": 12,
+        "sections": [
+          {"type": "text", "body": "Le devicetree est une structure de données qui décrit le matériel d'une carte au noyau Linux. Il remplace les tables de paramètres codées en dur sur les architectures ARM."},
+          {"type": "definition", "term": "DTB", "body": "Device Tree Blob : le devicetree compilé en un fichier binaire, chargé par le bootloader puis transmis au noyau au démarrage."},
+          {"type": "text", "body": "Le noyau interroge le devicetree pour connaître les périphériques présents, leurs adresses mémoire et leurs paramètres, ce qui rend le noyau plus portable."},
+          {"type": "exercise", "question": "Que décrit le devicetree ?", "answer": "Le matériel de la carte : périphériques, adresses mémoire, paramètres."}
+        ]
+      },
+      {
+        "id": "ch2",
+        "title": "La structure des nœuds",
+        "duration": 11,
+        "sections": [
+          {"type": "code", "code": "/dts-v1/;\n/ {\n  compatible = \"exemple,carte\";\n  soc {\n    uart0: serial@10000000 {\n      compatible = \"ns16550a\";\n      reg = <0x10000000 0x1000>;\n    };\n  };\n};", "lang": "bash", "body": "Extrait d'un devicetree avec un nœud décrivant un port série."},
+          {"type": "text", "body": "Le devicetree est une arborescence de nœuds. Chaque nœud a un nom, un label optionnel et des propriétés comme compatible et reg."},
+          {"type": "text", "body": "La propriété compatible identifie le pilote à utiliser. reg indique l'adresse mémoire et la taille de la région occupée par le périphérique."},
+          {"type": "exercise", "question": "Quelle propriété relie un nœud à son pilote ?", "answer": "La propriété compatible."},
+          {"type": "tip", "body": "Le label d'un nœud, comme uart0, permet de s'y référer et de l'étendre ailleurs dans l'arbre."}
+        ]
+      },
+      {
+        "id": "ch3",
+        "title": "Compiler le devicetree",
+        "duration": 11,
+        "sections": [
+          {"type": "code", "code": "dtc -I dts -O dtb -o carte.dtb carte.dts\ndtc -I dtb -O dts carte.dtb", "lang": "bash", "body": "Compiler un DTS en DTB et l'inverse pour inspecter."},
+          {"type": "text", "body": "Le compilateur dtc transforme le fichier source .dts en binaire .dtb. Inversement, on peut décompiler un .dtb pour le lire."},
+          {"type": "text", "body": "Le .dts source se compile souvent dans l'arbre du noyau via make dtbs ou un cible dédiée, avant d'être copié dans le bootloader."},
+          {"type": "exercise", "question": "Quel outil compile un DTS en DTB ?", "answer": "dtc, le Device Tree Compiler."}
+        ]
+      },
+      {
+        "id": "ch4",
+        "title": "Bindings et framework",
+        "duration": 11,
+        "sections": [
+          {"type": "code", "code": "leds {\n  compatible = \"gpio-leds\";\n  led-aliment {\n    label = \"aliment\";\n    gpios = <&gpio4 0 GPIO_ACTIVE_HIGH>;\n  };\n};", "lang": "c", "body": "Un binding gpio-leds déclare une LED pilotée par une broche GPIO."},
+          {"type": "text", "body": "Les bindings sont la documentation des propriétés valides pour chaque type de périphérique. Ils sont regroupés dans Documentation/devicetree/bindings du noyau."},
+          {"type": "text", "body": "Le framework noyau lit les bindings pour instancier les périphériques. Une erreur de binding empêche le périphérique d'être correctement configuré."},
+          {"type": "exercise", "question": "Où trouve-t-on la documentation des bindings ?", "answer": "Dans Documentation/devicetree/bindings de l'arbre source du noyau."},
+          {"type": "warning", "body": "Respectez strictement un binding existant : utiliser des propriétés inconnues ou des valeurs invalides fait échouer la configuration du périphérique."},
+          {"type": "tip", "body": "Consultez toujours le binding documenté avant d'ajouter un périphérique au devicetree de votre carte."}
+        ]
+      }
+    ]
+  }
+]

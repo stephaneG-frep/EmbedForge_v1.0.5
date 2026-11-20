@@ -1,0 +1,202 @@
+[
+  {
+    "term": "Kernel",
+    "category": "Noyau",
+    "definition": "Cœur du système d'exploitation : il gère les processus, la mémoire, les pilotes matériels et planifie l'exécution sur le processeur. Dans le monde embarqué, on embarque ses propres versions, souvent issues d'un noyau LTS."
+  },
+  {
+    "term": "Initramfs",
+    "category": "Stockage",
+    "definition": "Archive initiale chargée en RAM avant le système de fichiers racine. Elle contient l'exécutable init et les modules nécessaires pour monter le vrai rootfs (par exemple un volume chiffré ou une partition RAID)."
+  },
+  {
+    "term": "Bootloader",
+    "category": "Noyau",
+    "definition": "Programme exécuté au démarrage de la machine, avant le noyau. Il initialise les périphériques minimaux et charge le noyau Linux en mémoire, souvent depuis la flash, eMMC ou un réseau TFTP."
+  },
+  {
+    "term": "U-Boot",
+    "category": "Noyau",
+    "definition": "Bootloader libre le plus répandu dans l'embarqué (Das U-Boot). Il supporte de très nombreuses architectures (ARM, RISC-V, x86...) et fournit une console interactive pour charger un noyau depuis une carte SD, la flash ou le réseau."
+  },
+  {
+    "term": "Devicetree",
+    "category": "Noyau",
+    "definition": "Structure de données décrivant la composition matérielle d'une carte : processeur, mémoire, bus et périphériques. Elle est fournie au noyau au démarrage et évite d'écrire un driver spécifique à chaque platine."
+  },
+  {
+    "term": "DTB",
+    "category": "Noyau",
+    "definition": "Flat Device Tree Blob : le devicetree compilé au format binaire à l'aide du compilateur dtc (device tree compiler). Le bootloader le charge en RAM conjointement au noyau."
+  },
+  {
+    "term": "Flat Device Tree (FDT)",
+    "category": "Noyau",
+    "definition": "Représentation simple, tabulaire et linéaire du devicetree échangée entre le bootloader et le noyau. L'accès se fait sans mise en mémoire préalable, d'où son nom flat."
+  },
+  {
+    "term": "sysfs",
+    "category": "Noyau",
+    "definition": "Système de fichiers virtuel monté sous /sys qui expose la vision du noyau sur le matériel. Chaque périphérique et chaque driver possède des attributs lisibles et parfois inscriptibles, comme la valeur d'une GPIO ou un capteur de température."
+  },
+  {
+    "term": "/dev",
+    "category": "Noyau",
+    "definition": "Répertoire des fichiers spéciaux représentant les périphériques : /dev/ttyS0, /dev/mmcblk0, /dev/i2c-1... Depuis udev, ces entrées sont créées dynamiquement en fonction des périphériques détectés."
+  },
+  {
+    "term": "DRM",
+    "category": "Noyau",
+    "definition": "Direct Rendering Manager : sous-système du noyau gérant l'accès aux cartes graphiques pour le rendu accéléré. Il est à la base des interfaces graphiques minimales sur les écrans embarqués."
+  },
+  {
+    "term": "KMS",
+    "category": "Noyau",
+    "definition": "Kernel Mode Setting : la partie de DRM chargée de configurer les modes d'affichage (résolution, fréquence, plan du framebuffer). Grâce à KMS, le noyau peut afficher un logo dès le démarrage et basculer le mode sans clignoter."
+  },
+  {
+    "term": "Module",
+    "category": "Noyau",
+    "definition": "Brique de code du noyau compilée séparément et chargeable à chaud avec modprobe ou insmod. Les modules évitent de recompiler le noyau pour ajouter un driver et réduisent la mémoire utilisée."
+  },
+  {
+    "term": "Driver",
+    "category": "Noyau",
+    "definition": "Composant du noyau qui connaît le fonctionnement d'un périphérique précis et le présente au reste du système via une interface normalisée. En embarqué, écrire un driver se fait souvent dans le cadre du sous-système correspondant (GPIO, I2C, SPI, input...)."
+  },
+  {
+    "term": "Rootfs",
+    "category": "Stockage",
+    "definition": "Système de fichiers racine monté sur / après le boot. Il contient les binaires essentiels, les bibliothèques, la configuration et init. Il peut être en flash, en eMMC, sur une carte SD ou monté en NFS."
+  },
+  {
+    "term": "Buildroot",
+    "category": "Build",
+    "definition": "Outil de construction d'un rootfs complet pour Linux embarqué : il compile le noyau, les bibliothèques et les applications à partir d'un fichier de configuration simple (make menuconfig). Il produit une image prête à flasher."
+  },
+  {
+    "term": "Yocto",
+    "category": "Build",
+    "definition": "Projet libre fournissant un framework complet pour créer des distributions Linux embarquées sur mesure. Il repose sur BitBake et OpenEmbedded et domine l'industrie grâce à sa reproductibilité et sa flexibilité."
+  },
+  {
+    "term": "BitBake",
+    "category": "Outils",
+    "definition": "Moteur de construction et moteur de dépendances utilisé par OpenEmbedded/Yocto. Il exécute les tâches des recettes (téléchargement, compilation, installation) en respectant un graphe de dépendances et un cache partagé."
+  },
+  {
+    "term": "Recipe",
+    "category": "Build",
+    "definition": "Fichier décrit par BitBake permettant de construire un paquet : il précise la source, les dépendances, les options de compilation et les fichiers installés. Dans Yocto, les recettes ont l'extension .bb ou .bbappend."
+  },
+  {
+    "term": "Layer de distribution",
+    "category": "Build",
+    "definition": "Collection de recettes, de configurations et de patches regroupés par thème ou par BSP dans Yocto. Un layer d'ordre supérieur peut surcharger les choix d'un layer de base pour adapter la distribution."
+  },
+  {
+    "term": "Cross-compilation",
+    "category": "Build",
+    "definition": "Action de compiler un programme sur une machine (l'hôte) pour une autre architecture (la cible). Indispensable pour les cartes sans capacité de compilation intégrée : on assemble sur un PC puissant des binaires destinés à l'ARM."
+  },
+  {
+    "term": "Toolchain",
+    "category": "Outils",
+    "definition": "Ensemble des outils de compilation : compilateur (gcc ou clang), assembleur, linker, débogueur et bibliothèques. Une toolchain est dite croisée quand le préfixe désigne la cible, par exemple aarch64-linux-gnu-gcc."
+  },
+  {
+    "term": "Sysroot",
+    "category": "Build",
+    "definition": "Répertoire racine isolé contenant les bibliothèques et en-têtes de la cible, utilisé lors de la cross-compilation. Il garantit que le compilateur lie les bonnes versions de glibc ou de musl au lieu de celles de l'hôte."
+  },
+  {
+    "term": "SDK",
+    "category": "Outils",
+    "definition": "Software Development Kit : ensemble complet (toolchain croisée, sysroot, environnement) permettant de compiler des applications pour une cible embarquée depuis un PC. Yocto et Buildroot génèrent tous deux des SDKs reproductibles."
+  },
+  {
+    "term": "glibc",
+    "category": "Build",
+    "definition": "Bibliothèque C GNU, standard de fait sur la plupart des systèmes Linux. Complète et conforme à POSIX, elle est plus lourde en RAM qu'alternatives ; sur les racines embarquées serrées on lui préfère parfois musl."
+  },
+  {
+    "term": "musl",
+    "category": "Build",
+    "definition": "Bibliothèque C légère, rapide et volontairement conforme aux normes. Son petit encombrement mémoire et sa prévisibilité en font un choix apprécié pour les systèmes embarqués sous contrainte de ressources."
+  },
+  {
+    "term": "GPIO",
+    "category": "Matériel",
+    "definition": "General Purpose Input/Output : broche du processeur configurable en entrée ou en sortie, commandant un signal numérique haut ou bas. Elle pilote LED, boutons, relais et signaux de contrôle simples."
+  },
+  {
+    "term": "UART",
+    "category": "Matériel",
+    "definition": "Universal Asynchronous Receiver/Transmitter : liaison série point à point asynchrone entre deux équipements, très répandue pour la console de débogage, les GPS et les modems. Le débit se règle en bauds."
+  },
+  {
+    "term": "I2C",
+    "category": "Matériel",
+    "definition": "Inter-Integrated Circuit : bus série synchrone à deux fils (SDA pour les données, SCL pour l'horloge) permettant de connecter plusieurs esclaves sur une même ligne, chacun adressé par une adresse 7 bits. Excellent pour les capteurs."
+  },
+  {
+    "term": "SPI",
+    "category": "Matériel",
+    "definition": "Serial Peripheral Interface : bus série synchrone rapide, quatre fils minimum (SCLK, MOSI, MISO, CS). Un signal de sélection par esclave autorise des débits élevés, idéal pour écrans, mémoires flash et convertisseurs."
+  },
+  {
+    "term": "PWM",
+    "category": "Matériel",
+    "definition": "Pulse Width Modulation : technique consistant à générer un signal carré de rapport cyclique variable. Battement de LED, vitesse de moteur et simulation analogique en dépendent, sans consommation de sortie analogique."
+  },
+  {
+    "term": "ADC",
+    "category": "Matériel",
+    "definition": "Analog-to-Digital Converter : convertisseur qui numérise une tension continue en un mot binaire (par exemple 12 bits sur 0 à 3,3 V). Lecture de potentiomètres, de photorésistances et de capteurs analogiques."
+  },
+  {
+    "term": "Flash",
+    "category": "Stockage",
+    "definition": "Mémoire non volatile utilisée pour stocker le noyau, le rootfs et les données. On y accède via différentes interfaces : NOR par accès direct, NAND par blocs, et les mémoires utilisées avec d'autres contrôleurs."
+  },
+  {
+    "term": "eMMC",
+    "category": "Stockage",
+    "definition": "Embedded MultiMediaCard : mémoire flash donc le circuit de contrôle est intégré, soudée sur la carte. Interface standardisée, elle constitue le stockage principal de nombreuses cartes et ordinateurs monocarte."
+  },
+  {
+    "term": "BusyBox",
+    "category": "Outils",
+    "definition": "Une seule archive regroupant plus de 400 utilitaires Unix (sh, ls, grep, sed, init...). Il équipe pratiquement tous les rootfs embarqués compilés par Buildroot, réduisant drastiquement la taille du système."
+  },
+  {
+    "term": "Init",
+    "category": "Général",
+    "definition": "Premier processus lancé par le noyau (PID 1). Il prend en charge le démarrage des services et l'adoption des orphelins. Aujourd'hui c'est le plus souvent systemd, mais on trouve aussi BusyBox init et OpenRC."
+  },
+  {
+    "term": "Systemd",
+    "category": "Général",
+    "definition": "Suite d'init et gestionnaire de services devenue la référence sur les distributions Linux modernes. Il démarre les services en parallèle via des unités et supervise leur cycle de vie complet."
+  },
+  {
+    "term": "Journald",
+    "category": "Général",
+    "definition": "Le service de journalisation binaire de systemd. Il collecte les messages des services, du noyau et des journaux d'urgence, avec horodatage propre et aide à la recherche via journalctl."
+  },
+  {
+    "term": "Console série",
+    "category": "Commandes",
+    "definition": "Terminal accessible par une liaison série (UART), souvent la première façon d'interagir avec une carte embarquée. On s'y connecte avec minicom, screen, picocom ou un câble USB-UART à 115200 bauds."
+  },
+  {
+    "term": "Overlay",
+    "category": "Build",
+    "definition": "Mécanisme de chevauchement : un répertoire de construction vient recouvrir un autre sans le modifier (overlayfs). Dans Buildroot, les dossiers désignés comme overlay sont copiés par-dessus le rootfs produit."
+  },
+  {
+    "term": "NFS (root)",
+    "category": "Réseau",
+    "definition": "Network File System monté comme système de fichiers racine : la carte démarre depuis un répertoire exporté par un serveur. Cette technique découple le développement de la flash et accélère les itérations sur le rootfs."
+  }
+]
