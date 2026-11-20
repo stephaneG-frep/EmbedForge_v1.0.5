@@ -104,7 +104,11 @@ class _QuizCard extends StatelessWidget {
                     children: [
                       Pill(text: quizLevelLabel(quiz.level), color: color),
                       Pill(
-                        text: '${quiz.questions.length} questions',
+                        text:
+                            quiz.questions.length >
+                                QuizSessionScreen.questionsParPartie
+                            ? '${QuizSessionScreen.questionsParPartie} questions parmi ${quiz.questions.length}'
+                            : '${quiz.questions.length} questions',
                         color: color,
                       ),
                       if (result != null)

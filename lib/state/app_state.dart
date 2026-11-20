@@ -119,10 +119,12 @@ class AppState extends ChangeNotifier {
   // ---------------- quizzes ----------------
   Map<String, QuizScore> get quizResults => storage.quizResults;
 
+  /// Meilleur score aux quiz de niveau (les quiz de module, plus courts,
+  /// ne comptent pas pour le badge « Maître du quiz »).
   double get bestQuizRatio {
-    if (quizResults.isEmpty) return 0;
     double maxRatio = 0;
-    quizResults.forEach((_, s) {
+    quizResults.forEach((id, s) {
+      if (id.startsWith(Quiz.modulePrefix)) return;
       if (s.ratio > maxRatio) maxRatio = s.ratio;
     });
     return maxRatio;

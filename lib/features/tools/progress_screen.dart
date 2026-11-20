@@ -1,4 +1,3 @@
-import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -281,11 +280,7 @@ class ProgressScreen extends StatelessWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      state.repo.quizzes
-                              .where((q) => q.id == entry.key)
-                              .firstOrNull
-                              ?.title ??
-                          entry.key,
+                      state.repo.quizTitle(entry.key),
                       style: const TextStyle(fontSize: 12.5),
                     ),
                   ),

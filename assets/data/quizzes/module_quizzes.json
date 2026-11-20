@@ -1,0 +1,1180 @@
+[
+  {
+    "id": "mq_intro_linux",
+    "title": "Quiz — Découvrir le Linux embarqué",
+    "level": "beginner",
+    "course": "intro_linux",
+    "questions": [
+      {
+        "q": "Qu'est-ce qui caractérise le mieux un système embarqué ?",
+        "options": ["Un ordinateur dédié à une fonction précise, aux ressources limitées", "Un ordinateur très puissant", "Un PC portable", "Un serveur de données"],
+        "answer": 0,
+        "explanation": "Il remplit une tâche précise, souvent sans écran ni clavier, avec des contraintes de coût et d'énergie."
+      },
+      {
+        "q": "Dans quel ordre démarre un système Linux embarqué ?",
+        "options": ["Init, noyau, bootloader", "Applications, noyau, bootloader", "Bootloader, noyau, init", "Noyau, bootloader, init"],
+        "answer": 2,
+        "explanation": "Le bootloader charge le noyau, qui lance init, qui démarre les services."
+      },
+      {
+        "q": "Que fournit BusyBox ?",
+        "options": ["Des centaines de commandes simplifiées dans un seul petit programme", "Un bootloader", "Un noyau temps réel", "Une interface graphique"],
+        "answer": 0,
+        "explanation": "BusyBox remplace les outils classiques (ls, cp, sh…) sur les petits systèmes."
+      },
+      {
+        "q": "Quelle puce fait généralement tourner Linux ?",
+        "options": ["Une EEPROM", "Un capteur I2C", "Un microprocesseur Cortex-A avec MMU", "Un microcontrôleur Cortex-M"],
+        "answer": 2,
+        "explanation": "Linux a besoin d'une MMU et de mémoire externe, comme sur les Cortex-A."
+      },
+      {
+        "q": "Pour un capteur sur pile mesurant une valeur par minute, quel choix est le plus adapté ?",
+        "options": ["Un serveur cloud", "Un microcontrôleur avec RTOS ou bare metal", "Un PC industriel", "Linux complet"],
+        "answer": 1,
+        "explanation": "Un microcontrôleur consomme beaucoup moins et suffit à cette tâche simple."
+      }
+    ]
+  },
+  {
+    "id": "mq_linux_commands",
+    "title": "Quiz — Les commandes essentielles",
+    "level": "beginner",
+    "course": "linux_commands",
+    "questions": [
+      {
+        "q": "Que fait « cd - » ?",
+        "options": ["Retourne au dossier précédent", "Remonte au dossier parent", "Supprime le dossier", "Va à la racine"],
+        "answer": 0,
+        "explanation": "cd - revient au dossier dans lequel on se trouvait juste avant."
+      },
+      {
+        "q": "Quelle option permet à cp de copier un dossier entier ?",
+        "options": ["-v", "-a", "-r", "-f"],
+        "answer": 2,
+        "explanation": "-r (récursif) copie le dossier et tout son contenu."
+      },
+      {
+        "q": "Que fait le symbole | entre deux commandes ?",
+        "options": ["Il lance en arrière-plan", "Il sépare deux commandes indépendantes", "Il envoie la sortie de la première vers l'entrée de la seconde", "Il redirige vers un fichier"],
+        "answer": 2,
+        "explanation": "Le pipe permet d'enchaîner des outils simples : dmesg | grep usb."
+      },
+      {
+        "q": "Dans less, comment chercher un mot ?",
+        "options": ["Avec la touche s", "En tapant :find", "En tapant /mot puis Entrée", "Ctrl+F"],
+        "answer": 2,
+        "explanation": "/mot cherche vers le bas, n passe à l'occurrence suivante."
+      },
+      {
+        "q": "Quelle section du manuel décrit les fonctions de la bibliothèque C ?",
+        "options": ["2", "3", "1", "5"],
+        "answer": 1,
+        "explanation": "Section 1 : commandes, 2 : appels système, 3 : fonctions de bibliothèque, 5 : formats de fichiers."
+      }
+    ]
+  },
+  {
+    "id": "mq_bash_intro",
+    "title": "Quiz — Bash : premiers scripts",
+    "level": "beginner",
+    "course": "bash_intro",
+    "questions": [
+      {
+        "q": "À quoi sert la ligne #!/bin/bash en tête de script ?",
+        "options": ["Elle indique l'interpréteur qui doit lire le script", "Elle rend le script exécutable", "Elle importe une bibliothèque", "C'est un commentaire sans effet"],
+        "answer": 0,
+        "explanation": "Le shebang désigne le programme qui exécute le fichier."
+      },
+      {
+        "q": "Quelle affectation est correcte en Bash ?",
+        "options": ["NOM=capteur", "set NOM capteur", "NOM = capteur", "$NOM=capteur"],
+        "answer": 0,
+        "explanation": "Pas d'espace autour du signe égal, et pas de $ à l'affectation."
+      },
+      {
+        "q": "Quelle différence entre '$VAR' et \"$VAR\" ?",
+        "options": ["Aucune", "Les simples sont plus rapides", "Les guillemets simples affichent $VAR tel quel, les doubles l'interprètent", "Les doubles sont interdits"],
+        "answer": 2,
+        "explanation": "Seuls les guillemets doubles laissent le shell remplacer la variable."
+      },
+      {
+        "q": "Quel test vérifie qu'un fichier existe ?",
+        "options": ["[ -x fichier ]", "[ -n fichier ]", "[ -e fichier ]", "[ -z fichier ]"],
+        "answer": 2,
+        "explanation": "-e teste l'existence ; -f un fichier ordinaire, -d un dossier."
+      },
+      {
+        "q": "Pourquoi ajouter sleep dans une boucle while true de surveillance ?",
+        "options": ["Pour respecter la syntaxe", "Pour afficher l'heure", "Pour que la boucle s'arrête", "Pour ne pas consommer 100 % d'un cœur"],
+        "answer": 3,
+        "explanation": "Sans pause, la boucle tourne en permanence et occupe tout un cœur."
+      }
+    ]
+  },
+  {
+    "id": "mq_fichiers_permissions",
+    "title": "Quiz — Fichiers et permissions",
+    "level": "beginner",
+    "course": "fichiers_permissions",
+    "questions": [
+      {
+        "q": "Quel dossier contient les fichiers de configuration du système ?",
+        "options": ["/etc", "/var", "/usr", "/opt"],
+        "answer": 0,
+        "explanation": "/etc regroupe la configuration ; /var les données variables comme les journaux."
+      },
+      {
+        "q": "Que signifie le droit x sur un dossier ?",
+        "options": ["Exécuter tous ses fichiers", "Pouvoir y entrer et accéder à son contenu", "Le rendre caché", "Pouvoir le supprimer"],
+        "answer": 1,
+        "explanation": "Sur un dossier, x autorise la traversée ; r autorise la liste du contenu."
+      },
+      {
+        "q": "Quels droits conviennent à une clé SSH privée ?",
+        "options": ["755", "600", "644", "777"],
+        "answer": 1,
+        "explanation": "600 : lecture et écriture pour le propriétaire seul ; ssh refuse une clé trop ouverte."
+      },
+      {
+        "q": "Que fait « ln -s /opt/app-v2 /opt/app » ?",
+        "options": ["Supprime /opt/app", "Crée un lien symbolique /opt/app vers /opt/app-v2", "Renomme app-v2", "Copie app-v2 dans app"],
+        "answer": 1,
+        "explanation": "Le lien pointe vers la version active ; on peut le basculer pour changer de version."
+      },
+      {
+        "q": "Pourquoi éviter chmod 777 ?",
+        "options": ["Cela ne fonctionne qu'en root", "Cela supprime le fichier", "Cela donne tous les droits à tout le monde", "C'est une syntaxe invalide"],
+        "answer": 2,
+        "explanation": "N'importe quel utilisateur ou programme pourrait modifier le fichier."
+      }
+    ]
+  },
+  {
+    "id": "mq_systeme_processus",
+    "title": "Quiz — Processus et utilisateurs",
+    "level": "beginner",
+    "course": "systeme_processus",
+    "questions": [
+      {
+        "q": "Que signifie l'état Z d'un processus dans ps ?",
+        "options": ["Zombie : terminé mais non récupéré par son parent", "En cours d'exécution", "Stoppé par Ctrl+Z", "Endormi"],
+        "answer": 0,
+        "explanation": "Le processus est fini mais son parent n'a pas encore lu son code de sortie."
+      },
+      {
+        "q": "Quel signal est envoyé par Ctrl+C ?",
+        "options": ["TERM", "HUP", "KILL", "INT"],
+        "answer": 3,
+        "explanation": "Ctrl+C envoie SIGINT au programme au premier plan."
+      },
+      {
+        "q": "Pourquoi faire tourner un service sous un compte dédié plutôt qu'en root ?",
+        "options": ["Pour économiser la mémoire", "Pour limiter les dégâts s'il est compromis", "Parce que root ne peut pas lancer de services", "Pour qu'il démarre plus vite"],
+        "answer": 1,
+        "explanation": "Le service n'obtient que les droits strictement nécessaires."
+      },
+      {
+        "q": "Quelle commande donne à un utilisateur l'accès aux ports série ?",
+        "options": ["chown root /dev/ttyUSB0", "chmod 777 /dev/ttyUSB0", "sudo su", "usermod -aG dialout utilisateur"],
+        "answer": 3,
+        "explanation": "Les ports série appartiennent au groupe dialout."
+      },
+      {
+        "q": "Avec quel outil faut-il modifier /etc/sudoers ?",
+        "options": ["visudo", "echo >>", "chmod", "nano directement"],
+        "answer": 0,
+        "explanation": "visudo vérifie la syntaxe et évite de bloquer sudo pour tout le monde."
+      }
+    ]
+  },
+  {
+    "id": "mq_bash_advanced",
+    "title": "Quiz — Bash avancé et scripts pro",
+    "level": "beginner",
+    "course": "bash_advanced",
+    "questions": [
+      {
+        "q": "À quoi sert le mot-clé local dans une fonction Bash ?",
+        "options": ["Limiter une variable à la fonction", "Accélérer la fonction", "Lire un fichier local", "Rendre la fonction privée"],
+        "answer": 0,
+        "explanation": "Sans local, une variable modifiée dans la fonction écrase celle du script."
+      },
+      {
+        "q": "Comment transmettre tous les arguments intacts à une autre commande ?",
+        "options": ["$*", "\"$@\"", "$0", "$#"],
+        "answer": 1,
+        "explanation": "\"$@\" entre guillemets conserve chaque argument, même avec des espaces."
+      },
+      {
+        "q": "Que fait « set -e » dans un script ?",
+        "options": ["Exporte toutes les variables", "Active les couleurs", "Arrête le script à la première commande en erreur", "Affiche chaque commande"],
+        "answer": 2,
+        "explanation": "Le script ne continue pas dans un état incohérent après une erreur."
+      },
+      {
+        "q": "À quoi sert « trap nettoyer EXIT » ?",
+        "options": ["À intercepter Ctrl+Z uniquement", "À relancer le script", "À appeler la fonction nettoyer à toute sortie du script", "À désactiver la sortie"],
+        "answer": 2,
+        "explanation": "La fonction s'exécute en fin normale, en cas d'erreur ou d'interruption."
+      },
+      {
+        "q": "Quel outil analyse un script et signale les erreurs classiques ?",
+        "options": ["strace", "shellcheck", "gcc", "make"],
+        "answer": 1,
+        "explanation": "ShellCheck repère variables non protégées, tests mal écrits, etc."
+      }
+    ]
+  },
+  {
+    "id": "mq_c_basics",
+    "title": "Quiz — Programmer en C : bases",
+    "level": "beginner",
+    "course": "c_basics",
+    "questions": [
+      {
+        "q": "Quelle étape de la compilation traite les #include et #define ?",
+        "options": ["Le chargeur", "L'assembleur", "L'éditeur de liens", "Le préprocesseur"],
+        "answer": 3,
+        "explanation": "Le préprocesseur remplace les inclusions et les macros avant la compilation."
+      },
+      {
+        "q": "Que se passe-t-il si un uint8_t valant 255 est incrémenté ?",
+        "options": ["Il reste à 255", "Il repart à 0", "Le programme plante", "Il vaut 256"],
+        "answer": 1,
+        "explanation": "Un entier non signé qui déborde repart à zéro."
+      },
+      {
+        "q": "Que fait « if (x = 5) » en C ?",
+        "options": ["Affecte 5 à x et est toujours vrai", "Ne fait rien", "Compare x à 5", "Provoque une erreur de compilation"],
+        "answer": 0,
+        "explanation": "= est une affectation ; la comparaison s'écrit ==. -Wall signale ce piège."
+      },
+      {
+        "q": "Quel est le rôle du mot-clé break dans un switch ?",
+        "options": ["Il recommence le switch", "Il empêche de continuer dans le case suivant", "Il est obligatoire avant default", "Il quitte le programme"],
+        "answer": 1,
+        "explanation": "Sans break, l'exécution se poursuit dans le case suivant."
+      },
+      {
+        "q": "Que contient habituellement un fichier .h ?",
+        "options": ["Le programme principal", "Le code compilé", "Les prototypes des fonctions à partager", "Les données de test"],
+        "answer": 2,
+        "explanation": "Les autres fichiers incluent le .h pour connaître les fonctions définies dans le .c."
+      }
+    ]
+  },
+  {
+    "id": "mq_c_advanced",
+    "title": "Quiz — C avancé : pointeurs et mémoire",
+    "level": "intermediate",
+    "course": "c_advanced",
+    "questions": [
+      {
+        "q": "Que vaut x après « int x = 5; int *p = &x; *p = 8; » ?",
+        "options": ["8", "Indéfini", "5", "L'adresse de x"],
+        "answer": 0,
+        "explanation": "p pointe sur x : modifier *p modifie x."
+      },
+      {
+        "q": "Combien de caractères utiles peut contenir char nom[8] ?",
+        "options": ["6", "8", "9", "7"],
+        "answer": 3,
+        "explanation": "Une case est réservée au caractère de fin '\\0'."
+      },
+      {
+        "q": "Pourquoi éviter « tab = realloc(tab, n) » ?",
+        "options": ["realloc n'existe pas", "Cela libère tab", "Si realloc échoue, l'ancien bloc est perdu et fuit", "C'est plus lent"],
+        "answer": 2,
+        "explanation": "realloc renvoie NULL en cas d'échec : on perd l'adresse de l'ancien bloc."
+      },
+      {
+        "q": "Où sont stockées les variables locales d'une fonction ?",
+        "options": ["Dans la pile", "Sur le disque", "Dans la section .data", "Dans le tas"],
+        "answer": 0,
+        "explanation": "La pile contient les variables locales, libérées à la sortie de la fonction."
+      },
+      {
+        "q": "Que détecte l'option -fsanitize=address ?",
+        "options": ["Les fautes d'orthographe", "Les erreurs de syntaxe", "Les variables non utilisées uniquement", "Les débordements de tableau et accès mémoire invalides"],
+        "answer": 3,
+        "explanation": "AddressSanitizer arrête le programme à la première erreur mémoire avec la ligne fautive."
+      }
+    ]
+  },
+  {
+    "id": "mq_systemd_services",
+    "title": "Quiz — Systemd et les services",
+    "level": "intermediate",
+    "course": "systemd_services",
+    "questions": [
+      {
+        "q": "Quelle différence entre systemctl start et systemctl enable ?",
+        "options": ["start redémarre la carte", "Aucune", "enable lance maintenant, start au démarrage", "start lance maintenant, enable active au démarrage"],
+        "answer": 3,
+        "explanation": "enable --now fait les deux à la fois."
+      },
+      {
+        "q": "Quel type d'unité remplace une tâche cron ?",
+        "options": [".service", ".timer", ".target", ".mount"],
+        "answer": 1,
+        "explanation": "Un timer déclenche un service selon un calendrier ou un délai."
+      },
+      {
+        "q": "Que fait ProtectSystem=strict dans un service ?",
+        "options": ["Interdit le réseau", "Empêche le redémarrage", "Chiffre les fichiers", "Monte le système en lecture seule pour ce service"],
+        "answer": 3,
+        "explanation": "Seuls les chemins listés dans ReadWritePaths restent modifiables."
+      },
+      {
+        "q": "Quelle commande affiche le fichier d'unité complet d'un service ?",
+        "options": ["journalctl -u", "systemctl cat", "systemctl show", "systemctl list-units"],
+        "answer": 1,
+        "explanation": "systemctl cat affiche le fichier et ses surcharges éventuelles."
+      },
+      {
+        "q": "Dans [Install], que signifie WantedBy=multi-user.target ?",
+        "options": ["Le service démarre avec le système multi-utilisateur quand il est activé", "Le service est désactivé", "Le service est réservé à plusieurs utilisateurs", "Le service démarre après la connexion graphique"],
+        "answer": 0,
+        "explanation": "systemctl enable crée le lien qui rattache le service à cette cible."
+      }
+    ]
+  },
+  {
+    "id": "mq_syslog_journaux",
+    "title": "Quiz — Journaux et journalctl",
+    "level": "intermediate",
+    "course": "syslog_journaux",
+    "questions": [
+      {
+        "q": "Où est stocké le journal quand il est persistant ?",
+        "options": ["/run/log/journal", "/var/log/journal", "/tmp/journal", "/etc/journal"],
+        "answer": 1,
+        "explanation": "Sinon il reste en RAM dans /run/log/journal et disparaît au redémarrage."
+      },
+      {
+        "q": "Quelle option suit le journal en direct ?",
+        "options": ["-r", "-k", "-e", "-f"],
+        "answer": 3,
+        "explanation": "journalctl -f affiche les nouveaux messages au fil de l'eau."
+      },
+      {
+        "q": "Quel numéro de priorité correspond à warning ?",
+        "options": ["4", "2", "6", "3"],
+        "answer": 0,
+        "explanation": "0 emerg … 3 err, 4 warning, 5 notice, 6 info, 7 debug."
+      },
+      {
+        "q": "Quelle commande écrit un message dans le journal depuis un script ?",
+        "options": ["echo", "logger", "tee", "printf"],
+        "answer": 1,
+        "explanation": "logger -t monscript \"message\" ajoute une entrée au journal."
+      },
+      {
+        "q": "Que signale « Out of memory: Killed process » ?",
+        "options": ["Le noyau a tué un processus faute de mémoire", "Une erreur de syntaxe", "Une coupure réseau", "Un disque plein"],
+        "answer": 0,
+        "explanation": "L'OOM killer intervient quand la mémoire est épuisée, souvent à cause d'une fuite."
+      }
+    ]
+  },
+  {
+    "id": "mq_ssh_administration",
+    "title": "Quiz — Administration à distance SSH",
+    "level": "intermediate",
+    "course": "ssh_administration",
+    "questions": [
+      {
+        "q": "Que signifie l'avertissement « REMOTE HOST IDENTIFICATION HAS CHANGED » ?",
+        "options": ["Le réseau est lent", "Le port est fermé", "La clé de la machine distante a changé depuis la dernière connexion", "Le mot de passe a expiré"],
+        "answer": 2,
+        "explanation": "Machine réinstallée ou tentative d'usurpation : il faut vérifier avant d'accepter."
+      },
+      {
+        "q": "Quelle clé doit rester secrète ?",
+        "options": ["id_ed25519", "known_hosts", "id_ed25519.pub", "authorized_keys"],
+        "answer": 0,
+        "explanation": "La clé privée ne doit jamais quitter votre poste ; la .pub peut être copiée partout."
+      },
+      {
+        "q": "Que fait « ssh -L 8080:localhost:80 pi@carte » ?",
+        "options": ["Crée un tunnel : le port 8080 local mène au port 80 de la carte", "Copie un fichier", "Bloque le port 80", "Change le port SSH"],
+        "answer": 0,
+        "explanation": "On accède à un service web de la carte via http://localhost:8080."
+      },
+      {
+        "q": "Que faut-il faire avant de désactiver PasswordAuthentication ?",
+        "options": ["Vérifier dans une autre session que la connexion par clé fonctionne", "Redémarrer la carte", "Changer le port", "Supprimer known_hosts"],
+        "answer": 0,
+        "explanation": "Sinon on risque de s'enfermer dehors."
+      },
+      {
+        "q": "Quelle commande vérifie la syntaxe de la configuration du serveur SSH ?",
+        "options": ["ssh-keygen -l", "ssh -v", "sshd -t", "systemctl status ssh"],
+        "answer": 2,
+        "explanation": "sshd -t ne renvoie rien si la configuration est valide."
+      }
+    ]
+  },
+  {
+    "id": "mq_packages_apt",
+    "title": "Quiz — Gérer les paquets apt",
+    "level": "intermediate",
+    "course": "packages_apt",
+    "questions": [
+      {
+        "q": "Que fait apt update ?",
+        "options": ["Télécharge la liste à jour des paquets disponibles", "Supprime les paquets inutiles", "Met à jour le noyau", "Met à jour tous les paquets"],
+        "answer": 0,
+        "explanation": "Il rafraîchit l'index ; c'est apt upgrade qui installe les nouvelles versions."
+      },
+      {
+        "q": "Quelle différence entre apt remove et apt purge ?",
+        "options": ["Aucune", "remove supprime aussi la configuration", "purge supprime aussi les fichiers de configuration", "purge réinstalle le paquet"],
+        "answer": 2,
+        "explanation": "remove garde la configuration, purge l'efface."
+      },
+      {
+        "q": "À quoi sert apt-mark hold ?",
+        "options": ["Empêcher la mise à jour d'un paquet", "Marquer un paquet comme favori", "Supprimer un paquet", "Accélérer apt"],
+        "answer": 0,
+        "explanation": "Le paquet reste sur sa version jusqu'à apt-mark unhold."
+      },
+      {
+        "q": "Quelle commande répare une installation interrompue ?",
+        "options": ["apt clean", "apt search", "dpkg -l", "dpkg --configure -a"],
+        "answer": 3,
+        "explanation": "Elle termine les configurations restées en suspens."
+      },
+      {
+        "q": "Quel type de paquet faut-il pour compiler avec une bibliothèque ?",
+        "options": ["Aucun", "Le paquet -doc", "Le paquet -dev", "Le paquet -dbg"],
+        "answer": 2,
+        "explanation": "Les paquets -dev fournissent les en-têtes et bibliothèques de compilation."
+      }
+    ]
+  },
+  {
+    "id": "mq_git_versioning",
+    "title": "Quiz — Git pour le versioning",
+    "level": "intermediate",
+    "course": "git_versioning",
+    "questions": [
+      {
+        "q": "À quoi sert git add avant git commit ?",
+        "options": ["À préparer les modifications qui iront dans le prochain commit", "À créer une branche", "À envoyer sur le serveur", "À annuler une modification"],
+        "answer": 0,
+        "explanation": "L'index permet de choisir précisément le contenu du commit."
+      },
+      {
+        "q": "Quel fichier liste les fichiers que Git doit ignorer ?",
+        "options": [".gitconfig", ".gitkeep", ".gitignore", ".gitmodules"],
+        "answer": 2,
+        "explanation": ".gitignore exclut par exemple build/ et les fichiers .o."
+      },
+      {
+        "q": "Qu'est-ce qu'un conflit de fusion ?",
+        "options": ["Un commit sans message", "Une branche supprimée", "Un dépôt corrompu", "Deux branches ont modifié les mêmes lignes"],
+        "answer": 3,
+        "explanation": "Git demande alors de choisir à la main la bonne version."
+      },
+      {
+        "q": "Quelle différence entre git fetch et git pull ?",
+        "options": ["pull télécharge sans intégrer", "Aucune", "fetch supprime les branches", "fetch télécharge sans intégrer, pull télécharge et intègre"],
+        "answer": 3,
+        "explanation": "pull = fetch + fusion (ou rebase) dans la branche courante."
+      },
+      {
+        "q": "Pourquoi éviter git push --force sur main ?",
+        "options": ["Il supprime le dépôt", "Il ne fonctionne pas", "C'est lent", "Il réécrit l'historique partagé et peut effacer le travail des autres"],
+        "answer": 3,
+        "explanation": "Préférez --force-with-lease, et seulement sur vos propres branches."
+      }
+    ]
+  },
+  {
+    "id": "mq_python_sysfs",
+    "title": "Quiz — Contrôler le matériel via sysfs",
+    "level": "advanced",
+    "course": "python_sysfs",
+    "questions": [
+      {
+        "q": "Quelle est la règle de contenu d'un fichier d'attribut sysfs ?",
+        "options": ["Un tableau JSON", "Un fichier vide", "Une seule valeur, au format texte", "Plusieurs valeurs en binaire"],
+        "answer": 2,
+        "explanation": "Un attribut = un fichier = une valeur texte."
+      },
+      {
+        "q": "Dans quelle unité est la fréquence de scaling_cur_freq ?",
+        "options": ["GHz", "Hz", "kHz", "MHz"],
+        "answer": 2,
+        "explanation": "La valeur est en kilohertz : 1500000 = 1,5 GHz."
+      },
+      {
+        "q": "Quel déclencheur fait clignoter un voyant périodiquement dans le noyau ?",
+        "options": ["mmc0", "none", "default-on", "timer"],
+        "answer": 3,
+        "explanation": "Avec timer, on règle delay_on et delay_off sans écrire de boucle."
+      },
+      {
+        "q": "Les écritures dans sysfs survivent-elles au redémarrage ?",
+        "options": ["Seulement en root", "Seulement pour les voyants", "Oui, toujours", "Non, il faut une règle udev, un service ou le devicetree"],
+        "answer": 3,
+        "explanation": "sysfs reflète l'état courant du noyau, réinitialisé à chaque démarrage."
+      },
+      {
+        "q": "Pourquoi remettre un voyant à 0 dans un bloc finally en Python ?",
+        "options": ["Pour laisser le matériel dans un état sûr quelle que soit la sortie", "Parce que Python l'exige", "Pour accélérer le script", "Pour libérer la mémoire"],
+        "answer": 0,
+        "explanation": "finally s'exécute même après une exception ou Ctrl+C."
+      }
+    ]
+  },
+  {
+    "id": "mq_gpio",
+    "title": "Quiz — GPIO : allumer des LEDs",
+    "level": "advanced",
+    "course": "gpio",
+    "questions": [
+      {
+        "q": "Quelle tension utilisent les GPIO d'un Raspberry Pi ?",
+        "options": ["5 V", "12 V", "3,3 V", "1,2 V"],
+        "answer": 2,
+        "explanation": "Elles ne tolèrent pas le 5 V : il faut adapter les niveaux."
+      },
+      {
+        "q": "Que signifie une ligne marquée [used] dans gpioinfo ?",
+        "options": ["Elle est libre", "Elle est en entrée", "Elle est déjà réservée par un pilote ou un programme", "Elle est en panne"],
+        "answer": 2,
+        "explanation": "La demander à nouveau échouera avec « Device or resource busy »."
+      },
+      {
+        "q": "Pourquoi une LED a-t-elle besoin d'une résistance en série ?",
+        "options": ["Pour limiter le courant", "Pour la faire clignoter", "Pour changer sa couleur", "Pour inverser la polarité"],
+        "answer": 0,
+        "explanation": "Sans résistance, le courant détruirait la LED ou la broche."
+      },
+      {
+        "q": "Qu'est-ce que le rebond d'un bouton ?",
+        "options": ["Un bouton qui revient en place", "Plusieurs ouvertures et fermetures parasites en quelques millisecondes", "Un appui trop long", "Un défaut de couleur"],
+        "answer": 1,
+        "explanation": "On le filtre avec un délai d'anti-rebond (debounce)."
+      },
+      {
+        "q": "Quel avantage a l'attente d'événements de front sur le polling ?",
+        "options": ["Le programme dort et ne rate pas les appuis brefs", "Elle consomme plus de CPU", "Elle fonctionne sans noyau", "Elle est plus simple à câbler"],
+        "answer": 0,
+        "explanation": "Le noyau réveille le programme à chaque front, avec un horodatage précis."
+      }
+    ]
+  },
+  {
+    "id": "mq_uart",
+    "title": "Quiz — UART : la communication série",
+    "level": "advanced",
+    "course": "uart",
+    "questions": [
+      {
+        "q": "Combien d'octets utiles par seconde à 115200 bauds en 8N1 ?",
+        "options": ["9 600", "11 520", "14 400", "115 200"],
+        "answer": 1,
+        "explanation": "10 bits par octet : 115200 / 10 = 11 520 octets/s."
+      },
+      {
+        "q": "Pourquoi ne pas relier un port RS-232 directement aux broches UART d'un SoC ?",
+        "options": ["Ses tensions de ±12 V détruiraient la carte", "Les connecteurs sont différents", "RS-232 n'a pas de TX", "RS-232 est plus lent"],
+        "answer": 0,
+        "explanation": "Il faut un adaptateur TTL 3,3 V."
+      },
+      {
+        "q": "Quel groupe donne accès aux ports série sur Debian ?",
+        "options": ["serial", "tty", "uucp uniquement", "dialout"],
+        "answer": 3,
+        "explanation": "On ajoute l'utilisateur au groupe dialout."
+      },
+      {
+        "q": "Pourquoi indiquer un timeout à l'ouverture d'un port avec pyserial ?",
+        "options": ["Pour accélérer la vitesse", "C'est obligatoire", "Pour qu'une lecture ne bloque pas indéfiniment", "Pour activer la parité"],
+        "answer": 2,
+        "explanation": "Sans timeout, readline attend sans fin si l'appareil ne répond pas."
+      },
+      {
+        "q": "Quel paramètre du noyau désigne la console série ?",
+        "options": ["init=", "root=", "console=", "quiet"],
+        "answer": 2,
+        "explanation": "Par exemple console=ttyS0,115200."
+      }
+    ]
+  },
+  {
+    "id": "mq_i2c",
+    "title": "Quiz — I2C : capteurs et bus",
+    "level": "advanced",
+    "course": "i2c",
+    "questions": [
+      {
+        "q": "Pourquoi un bus I2C a-t-il besoin de résistances de pull-up ?",
+        "options": ["Pour alimenter les capteurs", "Pour limiter la vitesse", "Pour filtrer le bruit uniquement", "Parce que les sorties sont en drain ouvert et ne peuvent que tirer à 0"],
+        "answer": 3,
+        "explanation": "Les pull-up ramènent les lignes à 1 au repos."
+      },
+      {
+        "q": "Que signifie « -- » dans la grille d'i2cdetect ?",
+        "options": ["Adresse prise par un pilote", "Périphérique en veille", "Aucun périphérique n'a répondu", "Erreur de bus"],
+        "answer": 2,
+        "explanation": "Seules les adresses qui répondent affichent un nombre."
+      },
+      {
+        "q": "Pourquoi faut-il souvent permuter les octets après read_word_data ?",
+        "options": ["Pour chiffrer la valeur", "Pour convertir en Fahrenheit", "SMBus renvoie l'octet faible en premier alors que le capteur envoie l'octet fort en premier", "Ce n'est jamais nécessaire"],
+        "answer": 2,
+        "explanation": "Il faut remettre l'octet de poids fort devant avant d'interpréter la valeur."
+      },
+      {
+        "q": "Comment déclarer un capteur I2C de façon permanente ?",
+        "options": ["Dans le devicetree", "Avec new_device", "Avec i2cset", "Avec un script au démarrage uniquement"],
+        "answer": 0,
+        "explanation": "new_device est temporaire ; le devicetree est lu à chaque démarrage."
+      },
+      {
+        "q": "Comment obtenir la valeur réelle d'un capteur IIO ?",
+        "options": ["raw seul", "raw / 1000", "raw × scale (+ offset éventuel)", "scale seul"],
+        "answer": 2,
+        "explanation": "Les attributs scale et offset convertissent la valeur brute."
+      }
+    ]
+  },
+  {
+    "id": "mq_spi",
+    "title": "Quiz — SPI : communication rapide",
+    "level": "advanced",
+    "course": "spi",
+    "questions": [
+      {
+        "q": "Que signifie que SPI est full-duplex ?",
+        "options": ["Il n'a pas d'horloge", "Il fonctionne en 5 V", "Le maître envoie et reçoit un bit à chaque coup d'horloge", "Il utilise deux bus"],
+        "answer": 2,
+        "explanation": "MOSI et MISO transmettent simultanément."
+      },
+      {
+        "q": "Que désignent X et Y dans /dev/spidevX.Y ?",
+        "options": ["Version et révision", "Vitesse et mode", "Bus SPI et ligne Chip Select", "Adresse et registre"],
+        "answer": 2,
+        "explanation": "X est le contrôleur, Y la ligne CS utilisée."
+      },
+      {
+        "q": "Quel test valide un contrôleur SPI sans composant ?",
+        "options": ["Relier MISO à la masse", "Relier MOSI à MISO (bouclage)", "Relier SCLK à CS", "Débrancher CS"],
+        "answer": 1,
+        "explanation": "Les octets envoyés doivent revenir identiques."
+      },
+      {
+        "q": "Pourquoi choisir SPI pour un écran couleur ?",
+        "options": ["Il est obligatoire pour les écrans", "Il utilise moins de fils", "Il adresse les périphériques par numéro", "Son débit élevé est nécessaire pour rafraîchir l'image"],
+        "answer": 3,
+        "explanation": "Un écran demande des dizaines de Mbit/s, hors de portée d'I2C."
+      },
+      {
+        "q": "Quel outil montre les signaux SCLK, MOSI, MISO et CS réellement échangés ?",
+        "options": ["Un multimètre", "Une alimentation", "Un analyseur logique", "Un fer à souder"],
+        "answer": 2,
+        "explanation": "Il décode les octets et révèle les problèmes de mode ou de timing."
+      }
+    ]
+  },
+  {
+    "id": "mq_cpu_architectures",
+    "title": "Quiz — Architectures ARM et processeurs",
+    "level": "advanced",
+    "course": "cpu_architectures",
+    "questions": [
+      {
+        "q": "Que signifie qu'ARM est une architecture load/store ?",
+        "options": ["Elle charge le système plus vite", "Elle ne gère pas la mémoire", "Les calculs se font entre registres, la mémoire n'est accédée que par chargement et rangement", "Elle n'a pas de registres"],
+        "answer": 2,
+        "explanation": "LDR charge, STR range ; les opérations travaillent sur les registres."
+      },
+      {
+        "q": "Que renvoie uname -m sur un Raspberry Pi 64 bits ?",
+        "options": ["x86_64", "aarch64", "riscv64", "armv7l"],
+        "answer": 1,
+        "explanation": "aarch64 désigne le mode ARM 64 bits."
+      },
+      {
+        "q": "Comment 0x12345678 est-il rangé en mémoire sur un ARM little-endian ?",
+        "options": ["21 43 65 87", "78 56 34 12", "12 34 56 78", "56 78 12 34"],
+        "answer": 1,
+        "explanation": "L'octet de poids faible est à l'adresse la plus basse."
+      },
+      {
+        "q": "Dans quel registre AArch64 une fonction renvoie-t-elle un entier ?",
+        "options": ["X30", "SP", "X8", "X0"],
+        "answer": 3,
+        "explanation": "La convention AAPCS place le résultat dans X0 (W0 pour 32 bits)."
+      },
+      {
+        "q": "Que signifie le « C » dans RV64GC ?",
+        "options": ["Le mode compatible ARM", "Le chiffrement", "Les instructions compressées 16 bits", "Le cache"],
+        "answer": 2,
+        "explanation": "L'extension C réduit la taille du code."
+      }
+    ]
+  },
+  {
+    "id": "mq_cross_compilation",
+    "title": "Quiz — La cross-compilation",
+    "level": "advanced",
+    "course": "cross_compilation",
+    "questions": [
+      {
+        "q": "Pourquoi cross-compiler pour une carte embarquée ?",
+        "options": ["Parce que la carte n'a pas de processeur", "Pour éviter les licences", "Pour obtenir un code plus rapide", "Parce que compiler sur la carte est lent ou impossible faute de ressources"],
+        "answer": 3,
+        "explanation": "On compile sur un PC puissant pour l'architecture de la cible."
+      },
+      {
+        "q": "Qu'est-ce que le sysroot ?",
+        "options": ["Le dossier du compilateur", "Le dossier des en-têtes et bibliothèques du système cible", "Le dossier personnel de root", "La racine de la carte SD"],
+        "answer": 1,
+        "explanation": "Le cross-compilateur s'y réfère à la place des fichiers du PC."
+      },
+      {
+        "q": "Que signifie l'erreur « GLIBC_2.34 not found » sur la cible ?",
+        "options": ["Le binaire est corrompu", "Il manque le noyau", "Il a été lié à une glibc plus récente que celle de la cible", "Le binaire est pour x86"],
+        "answer": 2,
+        "explanation": "Utilisez une toolchain dont la glibc n'est pas plus récente, ou liez en statique."
+      },
+      {
+        "q": "Que contient habituellement la variable CROSS_COMPILE ?",
+        "options": ["Le préfixe de la toolchain, par exemple aarch64-linux-gnu-", "Le nombre de cœurs", "Le chemin des sources", "L'adresse de la carte"],
+        "answer": 0,
+        "explanation": "Il est collé devant gcc, ld, objcopy…"
+      },
+      {
+        "q": "À quoi sert qemu-aarch64 sur un PC ?",
+        "options": ["À se connecter en SSH", "À flasher la carte", "À compiler le noyau", "À exécuter un binaire ARM en émulation pour le tester"],
+        "answer": 3,
+        "explanation": "QEMU utilisateur traduit les instructions ARM sans carte physique."
+      }
+    ]
+  },
+  {
+    "id": "mq_kernel_linux",
+    "title": "Quiz — Le noyau Linux en action",
+    "level": "expert",
+    "course": "kernel_linux",
+    "questions": [
+      {
+        "q": "Comment une application demande-t-elle un service au noyau ?",
+        "options": ["Par une variable d'environnement", "Par un fichier .ko", "Par un appel système", "Par le bootloader"],
+        "answer": 2,
+        "explanation": "open, read, write… sont des appels système."
+      },
+      {
+        "q": "Quel outil montre les appels système d'un programme ?",
+        "options": ["gdb", "lsmod", "make", "strace"],
+        "answer": 3,
+        "explanation": "strace affiche chaque appel, ses arguments et son résultat."
+      },
+      {
+        "q": "Pourquoi un pilote nécessaire au montage de la racine doit-il être en =y ?",
+        "options": ["Parce que les modules sont sur la racine, pas encore montée", "Pour économiser la mémoire", "Pour être plus rapide", "Parce que =m n'existe pas pour les pilotes"],
+        "answer": 0,
+        "explanation": "Sinon le noyau ne peut pas monter la racine pour charger le module."
+      },
+      {
+        "q": "Pourquoi utiliser INSTALL_MOD_PATH en cross-compilation ?",
+        "options": ["Pour ne pas installer les modules ARM dans le système du PC", "Pour signer les modules", "C'est obligatoire pour make", "Pour accélérer la compilation"],
+        "answer": 0,
+        "explanation": "Les modules vont dans un dossier destiné à la cible."
+      },
+      {
+        "q": "Quelle commande recalcule les dépendances des modules ?",
+        "options": ["insmod", "depmod -a", "lsmod", "modinfo"],
+        "answer": 1,
+        "explanation": "depmod met à jour la table utilisée par modprobe."
+      }
+    ]
+  },
+  {
+    "id": "mq_linux_drivers",
+    "title": "Quiz — Écrire un driver simple",
+    "level": "expert",
+    "course": "linux_drivers",
+    "questions": [
+      {
+        "q": "Quelle lettre de ls -l identifie un périphérique caractère ?",
+        "options": ["l", "b", "d", "c"],
+        "answer": 3,
+        "explanation": "c pour caractère, b pour bloc."
+      },
+      {
+        "q": "Quand le noyau appelle-t-il la fonction probe d'un pilote ?",
+        "options": ["Au déchargement", "Quand un périphérique correspondant est trouvé sur son bus", "Au chargement du module seulement", "À chaque lecture"],
+        "answer": 1,
+        "explanation": "Le modèle bus / périphérique / pilote associe les deux et appelle probe."
+      },
+      {
+        "q": "Comment une fonction d'init de module signale-t-elle une erreur ?",
+        "options": ["En affichant un message", "En appelant exit()", "En renvoyant 1", "En renvoyant un code d'erreur négatif, comme -EINVAL"],
+        "answer": 3,
+        "explanation": "Le chargement est alors annulé."
+      },
+      {
+        "q": "Quel appel crée automatiquement le fichier /dev d'un pilote caractère ?",
+        "options": ["register_chrdev_region", "cdev_init", "device_create (avec une classe)", "alloc_chrdev_region"],
+        "answer": 2,
+        "explanation": "udev crée le nœud quand le device est publié dans une classe."
+      },
+      {
+        "q": "Pourquoi les goto vers des étiquettes de nettoyage sont-ils courants dans le noyau ?",
+        "options": ["Pour la compatibilité C++", "Pour accélérer le code", "Parce que les boucles sont interdites", "Pour défaire exactement ce qui a été fait en cas d'échec"],
+        "answer": 3,
+        "explanation": "C'est l'idiome standard de gestion d'erreurs du noyau."
+      }
+    ]
+  },
+  {
+    "id": "mq_bootloader_uboot",
+    "title": "Quiz — Le boot U-Boot",
+    "level": "expert",
+    "course": "bootloader_uboot",
+    "questions": [
+      {
+        "q": "Que désigne « mmc 0:1 » dans U-Boot ?",
+        "options": ["La mémoire 0, octet 1", "La partition 1 du périphérique MMC 0", "Le cœur 0, thread 1", "La version 0.1"],
+        "answer": 1,
+        "explanation": "On l'utilise avec ls, fatload, load…"
+      },
+      {
+        "q": "Quelle variable contient les paramètres passés au noyau ?",
+        "options": ["bootcmd", "fdtfile", "bootargs", "bootdelay"],
+        "answer": 2,
+        "explanation": "Par exemple console=ttyS0,115200 root=/dev/mmcblk0p2."
+      },
+      {
+        "q": "Que fait bootdelay = -2 ?",
+        "options": ["Attend 2 secondes", "Désactive le démarrage", "Démarre sans permettre d'interrompre U-Boot", "Redémarre en boucle"],
+        "answer": 2,
+        "explanation": "Utile pour sécuriser un produit fini."
+      },
+      {
+        "q": "Quels outils modifient l'environnement U-Boot depuis Linux ?",
+        "options": ["systemctl", "setenv et saveenv", "fw_printenv et fw_setenv", "sysctl"],
+        "answer": 2,
+        "explanation": "Ils lisent la configuration décrite dans /etc/fw_env.config."
+      },
+      {
+        "q": "À quoi sert le paramètre rootwait ?",
+        "options": ["À attendre que le périphérique de la racine soit prêt", "À attendre l'utilisateur", "À attendre le réseau", "À ralentir le démarrage"],
+        "answer": 0,
+        "explanation": "Évite l'erreur « Unable to mount root fs » sur carte SD."
+      }
+    ]
+  },
+  {
+    "id": "mq_buildroot",
+    "title": "Quiz — Buildroot : créer son image",
+    "level": "expert",
+    "course": "buildroot",
+    "questions": [
+      {
+        "q": "Quels éléments Buildroot produit-il ?",
+        "options": ["Uniquement le noyau", "Uniquement des paquets .deb", "Toolchain, bootloader, noyau et système de fichiers racine", "Une machine virtuelle"],
+        "answer": 2,
+        "explanation": "Tout est construit à partir d'un fichier de configuration."
+      },
+      {
+        "q": "Que contient un fichier produit par make savedefconfig ?",
+        "options": ["La liste des fichiers de l'image", "Seulement les options différentes des valeurs par défaut", "Toute la configuration", "Le noyau compilé"],
+        "answer": 1,
+        "explanation": "Il est court, lisible et facile à versionner."
+      },
+      {
+        "q": "Comment ajouter un fichier de configuration à l'image ?",
+        "options": ["En le copiant dans output/target", "Avec un overlay de système de fichiers racine", "Avec dd", "En modifiant le noyau"],
+        "answer": 1,
+        "explanation": "Les modifications directes dans output/target sont perdues à la reconstruction."
+      },
+      {
+        "q": "Quelle commande recompile un seul paquet ?",
+        "options": ["make nom_paquet-rebuild", "make menuconfig", "make clean", "make savedefconfig"],
+        "answer": 0,
+        "explanation": "Utile après la modification des sources d'un paquet."
+      },
+      {
+        "q": "Quels fichiers définissent un paquet Buildroot ?",
+        "options": ["recipe.bb", "Config.in et nom.mk", "Makefile et README", "package.json"],
+        "answer": 1,
+        "explanation": "Config.in ajoute l'option, le .mk décrit la construction."
+      }
+    ]
+  },
+  {
+    "id": "mq_yocto",
+    "title": "Quiz — Yocto Project : distribution à façon",
+    "level": "expert",
+    "course": "yocto",
+    "questions": [
+      {
+        "q": "Qu'est-ce qu'un fichier .bbappend ?",
+        "options": ["Une modification d'une recette existante sans la copier", "Une nouvelle image", "Un fichier de log", "Une sauvegarde"],
+        "answer": 0,
+        "explanation": "Il permet d'adapter une recette d'un autre layer."
+      },
+      {
+        "q": "Quel fichier liste les layers d'un build ?",
+        "options": ["local.conf", "layer.conf", "bblayers.conf", "machine.conf"],
+        "answer": 2,
+        "explanation": "conf/bblayers.conf, géré avec bitbake-layers."
+      },
+      {
+        "q": "Pourquoi l'espace est-il indispensable dans IMAGE_INSTALL:append = \" hello\" ?",
+        "options": ["Il ne l'est pas", "Par convention uniquement", "Car :append colle le texte tel quel à la valeur existante", "Pour la compatibilité Windows"],
+        "answer": 2,
+        "explanation": "Sans espace, hello fusionnerait avec le nom du paquet précédent."
+      },
+      {
+        "q": "Où trouve-t-on les images construites ?",
+        "options": ["tmp/deploy/images/<machine>", "/boot", "output/images", "build/images"],
+        "answer": 0,
+        "explanation": "C'est le dossier de dépôt des artefacts finaux."
+      },
+      {
+        "q": "Pourquoi choisir une version LTS de Yocto pour un produit ?",
+        "options": ["Elle compile plus vite", "Elle reçoit des correctifs pendant quatre ans", "Elle est la seule gratuite", "Elle contient plus de paquets"],
+        "answer": 1,
+        "explanation": "Les autres versions ne sont maintenues que quelques mois."
+      }
+    ]
+  },
+  {
+    "id": "mq_devicetree_bindings",
+    "title": "Quiz — Devicetree et bindings",
+    "level": "expert",
+    "course": "devicetree_bindings",
+    "questions": [
+      {
+        "q": "Pourquoi les cartes ARM ont-elles besoin d'un devicetree ?",
+        "options": ["Parce que leurs périphériques ne sont pas détectables automatiquement", "Pour chiffrer le système", "Pour remplacer le bootloader", "Pour accélérer le noyau"],
+        "answer": 0,
+        "explanation": "Les contrôleurs sont à des adresses fixes, que le devicetree décrit."
+      },
+      {
+        "q": "Que signifie status = \"disabled\" ?",
+        "options": ["Le pilote est supprimé", "Le bus est coupé", "Le nœud est décrit mais non instancié", "Le périphérique est en panne"],
+        "answer": 2,
+        "explanation": "On l'active ailleurs avec status = \"okay\"."
+      },
+      {
+        "q": "Que contient reg pour un composant sur un bus I2C ?",
+        "options": ["Sa fréquence", "Son adresse mémoire et sa taille", "Son numéro de broche", "Son adresse I2C sur 7 bits"],
+        "answer": 3,
+        "explanation": "Sur I2C, #size-cells vaut 0 : reg ne contient que l'adresse."
+      },
+      {
+        "q": "À quoi sert un overlay (.dtbo) ?",
+        "options": ["À compiler le noyau", "À signer le devicetree", "À remplacer U-Boot", "À modifier le devicetree au démarrage sans le recompiler"],
+        "answer": 3,
+        "explanation": "Idéal pour les cartes d'extension."
+      },
+      {
+        "q": "Quelle table d'un pilote liste les chaînes compatible gérées ?",
+        "options": ["file_operations", "cdev", "module_param", "of_match_table"],
+        "answer": 3,
+        "explanation": "Le noyau compare le compatible du nœud à cette table."
+      }
+    ]
+  },
+  {
+    "id": "mq_rtos_linux",
+    "title": "Quiz — RTOS vs Linux temps réel",
+    "level": "expert",
+    "course": "rtos_linux",
+    "questions": [
+      {
+        "q": "Qu'est-ce qui compte le plus pour juger un système temps réel ?",
+        "options": ["La latence moyenne", "La latence dans le pire cas", "La quantité de RAM", "La fréquence du processeur"],
+        "answer": 1,
+        "explanation": "Une seule échéance manquée peut être grave."
+      },
+      {
+        "q": "Pourquoi utiliser vTaskDelayUntil plutôt que vTaskDelay ?",
+        "options": ["Il désactive les interruptions", "Il est plus simple", "Il consomme moins", "La période ne dérive pas, le réveil se fait à date absolue"],
+        "answer": 3,
+        "explanation": "vTaskDelay accumule la durée du traitement à chaque cycle."
+      },
+      {
+        "q": "Depuis quelle version du noyau PREEMPT_RT est-il intégré ?",
+        "options": ["Il ne l'est pas", "6.12", "4.8", "5.10"],
+        "answer": 1,
+        "explanation": "Il suffit d'activer CONFIG_PREEMPT_RT, sans correctif externe."
+      },
+      {
+        "q": "Quelle politique d'ordonnancement utilise une tâche temps réel sous Linux ?",
+        "options": ["SCHED_BATCH", "SCHED_IDLE", "SCHED_FIFO", "SCHED_OTHER"],
+        "answer": 2,
+        "explanation": "Avec une priorité de 1 à 99, réglable par chrt."
+      },
+      {
+        "q": "Pourquoi mesurer la latence sous charge et longtemps ?",
+        "options": ["Parce que cyclictest l'exige", "Pour chauffer le processeur", "Pour user le matériel", "Parce que les pires latences sont rares et surviennent sous charge"],
+        "answer": 3,
+        "explanation": "Une mesure courte à vide est trop optimiste."
+      }
+    ]
+  },
+  {
+    "id": "mq_securite_embarque",
+    "title": "Quiz — Sécuriser un système embarqué",
+    "level": "expert",
+    "course": "securite_embarque",
+    "questions": [
+      {
+        "q": "Quelle est la première étape pour sécuriser un appareil ?",
+        "options": ["Changer le port SSH", "Inventorier et réduire la surface d'attaque", "Installer un antivirus", "Chiffrer tout le disque"],
+        "answer": 1,
+        "explanation": "Chaque service, port et interface doit être justifié ou supprimé."
+      },
+      {
+        "q": "Quelle commande liste les services qui écoutent sur le réseau ?",
+        "options": ["lsblk", "df -h", "ps aux", "ss -tulpn"],
+        "answer": 3,
+        "explanation": "Elle affiche les ports ouverts et les processus associés."
+      },
+      {
+        "q": "Qu'apporte le TLS mutuel ?",
+        "options": ["La compression des données", "Un chiffrement plus fort", "Une connexion plus rapide", "Le serveur authentifie aussi chaque appareil par son certificat"],
+        "answer": 3,
+        "explanation": "Un appareil précis peut être révoqué."
+      },
+      {
+        "q": "Pourquoi ne jamais utiliser curl -k en production ?",
+        "options": ["Il est plus lent", "Il désactive la vérification du certificat", "Il n'existe pas", "Il compresse mal"],
+        "answer": 1,
+        "explanation": "Le chiffrement devient inutile face à une attaque de l'homme du milieu."
+      },
+      {
+        "q": "Où est ancrée la confiance d'une chaîne de démarrage sécurisé ?",
+        "options": ["Dans U-Boot", "Dans /etc", "Dans les fusibles (eFuse) du SoC lus par la ROM", "Dans le noyau"],
+        "answer": 2,
+        "explanation": "La ROM vérifie la première étape avec l'empreinte de clé gravée."
+      }
+    ]
+  },
+  {
+    "id": "mq_debug_low_level",
+    "title": "Quiz — Debug : GDB, logs, traceurs",
+    "level": "expert",
+    "course": "debug_low_level",
+    "questions": [
+      {
+        "q": "Qu'est-ce qu'un core dump ?",
+        "options": ["Une image de la mémoire du processus au moment du crash", "Un journal système", "Une sauvegarde du noyau", "Un fichier de configuration"],
+        "answer": 0,
+        "explanation": "GDB l'ouvre avec le binaire pour voir la pile et les variables."
+      },
+      {
+        "q": "Quelle commande GDB arrête le programme quand une variable change ?",
+        "options": ["break", "watch", "next", "finish"],
+        "answer": 1,
+        "explanation": "Un point de surveillance révèle qui écrase la variable."
+      },
+      {
+        "q": "Pourquoi déployer un binaire strippé sur la cible tout en déboguant avec les symboles ?",
+        "options": ["Les symboles sont dans le noyau", "C'est impossible", "Pour accélérer le réseau", "GDB lit les symboles du binaire complet sur le PC, gdbserver n'a besoin que du code"],
+        "answer": 3,
+        "explanation": "Les deux binaires doivent venir de la même compilation."
+      },
+      {
+        "q": "Comment rendre le journal systemd persistant ?",
+        "options": ["Redémarrer journald uniquement", "C'est automatique", "journalctl --save", "Storage=persistent dans journald.conf"],
+        "answer": 3,
+        "explanation": "Sinon il reste en RAM sur beaucoup de systèmes embarqués."
+      },
+      {
+        "q": "Que montre le tracepoint sched_switch ?",
+        "options": ["Les paquets réseau", "Les changements de processus sur chaque cœur", "Les appels malloc", "Les accès disque"],
+        "answer": 1,
+        "explanation": "Idéal pour savoir qui occupait le cœur pendant une latence."
+      }
+    ]
+  },
+  {
+    "id": "mq_optimisation_perf",
+    "title": "Quiz — Performance et optimisation",
+    "level": "expert",
+    "course": "optimisation_perf",
+    "questions": [
+      {
+        "q": "Quel outil indique quelles fonctions consomment le plus de temps CPU ?",
+        "options": ["top uniquement", "perf record + perf report", "free", "df"],
+        "answer": 1,
+        "explanation": "perf échantillonne le programme et classe les fonctions."
+      },
+      {
+        "q": "Pourquoi éviter -march=native en cross-compilation ?",
+        "options": ["Il désactive les optimisations", "Il ralentit la compilation", "Il n'existe pas", "Il cible le processeur du PC, pas celui de la carte"],
+        "answer": 3,
+        "explanation": "On précise plutôt -mcpu du cœur de la cible."
+      },
+      {
+        "q": "Quelle valeur de /proc/meminfo indique la mémoire réellement utilisable ?",
+        "options": ["SwapTotal", "Cached", "MemAvailable", "MemFree"],
+        "answer": 2,
+        "explanation": "Linux utilise la mémoire libre comme cache, libéré à la demande."
+      },
+      {
+        "q": "Quelle commande montre la chaîne qui détermine la durée du démarrage ?",
+        "options": ["uptime", "journalctl -b", "systemd-analyze blame", "systemd-analyze critical-chain"],
+        "answer": 3,
+        "explanation": "blame liste aussi des services qui démarrent en parallèle sans retarder la fin."
+      },
+      {
+        "q": "Pourquoi les mesures de performance doivent-elles se faire carte dans son boîtier, après chauffe ?",
+        "options": ["Pour la sécurité", "Ce n'est pas nécessaire", "Pour économiser l'énergie", "Parce que la fréquence baisse quand le SoC chauffe (throttling)"],
+        "answer": 3,
+        "explanation": "Un gain mesuré à froid peut disparaître en conditions réelles."
+      }
+    ]
+  },
+  {
+    "id": "mq_production_fleet",
+    "title": "Quiz — Mises à jour et flottes d'appareils",
+    "level": "expert",
+    "course": "production_fleet",
+    "questions": [
+      {
+        "q": "Pourquoi une mise à jour doit-elle être atomique ?",
+        "options": ["Pour réduire la taille", "Pour être plus rapide", "Pour être signée", "Pour qu'une interruption ne laisse jamais le système inutilisable"],
+        "answer": 3,
+        "explanation": "Soit elle réussit complètement, soit l'ancienne version reste intacte."
+      },
+      {
+        "q": "Quel est le principe du système A/B ?",
+        "options": ["Deux appareils identiques", "Écrire la mise à jour sur la partition inactive puis basculer", "Deux cartes SD", "Deux noyaux sur la même partition"],
+        "answer": 1,
+        "explanation": "En cas d'échec, l'autre partition reste disponible."
+      },
+      {
+        "q": "Quand faut-il remettre bootcount à zéro après une mise à jour ?",
+        "options": ["Jamais", "Dès le début du démarrage", "Après avoir vérifié que l'application et le réseau fonctionnent", "Avant la mise à jour"],
+        "answer": 2,
+        "explanation": "Valider trop tôt supprime le retour arrière automatique."
+      },
+      {
+        "q": "Pourquoi déployer une mise à jour par vagues ?",
+        "options": ["Pour économiser la bande passante uniquement", "Pour détecter un problème sur un petit nombre d'appareils avant de généraliser", "Pour respecter la loi", "Parce que les serveurs sont lents"],
+        "answer": 1,
+        "explanation": "On observe le taux d'échec à chaque étape."
+      },
+      {
+        "q": "À quoi sert le watchdog matériel ?",
+        "options": ["À redémarrer la carte si le logiciel se bloque", "À chiffrer les données", "À mesurer la température", "À compter les démarrages"],
+        "answer": 0,
+        "explanation": "systemd peut l'alimenter avec RuntimeWatchdogSec."
+      }
+    ]
+  }
+]

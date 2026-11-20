@@ -22,7 +22,7 @@ aucun abonnement.
 |---|---|---|
 | Cours | 31 modules | 124 chapitres, 5 niveaux (Fondamentaux → Pro), 368 exercices corrigés dont ~110 pratiques |
 | Commandes | 79 | exemples réels, exercices, défis, erreurs courantes |
-| Quiz | 4 | 32 questions (Débutant → Expert) |
+| Quiz | 4 + 31 | 4 quiz de niveau de 20 questions (10 tirées par partie) + 1 quiz de 5 questions par module : 235 questions |
 | Projets | 11 | 10 mini-projets + 1 projet final « Smart Environment Monitor » |
 | Glossaire | 40 termes | du Kernel au Devicetree |
 | Cheat sheets | 12 | fiches pratiques |
@@ -78,8 +78,12 @@ Les contenus sont des fichiers JSON chargés au démarrage :
 - `commands/commands.json` : liste de commandes (`name`, `category`,
   `definition`, `syntax`, `example`, `options`, `exercise`,
   `challenge`, `commonError`).
-- `quizzes/quizzes.json` : 4 quiz (`level` : beginner/intermediate/
-  advanced/expert, `questions[]` : `q`, `options`, `answer`, `explanation`).
+- `quizzes/quizzes.json` : 4 quiz de niveau (`level` : beginner/intermediate/
+  advanced/expert, `questions[]` : `q`, `options`, `answer`, `explanation`) ;
+  chaque partie tire 10 questions parmi la banque.
+- `quizzes/module_quizzes.json` : un quiz par module (`id` préfixé `mq_`,
+  champ `course` = id du module), affiché sur la page du module. Ces quiz ne
+  comptent pas pour le badge « Maître du quiz ».
 - `projects/projects.json` : projets avec `steps[]` (`title`, `body`,
   `code`, `output`), drapeau `final` pour le projet de fin de parcours.
 - `glossary/glossary.json`, `cheat_sheets/cheat_sheets.json`,

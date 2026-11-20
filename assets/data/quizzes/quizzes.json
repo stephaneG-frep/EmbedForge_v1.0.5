@@ -6,14 +6,14 @@
     "questions": [
       {
         "q": "Quelle commande affiche le dossier courant ?",
-        "options": ["pwd", "ls", "cd", "cat"],
-        "answer": 0,
+        "options": ["cd", "cat", "ls", "pwd"],
+        "answer": 3,
         "explanation": "pwd affiche le dossier de travail courant."
       },
       {
         "q": "Quelle option de ls montre les fichiers cachés ?",
-        "options": ["-l", "-a", "-h", "-R"],
-        "answer": 1,
+        "options": ["-l", "-R", "-h", "-a"],
+        "answer": 3,
         "explanation": "L'option -a (all) affiche aussi les fichiers cachés."
       },
       {
@@ -24,33 +24,105 @@
       },
       {
         "q": "Quelle commande affiche le contenu d'un fichier page par page ?",
-        "options": ["cat", "less", "echo", "wc"],
-        "answer": 1,
+        "options": ["wc", "echo", "cat", "less"],
+        "answer": 3,
         "explanation": "less affiche le fichier page par page avec navigation."
       },
       {
         "q": "Quelle commande liste les processus en cours ?",
-        "options": ["ls", "ps", "cp", "touch"],
-        "answer": 1,
+        "options": ["cp", "touch", "ps", "ls"],
+        "answer": 2,
         "explanation": "ps affiche l'état des processus en cours d'exécution."
       },
       {
         "q": "Quelle commande crée un fichier vide ?",
-        "options": ["mkdir", "touch", "rm", "chmod"],
+        "options": ["rm", "touch", "mkdir", "chmod"],
         "answer": 1,
         "explanation": "touch crée un fichier vide ou met à jour son horodatage."
       },
       {
         "q": "Quelle commande affiche le nom de l'utilisateur courant ?",
-        "options": ["id", "passwd", "whoami", "useradd"],
-        "answer": 2,
+        "options": ["useradd", "passwd", "id", "whoami"],
+        "answer": 3,
         "explanation": "whoami affiche simplement le nom de l'utilisateur courant."
       },
       {
         "q": "Quelle commande donne des droits d'exécution à un script ?",
-        "options": ["chmod u+x script", "cat script", "ls script", "cd script"],
+        "options": ["chmod u+x script", "cd script", "cat script", "ls script"],
         "answer": 0,
         "explanation": "chmod u+x ajoute le droit d'exécution pour le propriétaire."
+      },
+      {
+        "q": "Que désigne le symbole ~ dans un chemin ?",
+        "options": ["Le dossier personnel de l'utilisateur", "La racine du système", "Le dossier précédent", "Le dossier /tmp"],
+        "answer": 0,
+        "explanation": "~ est un raccourci vers le dossier personnel, par exemple /home/pi."
+      },
+      {
+        "q": "Que fait la commande « grep -i erreur app.log » ?",
+        "options": ["Remplace erreur par ERREUR", "Affiche les lignes contenant erreur, sans tenir compte des majuscules", "Supprime les lignes contenant erreur", "Compte les mots du fichier"],
+        "answer": 1,
+        "explanation": "grep affiche les lignes qui contiennent le motif ; -i ignore la casse."
+      },
+      {
+        "q": "Quelle est la différence entre > et >> ?",
+        "options": ["> lit un fichier, >> l'écrit", "Aucune", "> ajoute à la fin, >> écrase", "> écrase le fichier, >> ajoute à la fin"],
+        "answer": 3,
+        "explanation": "> remplace le contenu du fichier, >> ajoute la sortie à la fin."
+      },
+      {
+        "q": "Quelle valeur numérique correspond aux droits rw-r--r-- ?",
+        "options": ["777", "644", "755", "600"],
+        "answer": 1,
+        "explanation": "rw- = 6, r-- = 4, r-- = 4, soit 644."
+      },
+      {
+        "q": "Pourquoi faut-il exécuter chmod +x sur un nouveau script ?",
+        "options": ["Pour le rendre lisible", "Pour le cacher", "Pour lui donner le droit d'exécution", "Pour le compiler"],
+        "answer": 2,
+        "explanation": "Sans le droit x, le shell refuse de lancer le script : « Permission denied »."
+      },
+      {
+        "q": "Que contient la variable $? juste après une commande ?",
+        "options": ["Le nom du script", "Le code de sortie de la commande", "Le nombre d'arguments", "Le PID de la commande"],
+        "answer": 1,
+        "explanation": "$? vaut 0 en cas de succès, une autre valeur en cas d'erreur."
+      },
+      {
+        "q": "Dans un script Bash, comment écrire correctement le test « VAL supérieur à 10 » ?",
+        "options": ["if [ VAL -gt 10 ]", "if (VAL > 10)", "if [ \"$VAL\" -gt 10 ]", "if [$VAL > 10]"],
+        "answer": 2,
+        "explanation": "Espaces obligatoires autour des crochets, -gt pour les nombres et $ pour lire la variable."
+      },
+      {
+        "q": "Quel signal kill envoie-t-il par défaut ?",
+        "options": ["KILL (9)", "HUP (1)", "TERM (15)", "INT (2)"],
+        "answer": 2,
+        "explanation": "kill envoie TERM, qui demande un arrêt propre ; -9 force l'arrêt."
+      },
+      {
+        "q": "Quel processus porte toujours le PID 1 ?",
+        "options": ["Le shell de l'utilisateur", "init (systemd ou BusyBox init)", "Le noyau", "sshd"],
+        "answer": 1,
+        "explanation": "Le premier programme lancé par le noyau, init, porte le PID 1."
+      },
+      {
+        "q": "Quelle commande ouvre une seule commande avec les droits root ?",
+        "options": ["sudo", "chmod", "root", "su"],
+        "answer": 0,
+        "explanation": "sudo exécute une commande avec les droits d'un autre utilisateur (root par défaut) et la journalise."
+      },
+      {
+        "q": "En C, quel type de <stdint.h> garantit un entier non signé de 8 bits ?",
+        "options": ["byte", "int8", "char", "uint8_t"],
+        "answer": 3,
+        "explanation": "uint8_t fait exactement 8 bits sur toutes les architectures."
+      },
+      {
+        "q": "Que signifie un code de retour 0 à la fin de main en C ?",
+        "options": ["Que le programme continue", "Une erreur", "Le succès du programme", "Un plantage"],
+        "answer": 2,
+        "explanation": "Par convention, 0 indique le succès ; une autre valeur signale une erreur."
       }
     ]
   },
@@ -61,8 +133,8 @@
     "questions": [
       {
         "q": "Quelle commande affiche les journaux du démarrage courant avec systemd ?",
-        "options": ["dmesg", "journalctl -b", "cat /var/log", "top"],
-        "answer": 1,
+        "options": ["journalctl -b", "cat /var/log", "dmesg", "top"],
+        "answer": 0,
         "explanation": "journalctl -b affiche les journaux depuis le dernier démarrage."
       },
       {
@@ -73,39 +145,111 @@
       },
       {
         "q": "Sur quel port écoute le serveur SSH par défaut ?",
-        "options": ["21", "22", "80", "443"],
+        "options": ["21", "22", "443", "80"],
         "answer": 1,
         "explanation": "SSH utilise le port 22 par défaut."
       },
       {
         "q": "Quelle commande installe un paquet Debian en résolvant les dépendances ?",
-        "options": ["dpkg -i", "apt install", "make install", "fdisk"],
+        "options": ["dpkg -i", "apt install", "fdisk", "make install"],
         "answer": 1,
         "explanation": "apt install résout et installe les dépendances automatiquement."
       },
       {
         "q": "Quelle commande teste la connectivité réseau par paquets ICMP ?",
-        "options": ["ip addr", "ping", "scp", "route"],
-        "answer": 1,
+        "options": ["scp", "ip addr", "ping", "route"],
+        "answer": 2,
         "explanation": "ping envoie des paquets ICMP et mesure la réponse."
       },
       {
         "q": "Quelle commande initialise un dépôt git ?",
-        "options": ["git clone", "git init", "git log", "git status"],
-        "answer": 1,
+        "options": ["git status", "git clone", "git init", "git log"],
+        "answer": 2,
         "explanation": "git init crée un nouveau dépôt git local."
       },
       {
         "q": "Quelle commande copie un fichier entre machines via SSH ?",
-        "options": ["tgz", "scp", "lsmod", "fg"],
+        "options": ["lsmod", "scp", "fg", "tgz"],
         "answer": 1,
         "explanation": "scp copie des fichiers sur SSH entre deux machines."
       },
       {
         "q": "Quelle commande affiche l'espace disque ?",
-        "options": ["du", "df", "free", "stat"],
-        "answer": 1,
+        "options": ["free", "du", "df", "stat"],
+        "answer": 2,
         "explanation": "df affiche l'espace disque utilisé et disponible des systèmes de fichiers."
+      },
+      {
+        "q": "Que contient un pointeur en C ?",
+        "options": ["Une copie de la variable", "L'adresse mémoire d'une variable", "La taille de la variable", "Le type de la variable"],
+        "answer": 1,
+        "explanation": "Un pointeur stocke une adresse ; *p accède à la valeur qui s'y trouve."
+      },
+      {
+        "q": "Que faut-il vérifier juste après un malloc ?",
+        "options": ["Que le pointeur n'est pas NULL", "Que la mémoire est à zéro", "Que free a été appelé", "Rien"],
+        "answer": 0,
+        "explanation": "malloc renvoie NULL en cas d'échec : l'utiliser sans vérifier fait planter le programme."
+      },
+      {
+        "q": "Pourquoi utiliser snprintf plutôt que sprintf ?",
+        "options": ["Il limite l'écriture à la taille du tampon", "Il est plus rapide", "Il affiche en couleur", "Il gère les fichiers"],
+        "answer": 0,
+        "explanation": "snprintf prend la taille du tampon et ne déborde jamais, contrairement à sprintf."
+      },
+      {
+        "q": "Quel outil détecte les fuites mémoire d'un programme C ?",
+        "options": ["gdb", "make", "valgrind", "strace"],
+        "answer": 2,
+        "explanation": "valgrind --leak-check=full signale les blocs alloués jamais libérés."
+      },
+      {
+        "q": "Quelle commande faut-il lancer après avoir modifié un fichier .service ?",
+        "options": ["journalctl --vacuum", "systemctl enable", "systemctl daemon-reload", "systemctl reboot"],
+        "answer": 2,
+        "explanation": "daemon-reload fait relire les fichiers d'unités à systemd."
+      },
+      {
+        "q": "Que fait Restart=on-failure dans un service systemd ?",
+        "options": ["Empêche le service de redémarrer", "Relance le service s'il s'arrête en erreur", "Redémarre la carte en cas d'erreur", "Relance le service toutes les minutes"],
+        "answer": 1,
+        "explanation": "systemd relance automatiquement le service après un arrêt anormal."
+      },
+      {
+        "q": "Quelle cible attendre pour qu'un service démarre une fois le réseau réellement opérationnel ?",
+        "options": ["multi-user.target", "network-online.target", "network.target", "basic.target"],
+        "answer": 1,
+        "explanation": "network.target indique seulement que la configuration a commencé ; network-online.target attend un réseau utilisable."
+      },
+      {
+        "q": "Quelle commande affiche les erreurs du démarrage précédent ?",
+        "options": ["dmesg -c", "journalctl -b -1 -p err", "journalctl -f", "journalctl --vacuum-time=1d"],
+        "answer": 1,
+        "explanation": "-b -1 désigne le démarrage précédent et -p err filtre les erreurs et pires."
+      },
+      {
+        "q": "Où la clé publique autorisée est-elle stockée sur la machine distante ?",
+        "options": ["~/.ssh/id_ed25519", "~/.ssh/known_hosts", "/etc/ssh/sshd_config", "~/.ssh/authorized_keys"],
+        "answer": 3,
+        "explanation": "authorized_keys liste les clés publiques acceptées pour cet utilisateur."
+      },
+      {
+        "q": "Quel est l'intérêt principal de rsync par rapport à scp ?",
+        "options": ["Il fonctionne sans réseau", "Il chiffre mieux", "Il compresse les images", "Il ne transfère que les différences"],
+        "answer": 3,
+        "explanation": "rsync compare source et destination et n'envoie que ce qui a changé."
+      },
+      {
+        "q": "Quelle commande indique quel paquet installé fournit un fichier ?",
+        "options": ["apt show", "dpkg -S", "dpkg -l", "apt search"],
+        "answer": 1,
+        "explanation": "dpkg -S /chemin/fichier renvoie le nom du paquet propriétaire."
+      },
+      {
+        "q": "Quelle commande Git localise le commit qui a introduit un bug ?",
+        "options": ["git bisect", "git revert", "git stash", "git blame"],
+        "answer": 0,
+        "explanation": "git bisect fait une recherche dichotomique entre une version correcte et une version défectueuse."
       }
     ]
   },
@@ -116,51 +260,123 @@
     "questions": [
       {
         "q": "Quelle commande libgpiod affiche les lignes d'un contrôleur GPIO ?",
-        "options": ["gpioinfo", "gpioset", "gpioget", "devmem"],
-        "answer": 0,
+        "options": ["devmem", "gpioget", "gpioinfo", "gpioset"],
+        "answer": 2,
         "explanation": "gpioinfo affiche les lignes et leur état via libgpiod."
       },
       {
         "q": "Quelle commande écrit une valeur dans une adresse mémoire physique ?",
-        "options": ["cat", "devmem", "echo", "mount"],
+        "options": ["cat", "devmem", "mount", "echo"],
         "answer": 1,
         "explanation": "devmem accède directement à la mémoire physique à une adresse donnée."
       },
       {
         "q": "Quelle commande scanne les périphériques d'un bus I2C ?",
-        "options": ["i2cset", "i2cdetect", "gpioinfo", "spidev_test"],
-        "answer": 1,
+        "options": ["gpioinfo", "spidev_test", "i2cset", "i2cdetect"],
+        "answer": 3,
         "explanation": "i2cdetect recherche les périphériques présents sur un bus I2C."
       },
       {
         "q": "Quel outil teste un bus SPI via spidev ?",
-        "options": ["spidev_test", "gpioinfo", "i2cset", "dmesg"],
-        "answer": 0,
+        "options": ["gpioinfo", "spidev_test", "i2cset", "dmesg"],
+        "answer": 1,
         "explanation": "spidev_test échange des données sur /dev/spidevX.Y."
       },
       {
         "q": "Quel compilateur croisé cible l'ARM 64 bits ?",
-        "options": ["gcc", "aarch64-linux-gnu-gcc", "make", "ld"],
-        "answer": 1,
+        "options": ["make", "gcc", "ld", "aarch64-linux-gnu-gcc"],
+        "answer": 3,
         "explanation": "aarch64-linux-gnu-gcc génère du code pour l'architecture AArch64."
       },
       {
         "q": "Quelle option de gcc ajoute les symboles de débogage ?",
-        "options": ["-O2", "-Wall", "-g", "-o"],
-        "answer": 2,
+        "options": ["-o", "-Wall", "-O2", "-g"],
+        "answer": 3,
         "explanation": "-g génère les informations de débogage utilisées par gdb."
       },
       {
         "q": "Quelle option make compile en parallèle sur plusieurs cœurs ?",
-        "options": ["-c", "-j4", "-o", "-l"],
-        "answer": 1,
+        "options": ["-o", "-l", "-c", "-j4"],
+        "answer": 3,
         "explanation": "-jN lance la compilation avec N processus en parallèle."
       },
       {
         "q": "Quelle commande affiche les messages du tampon du noyau ?",
-        "options": ["lsmod", "dmesg", "modprobe", "gpioget"],
-        "answer": 1,
+        "options": ["modprobe", "lsmod", "dmesg", "gpioget"],
+        "answer": 2,
         "explanation": "dmesg affiche le ring buffer du noyau avec les messages de boot et de drivers."
+      },
+      {
+        "q": "Dans quelle unité est exprimé le fichier temp d'une zone thermique ?",
+        "options": ["Kelvins", "Degrés Celsius", "Degrés Fahrenheit", "Millidegrés Celsius"],
+        "answer": 3,
+        "explanation": "48312 signifie 48,312 °C."
+      },
+      {
+        "q": "Pourquoi « sudo echo 1 > /sys/class/leds/led0/brightness » échoue-t-il ?",
+        "options": ["echo n'existe pas en root", "Le voyant est cassé", "La redirection est faite par le shell non privilégié", "sysfs est en lecture seule"],
+        "answer": 2,
+        "explanation": "Seul echo tourne en root ; il faut utiliser « echo 1 | sudo tee … »."
+      },
+      {
+        "q": "Quelle est l'interface recommandée pour les GPIO depuis le noyau 4.8 ?",
+        "options": ["/proc/gpio", "/dev/mem", "/dev/gpiochipN avec libgpiod", "/sys/class/gpio"],
+        "answer": 2,
+        "explanation": "L'interface sysfs est dépréciée au profit du périphérique caractère utilisé par libgpiod."
+      },
+      {
+        "q": "Quelle résistance limiter le courant d'une LED rouge (2 V) à environ 5 mA sous 3,3 V ?",
+        "options": ["2,7 kΩ", "270 Ω", "27 kΩ", "27 Ω"],
+        "answer": 1,
+        "explanation": "R = (3,3 − 2) / 0,005 = 260 Ω, arrondi à 270 Ω."
+      },
+      {
+        "q": "Combien de bits faut-il sur le fil pour envoyer un octet en 8N1 ?",
+        "options": ["8", "9", "12", "10"],
+        "answer": 3,
+        "explanation": "1 bit de start + 8 bits de données + 1 bit de stop = 10 bits."
+      },
+      {
+        "q": "Comment relier une carte et un adaptateur USB-série ?",
+        "options": ["Uniquement TX et RX", "TX→TX, RX→RX", "TX→RX, RX→TX et masse commune", "VCC→VCC uniquement"],
+        "answer": 2,
+        "explanation": "Les lignes se croisent et les masses doivent être reliées."
+      },
+      {
+        "q": "Que signifie « UU » dans le résultat d'i2cdetect ?",
+        "options": ["Erreur de bus", "Adresse inutilisée", "Adresse déjà prise par un pilote du noyau", "Composant en panne"],
+        "answer": 2,
+        "explanation": "i2cdetect ne sonde pas les adresses gérées par un pilote."
+      },
+      {
+        "q": "Une fiche technique donne l'adresse I2C d'écriture 0x90. Quelle adresse utiliser sous Linux ?",
+        "options": ["0x45", "0x90", "0x91", "0x48"],
+        "answer": 3,
+        "explanation": "Linux attend l'adresse sur 7 bits : 0x90 >> 1 = 0x48."
+      },
+      {
+        "q": "Pourquoi envoie-t-on des octets factices après une commande SPI ?",
+        "options": ["Pour réinitialiser l'esclave", "Pour générer l'horloge pendant laquelle l'esclave répond", "Pour calculer une somme de contrôle", "Pour changer de mode"],
+        "answer": 1,
+        "explanation": "L'esclave ne peut répondre que pendant que le maître fournit l'horloge."
+      },
+      {
+        "q": "Quel mode SPI correspond à CPOL = 0 et CPHA = 0 ?",
+        "options": ["Mode 1", "Mode 0", "Mode 2", "Mode 3"],
+        "answer": 1,
+        "explanation": "Le mode 0, le plus courant : horloge basse au repos, échantillonnage sur le premier front."
+      },
+      {
+        "q": "Que signifie l'erreur « Exec format error » au lancement d'un binaire ?",
+        "options": ["Bibliothèque manquante", "Binaire compilé pour une autre architecture", "Droits insuffisants", "Fichier corrompu sur le disque"],
+        "answer": 1,
+        "explanation": "Par exemple un binaire x86 lancé sur une carte ARM."
+      },
+      {
+        "q": "Pourquoi utiliser readelf plutôt que ldd sur un binaire ARM depuis un PC x86 ?",
+        "options": ["ldd tente d'exécuter le chargeur de la machine", "ldd ne lit que le C++", "readelf compile le binaire", "readelf est plus rapide"],
+        "answer": 0,
+        "explanation": "readelf lit simplement le fichier, quelle que soit son architecture."
       }
     ]
   },
@@ -171,51 +387,123 @@
     "questions": [
       {
         "q": "Quel fichier décrit le matériel d'un système dans le device tree ?",
-        "options": ["Makefile", "fichier .dts (Device Tree Source)", "lilo.conf", "modules.dep"],
-        "answer": 1,
+        "options": ["fichier .dts (Device Tree Source)", "modules.dep", "lilo.conf", "Makefile"],
+        "answer": 0,
         "explanation": "Les fichiers .dts décrivent le matériel, compilés en .dtb avec dtc."
       },
       {
         "q": "Quel format de fichier binaire décrit le device tree ?",
-        "options": [".elf", ".dtb (Flattened Device Tree)", ".ko", ".img"],
-        "answer": 1,
+        "options": [".dtb (Flattened Device Tree)", ".elf", ".ko", ".img"],
+        "answer": 0,
         "explanation": "dtc compile le .dts en un binaire .dtb chargé par le bootloader."
       },
       {
         "q": "Quelle commande charge un module du noyau avec ses dépendances ?",
-        "options": ["insmod", "modprobe", "rmmod", "lsmod"],
-        "answer": 1,
+        "options": ["modprobe", "insmod", "rmmod", "lsmod"],
+        "answer": 0,
         "explanation": "modprobe charge un module et ses dépendances listées par depmod."
       },
       {
         "q": "Quel système de construction embarqué utilise des recettes .bb ?",
-        "options": ["Make", "Yocto/BitBake", "CMake", "fdisk"],
-        "answer": 1,
+        "options": ["fdisk", "Make", "CMake", "Yocto/BitBake"],
+        "answer": 3,
         "explanation": "Yocto (OpenEmbedded/BitBake) construit des images via des recettes .bb."
       },
       {
         "q": "Quel bootloader est souvent utilisé sur ARM embarqué ?",
-        "options": ["GRUB", "U-Boot", "LILO", "systemd-boot"],
-        "answer": 1,
+        "options": ["systemd-boot", "LILO", "GRUB", "U-Boot"],
+        "answer": 3,
         "explanation": "U-Boot (Das U-Boot) est le bootloader le plus répandu sur l'embarqué ARM."
       },
       {
-        "q": "Quelle fonction fait d'un système Linux un système temps réel dur ?",
-        "options": ["PREEMPT standard", "PREEMPT_RT (noyau temps réel)", "SMP", "NUMA"],
-        "answer": 1,
-        "explanation": "Le patch PREEMPT_RT rend le noyau capable de garantir des latences temps réel."
+        "q": "Que garantit un noyau PREEMPT_RT ?",
+        "options": ["Un temps réel dur certifiable pour la sécurité", "Une exécution plus rapide de tous les programmes", "Une latence fortement réduite et plus prévisible, mais pas une garantie certifiée", "La suppression des interruptions"],
+        "answer": 2,
+        "explanation": "PREEMPT_RT (intégré depuis Linux 6.12) réduit la latence ; les contraintes dures critiques relèvent d'un RTOS ou d'un cœur dédié."
       },
       {
-        "q": "Quel outil place un processeur dans une politique de sécurité du noyau ?",
-        "options": ["SEAndroid", "selinux (SELinux)", "iptables", "ufw"],
+        "q": "Quel mécanisme du noyau applique un contrôle d'accès obligatoire (MAC) par politique ?",
+        "options": ["sudo", "SELinux ou AppArmor", "iptables", "chmod"],
         "answer": 1,
-        "explanation": "SELinux applique des politiques de contrôle d'accès obligatoire au noyau."
+        "explanation": "SELinux et AppArmor restreignent ce que chaque programme peut faire, au-delà des droits Unix classiques."
       },
       {
         "q": "Quel outil est utilisé pour déboguer un programme en pas-à-pas ?",
-        "options": ["make", "gdb", "objdump", "ar"],
+        "options": ["ar", "gdb", "make", "objdump"],
         "answer": 1,
         "explanation": "gdb permet de déboguer en inspectant les variables et en pas-à-pas."
+      },
+      {
+        "q": "Que signifie CONFIG_FOO=m dans la configuration du noyau ?",
+        "options": ["La fonctionnalité est désactivée", "Elle est intégrée au noyau", "Elle est en mode maintenance", "Elle est compilée en module chargeable"],
+        "answer": 3,
+        "explanation": "=m produit un .ko ; =y intègre la fonctionnalité dans l'image du noyau."
+      },
+      {
+        "q": "Pourquoi utiliser copy_to_user dans un pilote ?",
+        "options": ["Pour accélérer la copie", "Pour chiffrer les données", "Parce que le pointeur vient de l'espace utilisateur et doit être vérifié", "Pour allouer de la mémoire"],
+        "answer": 2,
+        "explanation": "Un pointeur utilisateur peut être invalide ou malveillant ; copy_to_user le vérifie."
+      },
+      {
+        "q": "Que signifie l'erreur « Invalid module format » au chargement ?",
+        "options": ["Le fichier n'est pas un .ko", "La vermagic ne correspond pas au noyau en cours", "Le module n'est pas signé en GPL", "Le module est déjà chargé"],
+        "answer": 1,
+        "explanation": "Le module a été compilé contre une autre version ou configuration du noyau."
+      },
+      {
+        "q": "Quel est le rôle du SPL au démarrage ?",
+        "options": ["Signer le noyau", "Charger le système de fichiers racine", "Initialiser la DRAM puis charger U-Boot", "Lancer systemd"],
+        "answer": 2,
+        "explanation": "Le SPL tient dans la SRAM interne et prépare la DRAM pour U-Boot complet."
+      },
+      {
+        "q": "Quelle commande U-Boot lance une Image arm64 brute ?",
+        "options": ["booti", "run", "bootm", "bootz"],
+        "answer": 0,
+        "explanation": "booti démarre une Image arm64 ; bootm sert aux uImage et images FIT."
+      },
+      {
+        "q": "Pourquoi faut-il un make clean dans Buildroot après un changement de toolchain ?",
+        "options": ["Ce n'est pas nécessaire", "Pour mettre à jour Buildroot", "Pour libérer de l'espace", "Buildroot ne suit pas les changements de configuration globaux"],
+        "answer": 3,
+        "explanation": "Les paquets déjà compilés avec l'ancienne toolchain resteraient incompatibles."
+      },
+      {
+        "q": "Quelle propriété du devicetree relie un nœud à son pilote ?",
+        "options": ["reg", "compatible", "status", "label"],
+        "answer": 1,
+        "explanation": "Le noyau cherche un pilote dont la table of_match_table contient la même chaîne compatible."
+      },
+      {
+        "q": "Pourquoi appeler mlockall dans une application temps réel ?",
+        "options": ["Pour éviter les fautes de page imprévisibles", "Pour empêcher les autres processus de démarrer", "Pour verrouiller le processeur", "Pour chiffrer la mémoire"],
+        "answer": 0,
+        "explanation": "La mémoire reste en RAM : aucune latence due au chargement de pages."
+      },
+      {
+        "q": "Que protège dm-verity ?",
+        "options": ["Les communications réseau", "Le bootloader", "L'intégrité du système de fichiers racine", "La confidentialité des données utilisateur"],
+        "answer": 2,
+        "explanation": "Chaque bloc lu est vérifié contre un arbre de hachage signé."
+      },
+      {
+        "q": "Quelle commande génère le SDK d'une image Yocto ?",
+        "options": ["devtool sdk", "bitbake image -c populate_sdk", "runqemu sdk", "bitbake-layers sdk"],
+        "answer": 1,
+        "explanation": "La tâche populate_sdk produit un script d'installation dans tmp/deploy/sdk/."
+      },
+      {
+        "q": "Après une mise à jour A/B, que fait U-Boot quand bootcount dépasse bootlimit ?",
+        "options": ["Il relance la mise à jour", "Il exécute altbootcmd, généralement l'ancienne partition", "Il s'arrête sur la console", "Il efface la flash"],
+        "answer": 1,
+        "explanation": "C'est le mécanisme de retour arrière automatique."
+      },
+      {
+        "q": "Selon la loi d'Amdahl, quel gain maximal en optimisant une fonction qui représente 10 % du temps ?",
+        "options": ["10 %", "Illimité", "90 %", "50 %"],
+        "answer": 0,
+        "explanation": "Même réduite à zéro, cette fonction ne fait gagner que ses 10 %."
       }
     ]
   }

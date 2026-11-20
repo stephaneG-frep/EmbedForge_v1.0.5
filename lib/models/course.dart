@@ -273,12 +273,21 @@ class Quiz {
   final QuizLevel level;
   final List<QuizQuestion> questions;
 
+  /// Module associé (quiz de module) ; null pour un quiz de niveau.
+  final String? course;
+
   Quiz({
     required this.id,
     required this.title,
     required this.level,
     required this.questions,
+    this.course,
   });
+
+  /// Les quiz de module ont un identifiant préfixé, pour les distinguer des
+  /// quiz de niveau (seuls ceux-ci comptent pour le badge « Maître du quiz »).
+  static const modulePrefix = 'mq_';
+  bool get isModuleQuiz => id.startsWith(modulePrefix);
 
   factory Quiz.fromJson(Map<String, dynamic> json) {
     return Quiz(
@@ -288,6 +297,7 @@ class Quiz {
       questions: (json['questions'] as List? ?? [])
           .map((e) => QuizQuestion.fromJson(e as Map<String, dynamic>))
           .toList(),
+      course: json['course'] as String?,
     );
   }
 }

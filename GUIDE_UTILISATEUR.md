@@ -73,6 +73,11 @@ faire sur votre machine ou votre carte. Cherchez d'abord, puis touchez
 « Voir la correction ». La durée affichée pour chaque chapitre inclut la
 lecture, le code et les exercices.
 
+En bas de la page de chaque module, la carte **Quiz du module** propose
+5 questions pour vérifier vos acquis ; votre meilleur score s'y affiche
+ensuite. Le badge *Maître du quiz* s'obtient, lui, avec les quiz de niveau
+(Outils → Quiz).
+
 **Commandes** : 79 commandes Linux classées par catégorie. Chaque fiche
 contient la définition, la syntaxe, un exemple, les options, un exercice,
 l'erreur fréquente et un **défi** :
@@ -110,7 +115,7 @@ Cochez un projet terminé : trois projets débloquent un badge.
 |---|---|
 | Terminal Linux | console simulée (voir ci-dessous) |
 | Défis | trouvez la commande qui répond à la question ; compteur de défis relevés et de série en cours (remise à zéro à la première erreur) |
-| Quiz | 4 niveaux (Débutant → Expert), 8 questions chacun ; l'ordre des réponses change à chaque partie ; correction détaillée à la fin |
+| Quiz | 4 niveaux (Débutant → Expert), 20 questions chacun dont 10 tirées au hasard à chaque partie ; l'ordre des réponses change aussi ; correction détaillée à la fin |
 | Roadmap métier | le parcours en 30 étapes, du débutant au pro ; cochez vos compétences |
 | Glossaire | 40 termes, filtrables par catégorie |
 | Cheat sheets | 12 fiches pratiques |
@@ -141,7 +146,7 @@ quiz, compétences acquises et badges. Accès aux paramètres.
   Débutant (5) → Intermédiaire (12) → Avancé (20) → Expert embarqué (26).
 - **16 badges** à débloquer, par exemple *Hello Linux*, *Recrue du
   terminal*, *Explorateur GPIO*, *Pirate série*, *Maître du quiz*
-  (80 % à un quiz), *Constructeur de projets* (3 projets) et
+  (80 % à un quiz de niveau), *Constructeur de projets* (3 projets) et
   *Développeur embarqué* (12 modules et 3 projets).
 
 ---

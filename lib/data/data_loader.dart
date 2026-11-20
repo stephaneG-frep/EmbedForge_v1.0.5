@@ -83,6 +83,11 @@ class DataLoader {
     return parseAll(maps, Quiz.fromJson, 'quizzes/quizzes.json');
   }
 
+  static Future<List<Quiz>> loadModuleQuizzes() async {
+    final maps = await _loadMaps('assets/data/quizzes/module_quizzes.json');
+    return parseAll(maps, Quiz.fromJson, 'quizzes/module_quizzes.json');
+  }
+
   static Future<List<Project>> loadProjects() async {
     final maps = await _loadMaps('assets/data/projects/projects.json');
     return parseAll(maps, Project.fromJson, 'projects/projects.json');
@@ -118,6 +123,9 @@ class ContentRepository {
   List<Course> courses = [];
   List<CommandInfo> commands = [];
   List<Quiz> quizzes = [];
+
+  /// Un quiz court par module, proposé sur la page du module.
+  List<Quiz> moduleQuizzes = [];
   List<Project> projects = [];
   List<GlossaryEntry> glossary = [];
   List<CheatSheet> cheatSheets = [];
@@ -136,6 +144,7 @@ class ContentRepository {
       DataLoader.loadCheatSheets(),
       DataLoader.loadRoadmap(),
       DataLoader.loadBadges(),
+      DataLoader.loadModuleQuizzes(),
     ]);
     courses = results[0] as List<Course>;
     commands = results[1] as List<CommandInfo>;
@@ -145,6 +154,22 @@ class ContentRepository {
     cheatSheets = results[5] as List<CheatSheet>;
     roadmap = results[6] as List<RoadmapStep>;
     badges = results[7] as List<BadgeDef>;
+    moduleQuizzes = results[8] as List<Quiz>;
+  }
+
+  Quiz? moduleQuiz(String courseId) {
+    for (final q in moduleQuizzes) {
+      if (q.course == courseId) return q;
+    }
+    return null;
+  }
+
+  /// Titre d'un quiz (de niveau ou de module) à partir de son identifiant.
+  String quizTitle(String id) {
+    for (final q in [...quizzes, ...moduleQuizzes]) {
+      if (q.id == id) return q.title;
+    }
+    return id;
   }
 
   Course? course(String id) {

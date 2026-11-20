@@ -39,6 +39,7 @@ flutter:
     - assets/data/courses/level5_pro.json
     - assets/data/commands/commands.json
     - assets/data/quizzes/quizzes.json
+    - assets/data/quizzes/module_quizzes.json
     - assets/data/projects/projects.json
     - assets/data/glossary/glossary.json
     - assets/data/cheat_sheets/cheat_sheets.json

@@ -3,11 +3,13 @@ import 'package:provider/provider.dart';
 
 import '../../core/constants.dart';
 import '../../core/formatters.dart';
+import '../../data/data_loader.dart';
 import '../../models/course.dart';
 import '../../state/app_state.dart';
 import '../../widgets/app_card.dart';
 import '../../widgets/common.dart';
 import '../../widgets/progress_chart.dart';
+import '../quizzes/quizzes_screen.dart' show pushQuiz;
 import 'chapter_screen.dart';
 import 'courses_screen.dart' show pushPage;
 
@@ -187,7 +189,65 @@ class CourseDetailScreen extends StatelessWidget {
               chapter: course.chapters[i],
               index: i + 1,
             ),
+          _ModuleQuizCard(course: course),
         ],
+      ),
+    );
+  }
+}
+
+/// Quiz court du module, proposé après les chapitres.
+class _ModuleQuizCard extends StatelessWidget {
+  final Course course;
+  const _ModuleQuizCard({required this.course});
+
+  @override
+  Widget build(BuildContext context) {
+    final quiz = context.read<ContentRepository>().moduleQuiz(course.id);
+    if (quiz == null) return const SizedBox.shrink();
+    final score = context.watch<AppState>().quizResults[quiz.id];
+    final color = levelColor(course.level);
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 16),
+      child: AppCard(
+        onTap: () => pushQuiz(context, quiz),
+        padding: const EdgeInsets.all(14),
+        borderColor: color.withValues(alpha: 0.5),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(Icons.quiz_outlined, color: color),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Quiz du module',
+                    style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
+                  ),
+                  Text(
+                    score == null
+                        ? '${quiz.questions.length} questions pour vérifier tes acquis'
+                        : 'Meilleur score : ${score.correct}/${score.total}',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.inkSoft,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right, color: color),
+          ],
+        ),
       ),
     );
   }

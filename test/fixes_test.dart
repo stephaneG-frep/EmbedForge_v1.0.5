@@ -229,6 +229,47 @@ void main() {
     });
   });
 
+  group('Quiz de niveau', () {
+    testWidgets('une partie tire 10 questions parmi la banque', (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final storage = StorageService();
+      await storage.init();
+      final state = AppState(storage: storage, repo: ContentRepository());
+      final quiz = Quiz(
+        id: 'banque',
+        title: 'Banque',
+        level: QuizLevel.beginner,
+        questions: [
+          for (var i = 0; i < 20; i++)
+            QuizQuestion(
+              q: 'Question $i ?',
+              options: const ['A', 'B', 'C', 'D'],
+              answer: 0,
+              explanation: '',
+            ),
+        ],
+      );
+      await tester.pumpWidget(
+        ChangeNotifierProvider.value(
+          value: state,
+          child: MaterialApp(home: QuizSessionScreen(quiz: quiz)),
+        ),
+      );
+      expect(find.text('1 / 10'), findsOneWidget);
+    });
+
+    test('les quiz de module ne comptent pas pour le badge', () async {
+      SharedPreferences.setMockInitialValues({});
+      final storage = StorageService();
+      await storage.init();
+      final state = AppState(storage: storage, repo: ContentRepository());
+      state.saveQuizScore('mq_gpio', 5, 5);
+      expect(state.bestQuizRatio, 0);
+      state.saveQuizScore('quiz_avance', 9, 10);
+      expect(state.bestQuizRatio, closeTo(0.9, 1e-9));
+    });
+  });
+
   group('Taille du texte', () {
     testWidgets('le réglage fontScale est appliqué à toute l’app', (
       tester,

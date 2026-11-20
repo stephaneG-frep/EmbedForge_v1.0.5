@@ -33,6 +33,10 @@ void main() {
     repo.quizzes = [
       for (final row in _file('quizzes/quizzes.json')) Quiz.fromJson(row),
     ];
+    repo.moduleQuizzes = [
+      for (final row in _file('quizzes/module_quizzes.json'))
+        Quiz.fromJson(row),
+    ];
     repo.projects = [
       for (final row in _file('projects/projects.json')) Project.fromJson(row),
     ];
@@ -148,12 +152,39 @@ void main() {
 
   test('chaque quiz a des réponses cohérentes', () {
     for (final q in repo.quizzes) {
-      expect(q.questions, hasLength(8));
+      expect(q.questions.length, greaterThanOrEqualTo(20), reason: q.id);
       for (final qu in q.questions) {
         expect(qu.options, hasLength(4));
         expect(qu.answer, inInclusiveRange(0, qu.options.length - 1));
       }
     }
+  });
+
+  test('chaque module a son quiz de 5 questions cohérentes', () {
+    for (final c in repo.courses) {
+      final quiz = repo.moduleQuiz(c.id);
+      expect(quiz, isNotNull, reason: 'quiz manquant pour ${c.id}');
+      expect(quiz!.isModuleQuiz, isTrue, reason: quiz.id);
+      expect(quiz.questions.length, greaterThanOrEqualTo(5), reason: c.id);
+      for (final qu in quiz.questions) {
+        expect(qu.options, hasLength(4), reason: qu.q);
+        expect(
+          qu.options.toSet(),
+          hasLength(4),
+          reason: 'options en double : ${qu.q}',
+        );
+        expect(qu.answer, inInclusiveRange(0, 3), reason: qu.q);
+        expect(qu.explanation, isNotEmpty, reason: qu.q);
+      }
+    }
+  });
+
+  test('aucune question de quiz en double', () {
+    final textes = [
+      for (final q in [...repo.quizzes, ...repo.moduleQuizzes])
+        for (final qu in q.questions) qu.q,
+    ];
+    expect(textes.toSet().length, textes.length);
   });
 
   test('badges require defs', () {

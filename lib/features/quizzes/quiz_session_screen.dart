@@ -17,6 +17,10 @@ class QuizSessionScreen extends StatefulWidget {
   final Quiz quiz;
   const QuizSessionScreen({super.key, required this.quiz});
 
+  /// Nombre de questions posées par partie quand le quiz en contient plus :
+  /// chaque partie tire un nouveau sous-ensemble, pour pouvoir rejouer.
+  static const questionsParPartie = 10;
+
   @override
   State<QuizSessionScreen> createState() => _QuizSessionScreenState();
 }
@@ -32,16 +36,33 @@ class _QuizSessionScreenState extends State<QuizSessionScreen> {
   List<List<int>> _order = [];
   final _rng = math.Random();
 
+  /// Questions de la partie en cours (tirage dans la banque du quiz).
+  List<QuizQuestion> _questions = [];
+
   @override
   void initState() {
     super.initState();
-    _answers.addAll(List<int?>.filled(widget.quiz.questions.length, null));
+    _nouvellePartie();
+  }
+
+  void _nouvellePartie() {
+    final banque = widget.quiz.questions;
+    _questions = banque.length > QuizSessionScreen.questionsParPartie
+        ? ([
+            ...banque,
+          ]..shuffle(_rng)).take(QuizSessionScreen.questionsParPartie).toList()
+        : [...banque];
+    _answers
+      ..clear()
+      ..addAll(List<int?>.filled(_questions.length, null));
+    _index = 0;
+    _correct = 0;
     _shuffleOptions();
   }
 
   void _shuffleOptions() {
     _order = [
-      for (final q in widget.quiz.questions)
+      for (final q in _questions)
         List<int>.generate(q.options.length, (i) => i)..shuffle(_rng),
     ];
   }
@@ -54,12 +75,12 @@ class _QuizSessionScreenState extends State<QuizSessionScreen> {
 
   void _next() {
     // Chaque question n'est comptée qu'une seule fois.
-    if (_answers[_index] == quiz.questions[_index].answer) _correct++;
-    if (_index + 1 < quiz.questions.length) {
+    if (_answers[_index] == _questions[_index].answer) _correct++;
+    if (_index + 1 < _questions.length) {
       setState(() => _index++);
     } else {
       final state = context.read<AppState>();
-      state.saveQuizScore(quiz.id, _correct, quiz.questions.length);
+      state.saveQuizScore(quiz.id, _correct, _questions.length);
       setState(() => _phase = _Phase.review);
     }
   }
@@ -71,7 +92,7 @@ class _QuizSessionScreenState extends State<QuizSessionScreen> {
   @override
   Widget build(BuildContext context) {
     final color = quizColor(quiz.level);
-    final questions = quiz.questions;
+    final questions = _questions;
 
     if (_phase == _Phase.review) {
       final ratio = _correct / questions.length;
@@ -84,12 +105,7 @@ class _QuizSessionScreenState extends State<QuizSessionScreen> {
         answers: _answers,
         onDone: _close,
         onRetry: () => setState(() {
-          _index = 0;
-          _correct = 0;
-          for (var i = 0; i < _answers.length; i++) {
-            _answers[i] = null;
-          }
-          _shuffleOptions();
+          _nouvellePartie(); // nouveau tirage de questions
           _phase = _Phase.question;
         }),
       );
